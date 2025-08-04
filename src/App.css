@@ -1,0 +1,36 @@
+:root {
+  --font-main: 'Pretendard', sans-serif;
+  --c-accent: #4e86da;
+  --c-accent-light: #FFE5E5;
+  --c-text: #4A4A4A;
+  --c-subtext: #888888;
+  --c-bg: #FFFFFF;
+  --c-border: #F0F0F0;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-main);
+  background-color: var(--c-bg);
+  color: var(--c-text);
+}
+
+button, input {
+  font-family: var(--font-main);
+  border: none;
+  outline: none;
+  background: none;
+  color: inherit;
+}
+button { cursor: pointer; }
+a { text-decoration: none; color: inherit; }
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+body.body-no-scroll {
+  overflow: hidden;
+}
