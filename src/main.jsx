@@ -3,9 +3,9 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import AddPost from './components/community/AddPost.jsx'
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    {/* <App /> */}
+    <App />
     <AddPost/>
-  </React.StrictMode>,
-)
+  </React.StrictMode>
+);
