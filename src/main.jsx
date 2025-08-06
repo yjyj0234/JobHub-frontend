@@ -5,7 +5,7 @@ import AddPost from './components/community/AddPost.jsx'
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App />
+    {/* <App /> */}
     <AddPost/>
   </React.StrictMode>
 );
