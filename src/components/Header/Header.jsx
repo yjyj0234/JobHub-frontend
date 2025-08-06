@@ -3,6 +3,7 @@ import './Header.css';
 import logo from '../../assets/img/logo4.png'
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
+import Users from '../Users/Users.jsx';
 
 function Header({ onLoginClick }) {
   const { isLoggedIn, logout } = useAuth();
@@ -12,6 +13,7 @@ function Header({ onLoginClick }) {
     logout();
     navigate('/');
   };
+  
 
   return (
     <header className="header">
@@ -24,6 +26,7 @@ function Header({ onLoginClick }) {
         <button type="button">이력서</button>
         <button type="button">취업툴</button>
         <button type="button">이력서 코칭 AI</button>
+        <button type="button" onClick={() => navigate(users)}>유저리스트</button>
       </nav>
       {isLoggedIn ? (
         <button type="button" onClick={handleLogout} className="cta-button">로그아웃</button>
