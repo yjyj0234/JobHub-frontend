@@ -8,6 +8,7 @@ import AuthPage from './components/Auth/AuthPage.jsx';
 import Modal from './components/Modal/Modal.jsx';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
+import Jobposting from './components/Companies/Jobposting.jsx';
 
 function MainPage() {
   const heroRef = useRef(null);
@@ -66,7 +67,12 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <AppContent />
+        <Routes>
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/jobposting" element={<Jobposting />} />
+          </Route>
+        </Routes>
       </AuthProvider>
     </Router>
   );
