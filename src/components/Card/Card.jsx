@@ -13,14 +13,16 @@ function Card({ data }) {
           <p className="card-desc">{data.desc}</p>
         </div>
         <div className="card-back">
-          <h3 className="card-name-back">{data.name}</h3>
-          <p className="card-back-title">원하는 기술</p>
-          <div className="skill-tags">
-            {data.skills.map((skill, index) => (
-              <span key={index} className="skill-tag">{skill}</span>
-            ))}
+          <h3 className="card-name">{data.name}</h3>
+          <div className="card-details">
+            <h4>요구 기술</h4>
+            <div className="skills">
+              {data.skills.map((skill) => (<span key={skill} className="skill-tag">{skill}</span>))}
+            </div>
+            <h4>원하는 인재상</h4>
+            <p>{data.talent}</p>
           </div>
-          <button className="apply-button">지원하기</button>
+          <button className="details-button">자세히 보기</button>
         </div>
       </div>
     </div>
