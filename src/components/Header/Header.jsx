@@ -26,7 +26,7 @@ function Header({ onLoginClick }) {
         <button type="button">이력서</button>
         <button type="button">취업툴</button>
         <button type="button">이력서 코칭 AI</button>
-        <button type="button" onClick={() => navigate(users)}>유저리스트</button>
+        <button type="button" onClick={() => navigate(users)}>유저리스트gg</button>
       </nav>
       {isLoggedIn ? (
         <button type="button" onClick={handleLogout} className="cta-button">로그아웃</button>
