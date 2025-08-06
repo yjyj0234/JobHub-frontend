@@ -9,6 +9,7 @@ import TopGrid from './components/TopGrid/TopGrid.jsx';
 import SideNav from './components/SideNav/SideNav.jsx';
 import AuthPage from './components/Auth/AuthPage.jsx';
 import Modal from './components/Modal/Modal.jsx';
+import AddPost from './components/community/AddPost.jsx';
 
 function MainLayout() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,6 +28,7 @@ function MainLayout() {
     };
   }, [isModalOpen]);
 
+  
   return (
     <>
       <GlobalHeader onLoginClick={openModal} />
@@ -69,6 +71,7 @@ function App() {
         <Routes>
           <Route element={<MainLayout />}>
             <Route path="/" element={<HomePage />} />
+            <Route path='/community/addpost' element={<AddPost/>}/>
           </Route>
         </Routes>
       </AuthProvider>

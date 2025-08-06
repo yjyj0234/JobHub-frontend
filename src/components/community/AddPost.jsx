@@ -1,11 +1,16 @@
 import React, { useState } from 'react'
 import './AddPost.css'
+import axios from 'axios'
+
+
 
 const AddPost = () => {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [isBold, setIsBold] = useState(false)
   const [isUnderline, setIsUnderline] = useState(false)
+  
+  
   
 
   const handleTitleChange = (e) => {
@@ -21,6 +26,27 @@ const AddPost = () => {
       setContent(value)
     }
   }
+   const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    const data = {
+      title,
+      content,
+      id: {
+        user_id : 3
+      }
+    }
+
+    try {
+     await axios.post('http://localhost:8080/community/addpost', data)
+      alert('등록 완료!')
+      setTitle('')
+      setContent('')
+    } catch (err) {
+      console.error(err)
+      alert('등록 실패')
+    }
+  }
 
   return (
     <div className="add-post-container">
@@ -29,7 +55,7 @@ const AddPost = () => {
         <h1 className="main-title">내용</h1>
         <p className="subtitle">실제 현직자 멘토들이 직접 답변해줘요</p>
       </div>
-        <form action="">
+        <form onSubmit={handleSubmit}>
       {/* 제목 입력 필드 */}
       <div className="title-input-section">
         <input
@@ -74,7 +100,7 @@ const AddPost = () => {
           </div>
         </div>
       </div>
-        </form>
+        
       {/* 가이드라인 */}
       <div className="guidelines">
         <ul className="guidelines-list">
@@ -89,6 +115,7 @@ const AddPost = () => {
            게시글 등록하기
         </button>
       </div>
+      </form>
     </div>
 
     
