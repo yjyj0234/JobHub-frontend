@@ -32,12 +32,21 @@
   display: flex;
   gap: 30px;
 }
-.nav button { font-size: 1rem; font-weight: 600; color: #333; }
+.nav button {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  background-color: transparent;
+  transition: color 0.2s ease;
+}
+.nav button:hover {
+  color: var(--c-accent);
+}
 
 .top-right-section {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 
 .auth-buttons .cta-button {
@@ -49,14 +58,64 @@
   border-radius: 20px;
   white-space: nowrap;
 }
-.auth-buttons .cta-button.logout { background-color: #eee; color: #555; }
+.auth-buttons .cta-button.logout {
+  background-color: transparent;
+  color: #555;
+  border: 1px solid #ddd;
+}
+.auth-buttons .cta-button.logout:hover {
+  background-color: #f5f5f5;
+  border-color: #ccc;
+}
 
+/* --- 스크롤 시 보이는 검색창 --- */
+.scrolled-search {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  height: 38px;
+  background-color: #f7f7f7;
+  position: relative;
+}
+
+.search-input-wrapper-scrolled {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+}
+.search-input-wrapper-scrolled input {
+  width: 120px;
+  font-size: 0.9rem;
+}
+
+/* --- 👇 수정된 부분 1 --- */
+.dropdown-trigger-scrolled {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  height: 100%;
+  border-left: 1px solid #e0e0e0;
+  font-size: 0.9rem;
+  color: #555;
+  background-color: transparent; /* 배경 투명 */
+  transition: background-color 0.2s ease;
+}
+.dropdown-trigger-scrolled:hover {
+  background-color: #efefef;
+}
+/* --- 👆 수정 끝 --- */
+
+
+/* --- 스크롤 아닐 때 보이는 큰 검색창 --- */
 .search-container {
   display: flex;
   justify-content: center;
   padding: 20px 0 30px 0;
   position: relative;
-  transition: all 0.3s ease-in-out;
+  transition: all 0.6s ease-in-out;
 }
 
 .pre-search-button {
@@ -109,6 +168,7 @@
   background-color: #e0e0e0;
 }
 
+/* --- 👇 수정된 부분 2 --- */
 .dropdown-trigger {
   display: flex;
   align-items: center;
@@ -118,7 +178,13 @@
   font-size: 1rem;
   font-weight: 500;
   color: #555;
+  background-color: transparent; /* 배경 투명 */
+  transition: color 0.2s ease;
 }
+.dropdown-trigger:hover {
+  color: var(--c-accent);
+}
+/* --- 👆 수정 끝 --- */
 
 .search-submit-button {
   height: 44px;
@@ -130,11 +196,12 @@
   font-weight: 600;
 }
 
+/* --- 공통 드롭다운 패널 --- */
 .dropdown-panel {
   position: absolute;
   top: calc(100% + 10px);
   left: 0;
-  width: 100%;
+  width: 820px;
   background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 20px;
@@ -143,6 +210,14 @@
   box-sizing: border-box;
   animation: dropdown-appear 0.3s ease;
 }
+
+.scrolled-search .dropdown-panel {
+    left: auto;
+    right: 0;
+    width: 500px;
+}
+
+
 @keyframes dropdown-appear {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -167,28 +242,15 @@
 }
 .item-button:hover { background-color: #f5f5f5; }
 
+/* --- 스크롤 시 헤더 변화 --- */
 .global-header.scrolled .top-bar {
   height: 60px;
 }
+
 .global-header.scrolled .search-container {
   height: 0;
   padding: 0;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-}
-
-.shrunken-search-bar {
-  display: flex;
-  align-items: center;
-  width: 220px;
-  height: 38px;
-  border: 1px solid #e0e0e0;
-  border-radius: 20px;
-  padding: 0 12px;
-  background-color: #f7f7f7;
-}
-.shrunken-search-bar input {
-  width: 100%;
-  font-size: 0.9rem;
 }

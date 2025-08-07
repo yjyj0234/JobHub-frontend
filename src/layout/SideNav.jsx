@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './SideNav.css';
+import '../css/SideNav.css';
 
 function SideNav({ sections }) {
   const [activeIndex, setActiveIndex] = useState(0);
