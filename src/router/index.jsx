@@ -13,6 +13,7 @@ import { Routes, Route, Outlet } from "react-router-dom";
 
 // --- 1. 페이지와 컴포넌트 불러오기 ---
 // 라우터에서 사용할 모든 페이지와 공통 컴포넌트들을 미리 불러옵니다.
+
 import GlobalHeader from "../layout/GlobalHeader.jsx"; // 공통 상단 헤더
 import SideNav from "../layout/SideNav.jsx"; // 공통 사이드 네비게이션
 import Modal from "../components/UI/Modal.jsx"; // 공통 모달 UI
@@ -24,6 +25,7 @@ import ResumeListPage from "../pages/ResumeListPage.jsx"; // 이력서 목록 �
 import ResumeEditorPage from "../pages/ResumeEditorPage.jsx"; // 이력서 편집 페이지
 import GlobalFooter from "../layout/GlobalFooter.jsx"; // 공통 푸터
 import { AuthProvider } from "../context/AuthContext.jsx";
+
 /**
  * 🏢 MainLayout 컴포넌트
  * 이 컴포넌트는 모든 페이지를 감싸는 '공통 뼈대' 역할을 합니다.
