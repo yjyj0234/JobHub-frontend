@@ -1,0 +1,204 @@
+.jobposting-container {
+  max-width: 700px;
+  margin: 48px auto;
+  background: #fff;
+  border-radius: 28px;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.10);
+  padding: 48px 44px 44px 44px;
+  box-sizing: border-box;
+}
+.jobposting-container.large {
+  max-width: 900px;
+  padding: 64px 56px 56px 56px;
+}
+
+.jobposting-title {
+  font-size: 2.1rem;
+  font-weight: 800;
+  margin-bottom: 36px;
+  color: #1a1a1a;
+  text-align: center;
+}
+
+.jobposting-form {
+  display: flex;
+  flex-direction: column;
+  gap: 38px;
+}
+
+.form-section {
+  border: 1.5px solid #e0e0e0;
+  border-radius: 18px;
+  padding: 32px 28px 24px 28px;
+  margin-bottom: 0;
+}
+.form-section legend {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--c-accent, #4f8cff);
+  padding: 0 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.form-group-inline {
+  display: flex;
+  gap: 32px;
+}
+
+.form-group label {
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  font-size: 1.15rem;
+  padding: 16px 20px;
+  border: 1.5px solid #ddd;
+  border-radius: 14px;
+  background: #f7f7f7;
+  transition: border-color 0.2s;
+  outline: none;
+  resize: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: var(--c-accent, #4f8cff);
+}
+
+.cta-button {
+  background-color: var(--c-accent, #4f8cff);
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 800;
+  padding: 18px 0;
+  border: none;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 18px;
+  width: 100%;
+}
+.cta-button.large {
+  font-size: 1.45rem;
+  padding: 22px 0;
+  border-radius: 28px;
+}
+
+.cta-button:hover {
+  background-color: #2563eb;
+}
+
+.draft-editor-wrapper {
+  min-height: 220px;
+  background: #f7f7f7;
+  border: 1.5px solid #ddd;
+  border-radius: 14px;
+  padding: 18px 20px;
+  font-size: 1.15rem;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+.draft-editor-wrapper:focus-within {
+  border-color: var(--c-accent, #4f8cff);
+}
+.editor-toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.toolbar-btn {
+  background: #e6eaff;
+  color: #2563eb;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.toolbar-btn:hover {
+  background: #d0dbff;
+}
+
+.lexical-editor-wrapper {
+  min-height: 220px;
+  background: #f7f7f7;
+  border: 1.5px solid #ddd;
+  border-radius: 14px;
+  padding: 18px 20px;
+  font-size: 1.15rem;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+.lexical-editor-wrapper:focus-within {
+  border-color: var(--c-accent, #4f8cff);
+}
+.lexical-editor-input {
+  min-height: 180px;
+  outline: none;
+  background: transparent;
+  font-size: 1.15rem;
+  color: #222;
+}
+.lexical-editor-placeholder {
+  color: #aaa;
+  font-size: 1.08rem;
+  position: absolute;
+  pointer-events: none;
+  padding: 0 2px;
+}
+
+.lexical-toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+  background: #f0f4ff;
+  border-radius: 10px;
+  padding: 10px 16px;
+  align-items: center;
+}
+.lexical-toolbar-btn {
+  background: #e6eaff;
+  color: #2563eb;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lexical-toolbar-btn:hover {
+  background: #d0dbff;
+  color: #1741a6;
+}
+
+@media (max-width: 700px) {
+  .jobposting-container, .jobposting-container.large {
+    max-width: 98vw;
+    padding: 18px 4vw;
+  }
+  .form-section {
+    padding: 18px 2vw 12px 2vw;
+  }
+  .form-group-inline {
+    flex-direction: column;
+    gap: 0;
+  }
+}

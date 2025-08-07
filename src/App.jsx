@@ -1,3 +1,4 @@
+
 /**
  * src/App.jsx (리팩토링 이전 버전)
  * --------------------------------
@@ -29,6 +30,7 @@ import Modal from './UI/Modal.jsx';
  * 모든 페이지를 감싸는 '공통 뼈대' 역할을 합니다.
  * 헤더나 모달처럼 모든 페이지에 공통으로 필요한 UI와 로직이 포함됩니다.
  */
+
 function MainLayout() {
   // 로그인 모달 창의 열림/닫힘 상태를 관리합니다.
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -109,6 +111,7 @@ function App() {
           <Route element={<MainLayout />}>
             {/* path="/": 메인 페이지 경로일 때 <HomePage>를 보여줍니다. */}
             <Route path="/" element={<HomePage />} />
+            <Route path="/jobposting" element={<Jobposting />} />
           </Route>
         </Routes>
       </AuthProvider>
