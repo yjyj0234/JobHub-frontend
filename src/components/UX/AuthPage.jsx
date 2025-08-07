@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './Auth.css';
+import '../../css/Auth.css';
 import { ChevronLeft, User, Building2, FileUp } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 

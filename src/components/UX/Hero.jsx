@@ -1,5 +1,5 @@
 import React from 'react';
-import './Hero.css';
+import '../../css/Hero.css';
 
 function Hero({ sectionRef }) {
   return (
