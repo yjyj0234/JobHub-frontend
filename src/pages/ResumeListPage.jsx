@@ -1,8 +1,3 @@
-/**
- * src/pages/ResumeListPage.jsx
- * --------------------------------
- * [최종 버전] 이력서 수정, 복사, 삭제 및 파일/URL 등록 기능이 구현된 이력서 관리 페이지
- */
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FilePlus, Link, FileText, Star, MoreVertical, Trash2, Copy, Briefcase, BarChart2, Eye } from 'lucide-react';
