@@ -5,13 +5,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { Search, MapPin, Briefcase, ChevronDown } from "lucide-react";
 
+
 // 커스텀 훅: 컴포넌트 바깥을 클릭했을 때를 감지
 const useOnClickOutside = (ref, handler) => {
   useEffect(() => {
     const listener = (event) => {
-      if (!ref.current || ref.current.contains(event.target)) {
-        return;
-      }
+      if (!ref.current || ref.current.contains(event.target)) return;
       handler(event);
     };
     document.addEventListener("mousedown", listener);
@@ -27,17 +26,14 @@ function GlobalHeader({ onLoginClick }) {
   const { isLoggedIn, logout } = useAuth();
   const navigate = useNavigate();
 
-  // 상태 (State)
   const [isScrolled, setIsScrolled] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isRegionOpen, setRegionOpen] = useState(false);
   const [isJobOpen, setJobOpen] = useState(false);
 
-  // Ref (DOM 요소 참조)
   const expandedSearchRef = useRef(null);
   const scrolledSearchRef = useRef(null);
 
-  // 커스텀 훅을 사용하여 바깥 클릭 시 드롭다운 닫기
   useOnClickOutside(expandedSearchRef, () => {
     setRegionOpen(false);
     setJobOpen(false);
@@ -47,13 +43,14 @@ function GlobalHeader({ onLoginClick }) {
     setJobOpen(false);
   });
 
+
   // 스크롤 이벤트 핸들러
+
   useEffect(() => {
     const handleScroll = () => {
       const shouldBeScrolled = window.scrollY > 80;
       if (shouldBeScrolled) {
         setIsScrolled(true);
-        // 스크롤 시 모든 드롭다운과 확장 상태를 닫음
         setIsExpanded(false);
         setRegionOpen(false);
         setJobOpen(false);
@@ -65,13 +62,11 @@ function GlobalHeader({ onLoginClick }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 로그아웃 핸들러
   const handleLogout = () => {
     logout();
     navigate("/");
   };
 
-  // 이력서 버튼 클릭 핸들러
   const handleResumeClick = () => {
     if (isLoggedIn) {
       navigate("/resumes");
@@ -79,8 +74,11 @@ function GlobalHeader({ onLoginClick }) {
       onLoginClick();
     }
   };
+  
+  const jobPosting = () => {
+    navigate('/jobposting');
+  };
 
-  // 드롭다운 토글 함수
   const toggleRegion = () => {
     setRegionOpen((prev) => !prev);
     setJobOpen(false);
@@ -92,10 +90,12 @@ function GlobalHeader({ onLoginClick }) {
   };
 
   // 공통 드롭다운 패널 렌더링 함수
+
   const renderDropdownPanels = () => (
     <>
       {isRegionOpen && (
         <div className="dropdown-panel region-panel">
+
           <h4>지역을 선택하세요</h4>
           <div className="region-grid">
             {[
@@ -119,6 +119,7 @@ function GlobalHeader({ onLoginClick }) {
               <button type="button" key={region} className="item-button">
                 {region}
               </button>
+
             ))}
           </div>
         </div>
@@ -173,9 +174,7 @@ function GlobalHeader({ onLoginClick }) {
             <button type="button">취업툴</button>
             <button type="button">이력서 코칭 AI</button>
           </nav>
-
           <div className="top-right-section">
-            {/* 스크롤 시 보이는 기능적 검색창 */}
             {isScrolled && (
               <div className="scrolled-search" ref={scrolledSearchRef}>
                 <div className="search-input-wrapper-scrolled">
@@ -223,7 +222,6 @@ function GlobalHeader({ onLoginClick }) {
           </div>
         </div>
 
-        {/* 스크롤 아닐 때 보이는 검색 컨테이너 */}
         <div className="search-container">
           {!isExpanded ? (
             <button
