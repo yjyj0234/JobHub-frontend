@@ -8,23 +8,22 @@
  * 2. 여러 페이지에 공통적으로 나타나는 레이아웃(예: 상단 헤더, 로그인 모달)을 관리합니다.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from "react";
+import { Routes, Route, Outlet } from "react-router-dom";
 
 // --- 1. 페이지와 컴포넌트 불러오기 ---
 // 라우터에서 사용할 모든 페이지와 공통 컴포넌트들을 미리 불러옵니다.
-import GlobalHeader from '../layout/GlobalHeader.jsx';     // 공통 상단 헤더
-import SideNav from '../layout/SideNav.jsx';             // 공통 사이드 네비게이션
-import Modal from '../components/UI/Modal.jsx';          // 공통 모달 UI
-import AuthPage from '../components/UX/AuthPage.jsx';      // 로그인/회원가입 기능
-import Hero from '../components/UX/Hero.jsx';              // 홈페이지의 Hero 섹션
-import Grid from '../components/UX/Grid.jsx';              // 홈페이지의 Grid 섹션
-import TopGrid from '../components/UX/TopGrid.jsx';        // 홈페이지의 TopGrid 섹션
-import ResumeListPage from '../pages/ResumeListPage.jsx'; // 이력서 목록 페이지
-import ResumeEditorPage from '../pages/ResumeEditorPage.jsx'; // 이력서 편집 페이지
-import GlobalFooter from '../layout/GlobalFooter.jsx'; // 공통 푸터
-import Jobposting from '../components/Companies/Jobposting.jsx';
-
+import GlobalHeader from "../layout/GlobalHeader.jsx"; // 공통 상단 헤더
+import SideNav from "../layout/SideNav.jsx"; // 공통 사이드 네비게이션
+import Modal from "../components/UI/Modal.jsx"; // 공통 모달 UI
+import AuthPage from "../components/UX/AuthPage.jsx"; // 로그인/회원가입 기능
+import Hero from "../components/UX/Hero.jsx"; // 홈페이지의 Hero 섹션
+import Grid from "../components/UX/Grid.jsx"; // 홈페이지의 Grid 섹션
+import TopGrid from "../components/UX/TopGrid.jsx"; // 홈페이지의 TopGrid 섹션
+import ResumeListPage from "../pages/ResumeListPage.jsx"; // 이력서 목록 페이지
+import ResumeEditorPage from "../pages/ResumeEditorPage.jsx"; // 이력서 편집 페이지
+import GlobalFooter from "../layout/GlobalFooter.jsx"; // 공통 푸터
+import { AuthProvider } from "../context/AuthContext.jsx";
 /**
  * 🏢 MainLayout 컴포넌트
  * 이 컴포넌트는 모든 페이지를 감싸는 '공통 뼈대' 역할을 합니다.
@@ -41,13 +40,13 @@ function MainLayout() {
   useEffect(() => {
     const body = document.body;
     if (isModalOpen) {
-      body.classList.add('body-no-scroll');
+      body.classList.add("body-no-scroll");
     } else {
-      body.classList.remove('body-no-scroll');
+      body.classList.remove("body-no-scroll");
     }
     // 컴포넌트가 사라질 때 원래대로 되돌리기 위한 정리(cleanup) 함수입니다.
     return () => {
-      body.classList.remove('body-no-scroll');
+      body.classList.remove("body-no-scroll");
     };
   }, [isModalOpen]); // isModalOpen 상태가 바뀔 때마다 이 함수가 실행됩니다.
 
@@ -81,7 +80,7 @@ function HomePage() {
   const sections = [
     { name: "소개", ref: heroRef },
     { name: "추천 기업", ref: gridRef },
-    { name: "TOP10 기업", ref: topgridRef }
+    { name: "TOP10 기업", ref: topgridRef },
   ];
 
   return (
@@ -102,29 +101,18 @@ function HomePage() {
  */
 function AppRouter() {
   return (
-    // BrowserRouter: 웹브라우저의 주소(URL)와 React 컴포넌트를 연결해주는 최상위 컴포넌트입니다.
-    <BrowserRouter>
-      {/* Routes: 여러 Route 중에서 현재 URL과 일치하는 단 하나의 Route만 화면에 보여줍니다. */}
-      <Routes>
-        {/* 중첩 라우팅: element={<MainLayout />}으로 감싸진 모든 Route들은 MainLayout 컴포넌트를 부모로 갖게 됩니다. */}
-        {/* 즉, 아래의 모든 페이지에는 상단 헤더가 항상 보이게 됩니다. */}
-        <Route element={<MainLayout />}>
-          
-          {/* path="/": 웹사이트의 가장 기본 주소일 때 HomePage 컴포넌트를 보여줍니다. */}
-          <Route path="/" element={<HomePage />} />
-          
-          {/* path="/resumes": '.../resumes' 주소일 때 ResumeListPage 컴포넌트를 보여줍니다. */}
-          <Route path="/resumes" element={<ResumeListPage />} />
-          
-          {/* path="/resumes/new": '.../resumes/new' 주소일 때 ResumeEditorPage 컴포넌트를 보여줍니다. */}
-          <Route path="/resumes/new" element={<ResumeEditorPage />} />
-          
-          {/* path="/resumes/edit/:id": '.../resumes/edit/1' 처럼 동적인 id 값을 가진 주소일 때 ResumeEditorPage 컴포넌트를 보여줍니다. */}
-          <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
+    // BrowserRouter: HTML5 History API를 사용하여 URL과 UI를 동기화합니다.
 
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    // <AuthProvider>
+    <Routes>
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/resumes" element={<ResumeListPage />} />
+        <Route path="/resumes/new" element={<ResumeEditorPage />} />
+        <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
+      </Route>
+    </Routes>
+    // </AuthProvider>
   );
 }
 
