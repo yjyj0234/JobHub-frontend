@@ -9,7 +9,7 @@ import TopGrid from './components/TopGrid/TopGrid.jsx';
 import SideNav from './components/SideNav/SideNav.jsx';
 import AuthPage from './components/Auth/AuthPage.jsx';
 import Modal from './components/Modal/Modal.jsx';
-import Jobposting from './components/Companies/Jobposting.jsx';
+import {Jobposting} from './components/Companies/Jobposting.jsx';
 function MainLayout() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const openModal = () => setIsModalOpen(true);
@@ -69,7 +69,6 @@ function App() {
         <Routes>
           <Route element={<MainLayout />}>
             <Route path="/" element={<HomePage />} />
-            <Route path="/jobposting" element={<Jobposting />} />
           </Route>
         </Routes>
       </AuthProvider>

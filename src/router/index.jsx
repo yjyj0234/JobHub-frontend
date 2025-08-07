@@ -18,7 +18,7 @@ import AuthPage from '../components/UX/AuthPage.jsx';      // 로그인/회원�
 import Hero from '../components/UX/Hero.jsx';              // 홈페이지의 Hero 섹션
 import Grid from '../components/UX/Grid.jsx';              // 홈페이지의 Grid 섹션
 import TopGrid from '../components/UX/TopGrid.jsx';        // 홈페이지의 TopGrid 섹션
-
+import Jobposting from '../components/Companies/Jobposting.jsx'; // 채용 공고 등록 페이지
 /**
  * MainLayout 컴포넌트:
  * 모든 페이지에 공통적으로 포함될 상단 헤더와 모달 로직을 담고 있습니다.
@@ -96,6 +96,7 @@ function AppRouter() {
           {/* path="/": 웹사이트의 메인 주소. HomePage 컴포넌트를 보여줍니다. */}
           <Route path="/" element={<HomePage />} />
           {/* 예: <Route path="/users" element={<UsersPage />} /> 와 같이 새 페이지를 추가할 수 있습니다. */}
+          <Route path='/jobposting' element={<Jobposting/>}/>
         </Route>
       </Routes>
     </BrowserRouter>
