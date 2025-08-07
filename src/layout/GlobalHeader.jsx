@@ -5,7 +5,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Search, MapPin, Briefcase, ChevronDown } from 'lucide-react';
 
+<<<<<<< HEAD:src/components/GlobalHeader/GlobalHeader.jsx
+
+=======
 // 커스텀 훅: 컴포넌트 바깥을 클릭했을 때를 감지
+>>>>>>> d1270ca005c51c00028c9062f44cbd400863f20f:src/layout/GlobalHeader.jsx
 const useOnClickOutside = (ref, handler) => {
   useEffect(() => {
     const listener = (event) => {
@@ -91,6 +95,11 @@ function GlobalHeader({ onLoginClick }) {
     setJobOpen(prev => !prev);
     setRegionOpen(false);
   };
+<<<<<<< HEAD:src/components/GlobalHeader/GlobalHeader.jsx
+  const jobPosting = () => {
+    navigate('/jobposting');
+  }
+=======
 
   // 공통 드롭다운 패널 렌더링 함수
   const renderDropdownPanels = () => (
@@ -119,6 +128,7 @@ function GlobalHeader({ onLoginClick }) {
   );
 
 
+>>>>>>> d1270ca005c51c00028c9062f44cbd400863f20f:src/layout/GlobalHeader.jsx
   return (
     <header className={`global-header ${isScrolled ? 'scrolled' : ''}`}>
       <div className="header-content">
@@ -130,8 +140,10 @@ function GlobalHeader({ onLoginClick }) {
             <button type="button">채용정보</button>
             <button type="button">커뮤니티</button>
             <button type="button" onClick={handleResumeClick}>이력서</button>
+            <button type="button" onClick={jobPosting}>공고 등록</button>
             <button type="button">취업툴</button>
             <button type="button">이력서 코칭 AI</button>
+            
           </nav>
 
           <div className="top-right-section">

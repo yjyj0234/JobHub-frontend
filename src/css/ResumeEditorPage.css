@@ -1,0 +1,160 @@
+/* src/css/ResumeEditorPage.css */
+
+.resume-editor-page {
+  position: relative; 
+  max-width: 1280px; 
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
+.editor-main {
+  margin: 0 auto; 
+  width: 100%;
+  max-width: 780px;
+}
+
+.editor-palette {
+  position: absolute;
+  right: -165px; 
+  top: 40px;
+  width: 240px;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+}
+
+.editor-header {
+  position: sticky;
+  top: 70px;
+  z-index: 10;
+  padding: 20px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.resume-title-input {
+  font-size: 2.2rem;
+  font-weight: 800;
+  width: 70%;
+  border-bottom: 2px solid transparent;
+  padding: 5px 0;
+  background-color: transparent;
+}
+.resume-title-input:focus {
+  border-bottom-color: var(--c-accent);
+}
+
+.editor-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-weight: 600;
+  border: 1px solid var(--c-border);
+  background-color: white;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+.action-btn.primary {
+  background-color: var(--c-accent);
+  color: white;
+  border-color: var(--c-accent);
+}
+.action-btn.primary:hover {
+  background-color: #3a75c4;
+  box-shadow: 0 4px 15px rgba(78, 134, 218, 0.3);
+}
+
+.editor-content {
+  background-color: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: 16px;
+  padding: 40px;
+}
+
+.editor-section {
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--c-border);
+  margin-bottom: 30px;
+}
+.editor-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.editor-section h2 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+.delete-item-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-subtext);
+  font-size: 0.9rem;
+  padding: 5px 10px;
+  border-radius: 6px;
+}
+.delete-item-btn:hover {
+  color: #c62828;
+  background-color: #ffebee;
+}
+
+.palette-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.palette-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 90px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+.palette-item:not(.disabled):hover {
+  background-color: var(--c-accent);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(78, 134, 218, 0.3);
+}
+.palette-item:not(.disabled):hover svg {
+  stroke: white;
+}
+.palette-item.disabled {
+  background-color: rgba(224, 224, 224, 0.3);
+  color: var(--c-subtext);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
