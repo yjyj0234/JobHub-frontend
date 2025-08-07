@@ -1,6 +1,6 @@
 import React from 'react';
-import Card from '../Card/Card.jsx';
-import './TopGrid.css';
+import Card from '../UI/Card.jsx';
+import '../../css/TopGrid.css';
 
 const top100Data = [
   { icon: '🥇', name: '네이버', desc: '국내 No.1 검색 포털', skills: ['AI', 'Big Data', 'Frontend'], talent: '세상을 바꾸는 인재' },
@@ -11,7 +11,7 @@ const top100Data = [
   { icon: '✈️', name: '대한항공', desc: '세계 항공업계를 선도하는 글로벌 항공사', skills: ['Service', 'Global', 'Logistics'], talent: '고객 만족을 최우선으로 하는 인재' },
 ];
 
-function Top100Grid({ sectionRef }) {
+function TopGrid({ sectionRef }) {
   return (
     <section ref={sectionRef} className="top100-grid-section">
       <h2 className="top100-grid-title">🏆 TOP 10</h2>
@@ -24,4 +24,4 @@ function Top100Grid({ sectionRef }) {
   );
 }
 
-export default Top100Grid;
+export default TopGrid;
