@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './GlobalHeader.css';
-import logo from '../../assets/img/logo4.png';
+import '../css/GlobalHeader.css';
+import logo from '../assets/img/logo4.png';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { Search, MapPin, Briefcase, ChevronDown } from 'lucide-react';
 
+// 커스텀 훅: 컴포넌트 바깥을 클릭했을 때를 감지
 const useOnClickOutside = (ref, handler) => {
   useEffect(() => {
     const listener = (event) => {
@@ -25,21 +26,35 @@ const useOnClickOutside = (ref, handler) => {
 function GlobalHeader({ onLoginClick }) {
   const { isLoggedIn, logout } = useAuth();
   const navigate = useNavigate();
+
+  // 상태 (State)
   const [isScrolled, setIsScrolled] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isRegionOpen, setRegionOpen] = useState(false);
   const [isJobOpen, setJobOpen] = useState(false);
 
-  const dropdownRef = useRef(null);
-  useOnClickOutside(dropdownRef, () => {
+  // Ref (DOM 요소 참조)
+  const expandedSearchRef = useRef(null);
+  const scrolledSearchRef = useRef(null);
+
+  // 커스텀 훅을 사용하여 바깥 클릭 시 드롭다운 닫기
+  useOnClickOutside(expandedSearchRef, () => {
+    setRegionOpen(false);
+    setJobOpen(false);
+  });
+  useOnClickOutside(scrolledSearchRef, () => {
     setRegionOpen(false);
     setJobOpen(false);
   });
 
+
+  // 스크롤 이벤트 핸들러
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 80) {
+      const shouldBeScrolled = window.scrollY > 80;
+      if (shouldBeScrolled) {
         setIsScrolled(true);
+        // 스크롤 시 모든 드롭다운과 확장 상태를 닫음
         setIsExpanded(false);
         setRegionOpen(false);
         setJobOpen(false);
@@ -51,11 +66,13 @@ function GlobalHeader({ onLoginClick }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // 로그아웃 핸들러
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
+  // 이력서 버튼 클릭 핸들러
   const handleResumeClick = () => {
     if (isLoggedIn) {
       navigate('/resumes');
@@ -64,15 +81,43 @@ function GlobalHeader({ onLoginClick }) {
     }
   };
 
+  // 드롭다운 토글 함수
   const toggleRegion = () => {
-    setRegionOpen(!isRegionOpen);
+    setRegionOpen(prev => !prev);
     setJobOpen(false);
   };
 
   const toggleJob = () => {
-    setJobOpen(!isJobOpen);
+    setJobOpen(prev => !prev);
     setRegionOpen(false);
   };
+
+  // 공통 드롭다운 패널 렌더링 함수
+  const renderDropdownPanels = () => (
+    <>
+      {isRegionOpen && (
+        <div className="dropdown-panel region-panel">
+          <h4>지역을 선택하세요</h4>
+          <div className="region-grid">
+            {['서울', '경기', '인천', '부산', '대구', '대전', '광주', '울산', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주'].map(region => (
+              <button key={region} className="item-button">{region}</button>
+            ))}
+          </div>
+        </div>
+      )}
+      {isJobOpen && (
+        <div className="dropdown-panel job-panel">
+          <h4>직무를 선택하세요</h4>
+          <div className="job-grid">
+            {['개발', '경영·비즈니스', '마케팅·광고', '디자인', '영업', '고객서비스·리테일', '인사·총무', '미디어', '엔지니어링', '금융', '의료·제약', '교육'].map(job => (
+              <button key={job} className="item-button">{job}</button>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+
 
   return (
     <header className={`global-header ${isScrolled ? 'scrolled' : ''}`}>
@@ -88,11 +133,24 @@ function GlobalHeader({ onLoginClick }) {
             <button type="button">취업툴</button>
             <button type="button">이력서 코칭 AI</button>
           </nav>
+
           <div className="top-right-section">
+            {/* 스크롤 시 보이는 기능적 검색창 */}
             {isScrolled && (
-              <div className="shrunken-search-bar">
-                <input type="text" placeholder="검색" />
-                <Search size={18} color="#888" />
+              <div className="scrolled-search" ref={scrolledSearchRef}>
+                <div className="search-input-wrapper-scrolled">
+                  <Search size={16} color="#888" />
+                  <input type="text" placeholder="검색" />
+                </div>
+                <button className="dropdown-trigger-scrolled" onClick={toggleRegion}>
+                  <MapPin size={16} />
+                  <span>지역</span>
+                </button>
+                <button className="dropdown-trigger-scrolled" onClick={toggleJob}>
+                  <Briefcase size={16} />
+                  <span>직무</span>
+                </button>
+                {renderDropdownPanels()}
               </div>
             )}
             <div className="auth-buttons">
@@ -105,6 +163,7 @@ function GlobalHeader({ onLoginClick }) {
           </div>
         </div>
 
+        {/* 스크롤 아닐 때 보이는 검색 컨테이너 */}
         <div className="search-container">
           {!isExpanded ? (
             <button className="pre-search-button" onClick={() => setIsExpanded(true)}>
@@ -112,7 +171,7 @@ function GlobalHeader({ onLoginClick }) {
               <span>어떤 기업을 찾고 계신가요?</span>
             </button>
           ) : (
-            <div className="expanded-search" ref={dropdownRef}>
+            <div className="expanded-search" ref={expandedSearchRef}>
               <div className="search-input-wrapper">
                 <label htmlFor="keyword-search">
                   <Search size={20} color="#888" />
@@ -132,26 +191,7 @@ function GlobalHeader({ onLoginClick }) {
                 <ChevronDown size={16} color="#aaa" />
               </button>
               <button className="search-submit-button">검색</button>
-              {isRegionOpen && (
-                <div className="dropdown-panel region-panel">
-                  <h4>지역을 선택하세요</h4>
-                  <div className="region-grid">
-                    {['서울', '경기', '인천', '부산', '대구', '대전', '광주', '울산', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주'].map(region => (
-                      <button key={region} className="item-button">{region}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {isJobOpen && (
-                <div className="dropdown-panel job-panel">
-                  <h4>직무를 선택하세요</h4>
-                  <div className="job-grid">
-                    {['개발', '경영·비즈니스', '마케팅·광고', '디자인', '영업', '고객서비스·리테일', '인사·총무', '미디어', '엔지니어링', '금융', '의료·제약', '교육'].map(job => (
-                      <button key={job} className="item-button">{job}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {renderDropdownPanels()}
             </div>
           )}
         </div>
