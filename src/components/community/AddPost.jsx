@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import './AddPost.css'
 import axios from 'axios'
+
 
 
 
@@ -10,8 +11,28 @@ const AddPost = () => {
   const [isBold, setIsBold] = useState(false)
   const [isUnderline, setIsUnderline] = useState(false)
   
-  
-  
+  //내용 bold 적용 버튼이벤트
+  const handleBoldClick = () => {
+  document.execCommand('bold');
+  setIsBold(document.queryCommandState('bold'));
+}
+//내용 underline
+ const handleUlineClick = () => {
+  document.execCommand('underline');
+  setIsUnderline(document.queryCommandState('underline'))
+}
+
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      setIsBold(document.queryCommandState('bold'))
+      setIsUnderline(document.queryCommandState('underline'))
+    }
+
+    document.addEventListener('selectionchange', handleSelectionChange)
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange)
+    }
+  }, [])
 
   const handleTitleChange = (e) => {
     const value = e.target.value
@@ -32,8 +53,8 @@ const AddPost = () => {
     const data = {
       title,
       content,
-      id: {
-        user_id : 3
+      user: {
+        id : 1
       }
     }
 
@@ -51,11 +72,12 @@ const AddPost = () => {
   return (
     <div className="add-post-container">
       {/* 헤더 섹션 */}
+        <form onSubmit={handleSubmit}>
       <div className="header-section">
         <h1 className="main-title">내용</h1>
         <p className="subtitle">실제 현직자 멘토들이 직접 답변해줘요</p>
       </div>
-        <form onSubmit={handleSubmit}>
+      
       {/* 제목 입력 필드 */}
       <div className="title-input-section">
         <input
@@ -65,20 +87,23 @@ const AddPost = () => {
           value={title}
           onChange={handleTitleChange}
           maxLength={50}
+          required
         />
       </div>
 
       {/* 텍스트 에디터 툴바 */}
       <div className="editor-toolbar">
         <button 
+          type='button'
           className={`toolbar-btn ${isBold ? 'active' : ''}`}
-          onClick={() => setIsBold(!isBold)}
+          onClick={handleBoldClick} //bold적용버튼
         >
           B
         </button>
         <button 
+          type='button'
           className={`toolbar-btn ${isUnderline ? 'active' : ''}`}
-          onClick={() => setIsUnderline(!isUnderline)}
+          onClick={handleUlineClick}
         >
           U
         </button>
@@ -88,13 +113,12 @@ const AddPost = () => {
       <div className="content-section">
         <p className="content-tip">구체적으로 작성하면 현직자의 답변률이 높아져요</p>
         <div className="content-input-container">
-          <textarea
-            className="content-input"
-            placeholder="질문 내용을 자세히 작성해주세요..."
-            value={content}
-            onChange={handleContentChange}
-            maxLength={5000}
-          />
+          <div
+              contentEditable
+              className="editor"
+                 onInput={(e) => setContent(e.currentTarget.innerHTML)}
+                 aria-required
+            ></div>
           <div className="character-counter">
             {content.length}/5000자
           </div>
@@ -104,14 +128,13 @@ const AddPost = () => {
       {/* 가이드라인 */}
       <div className="guidelines">
         <ul className="guidelines-list">
-          <li>등록한 글은 커리어피드에서 사용중인 닉네임으로 등록됩니다.</li>
           <li>저작권 침해, 음란, 청소년 유해물, 기타 위법자료 등을 게시할 경우 게시물은 경고 없이 삭제 됩니다.</li>
           <li>답변이 등록되면 게시글 삭제가 불가합니다.</li>
         </ul>
       </div>
 
-      <div>
-        <button type='submit' >
+      <div className="submit-section">
+        <button type='submit' className="submit-btn">
            게시글 등록하기
         </button>
       </div>

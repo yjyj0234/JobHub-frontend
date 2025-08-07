@@ -178,7 +178,7 @@
 }
 
 .submit-btn {
-  background-color: #007bff;
+  background-color: #4e86da;
   color: white;
   border: none;
   border-radius: 6px;
@@ -237,3 +237,15 @@
     font-size: 14px;
   }
 } 
+
+.editor{
+  display: block;
+    height: 150px;
+    border: 1px solid gray;
+    padding: 10px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    
+}
