@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { Search, MapPin, Briefcase, ChevronDown } from 'lucide-react';
 
+
 const useOnClickOutside = (ref, handler) => {
   useEffect(() => {
     const listener = (event) => {
@@ -73,7 +74,9 @@ function GlobalHeader({ onLoginClick }) {
     setJobOpen(!isJobOpen);
     setRegionOpen(false);
   };
-
+  const jobPosting = () => {
+    navigate('/jobposting');
+  }
   return (
     <header className={`global-header ${isScrolled ? 'scrolled' : ''}`}>
       <div className="header-content">
@@ -85,8 +88,10 @@ function GlobalHeader({ onLoginClick }) {
             <button type="button">채용정보</button>
             <button type="button">커뮤니티</button>
             <button type="button" onClick={handleResumeClick}>이력서</button>
+            <button type="button" onClick={jobPosting}>공고 등록</button>
             <button type="button">취업툴</button>
             <button type="button">이력서 코칭 AI</button>
+            
           </nav>
           <div className="top-right-section">
             {isScrolled && (

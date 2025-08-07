@@ -1,11 +1,19 @@
 import React from 'react';
 import './Jobposting.css';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Jobposting = () => {
+  const navigate = useNavigate();
+  const handleSubmit = (e)=>{
+    e.preventDefault();
+    
+  }
+
   return (
     <div className="jobposting-container large">
       <h2 className="jobposting-title">채용공고 등록</h2>
-      <form className="jobposting-form">
+      <form className="jobposting-form" onSubmit={handleSubmit} >
         {/* 기본 정보 */}
         <fieldset className="form-section">
           <legend>기본 정보</legend>
