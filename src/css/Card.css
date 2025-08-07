@@ -1,7 +1,7 @@
 .card-container {
   background-color: transparent;
   width: 300px;
-  height: 250px;
+  min-height: 250px;
   perspective: 1000px;
   cursor: pointer;
 }
@@ -29,7 +29,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 30px;
+  padding: 25px;
   box-sizing: border-box;
   background-color: var(--c-bg);
   border: 1px solid var(--c-border);
@@ -39,7 +39,8 @@
 
 .card-back {
   transform: rotateY(180deg);
-  justify-content: space-around;
+  justify-content: center;
+  gap: 12px;
 }
 
 .card-icon-wrapper {
@@ -67,6 +68,11 @@
   font-size: 0.9rem;
   color: var(--c-subtext);
   margin: 0;
+  text-align: center;
+}
+
+.card-details {
+  text-align: center;
 }
 
 .card-details h4 {
@@ -89,7 +95,6 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 6px;
-  margin-bottom: 15px;
 }
 
 .skill-tag {
@@ -111,7 +116,6 @@
   border: none;
   cursor: pointer;
   transition: background-color 0.3s;
-  margin-top: 10px;
 }
 
 .details-button:hover {

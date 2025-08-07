@@ -1,16 +1,18 @@
 /**
  * src/router/index.jsx
  * --------------------------------
- * 애플리케이션의 모든 라우팅(경로 설정) 규칙을 정의하는 파일입니다.
- * 역할:
- * 1. 사용자가 접속하는 URL에 따라 어떤 페이지 컴포넌트를 보여줄지 결정합니다.
- * 2. 여러 페이지에 공통적으로 나타나는 레이아웃(헤더, 푸터 등)을 관리합니다.
+ * React 애플리케이션의 모든 페이지 경로(라우팅) 규칙을 정의하는 '교통 안내원' 같은 파일입니다.
+ *
+ * 이 파일의 주요 역할은 다음과 같습니다:
+ * 1. 사용자가 접속하는 웹사이트 주소(URL)에 따라 어떤 페이지 컴포넌트를 보여줄지 결정합니다.
+ * 2. 여러 페이지에 공통적으로 나타나는 레이아웃(예: 상단 헤더, 로그인 모달)을 관리합니다.
  */
 
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 
-// 필요한 컴포넌트들을 불러옵니다.
+// --- 1. 페이지와 컴포넌트 불러오기 ---
+// 라우터에서 사용할 모든 페이지와 공통 컴포넌트들을 미리 불러옵니다.
 import GlobalHeader from '../layout/GlobalHeader.jsx';     // 공통 상단 헤더
 import SideNav from '../layout/SideNav.jsx';             // 공통 사이드 네비게이션
 import Modal from '../components/UI/Modal.jsx';          // 공통 모달 UI
@@ -18,18 +20,23 @@ import AuthPage from '../components/UX/AuthPage.jsx';      // 로그인/회원�
 import Hero from '../components/UX/Hero.jsx';              // 홈페이지의 Hero 섹션
 import Grid from '../components/UX/Grid.jsx';              // 홈페이지의 Grid 섹션
 import TopGrid from '../components/UX/TopGrid.jsx';        // 홈페이지의 TopGrid 섹션
+import ResumeListPage from '../pages/ResumeListPage.jsx'; // 이력서 목록 페이지
+import ResumeEditorPage from '../pages/ResumeEditorPage.jsx'; // 이력서 편집 페이지
+import GlobalFooter from '../layout/GlobalFooter.jsx'; // 공통 푸터
 
 /**
- * MainLayout 컴포넌트:
- * 모든 페이지에 공통적으로 포함될 상단 헤더와 모달 로직을 담고 있습니다.
- * <Outlet /> 부분에 각 페이지의 실제 내용이 렌더링됩니다.
+ * 🏢 MainLayout 컴포넌트
+ * 이 컴포넌트는 모든 페이지를 감싸는 '공통 뼈대' 역할을 합니다.
+ * 여기에 포함된 GlobalHeader나 Modal은 어떤 페이지로 이동하든 항상 화면에 존재하게 됩니다.
+ * <Outlet /> 부분에 각 페이지의 실제 내용이 들어옵니다.
  */
 function MainLayout() {
+  // 로그인 모달 창이 열렸는지 닫혔는지 상태를 관리합니다.
   const [isModalOpen, setIsModalOpen] = useState(false);
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
-  // 모달이 열렸을 때 배경 스크롤을 막는 로직
+  // 모달이 열렸을 때, 배경 페이지의 스크롤을 막는 부가 기능(Side Effect)을 처리합니다.
   useEffect(() => {
     const body = document.body;
     if (isModalOpen) {
@@ -37,32 +44,39 @@ function MainLayout() {
     } else {
       body.classList.remove('body-no-scroll');
     }
+    // 컴포넌트가 사라질 때 원래대로 되돌리기 위한 정리(cleanup) 함수입니다.
     return () => {
       body.classList.remove('body-no-scroll');
     };
-  }, [isModalOpen]);
+  }, [isModalOpen]); // isModalOpen 상태가 바뀔 때마다 이 함수가 실행됩니다.
 
   return (
     <>
+      {/* 모든 페이지 상단에 GlobalHeader를 표시하고, 로그인 버튼 클릭 시 모달을 여는 함수를 전달합니다. */}
       <GlobalHeader onLoginClick={openModal} />
       <div className="container">
-        <Outlet /> {/* 이 자리에 Route에 설정된 페이지 컴포넌트가 들어옵니다. */}
+        {/* ✨ Outlet: 이 자리에 Route 규칙에 따라 결정된 페이지 컴포넌트(HomePage, ResumeListPage 등)가 들어옵니다. */}
+        <Outlet />
       </div>
+      {/* 모든 페이지에서 사용할 수 있는 로그인/회원가입 모달입니다. */}
       <Modal isOpen={isModalOpen} onClose={closeModal}>
         <AuthPage onSuccess={closeModal} />
       </Modal>
+      <GlobalFooter />
     </>
   );
 }
 
 /**
- * HomePage 컴포넌트:
- * 메인 페이지('/')를 구성하는 여러 섹션 컴포넌트들을 조합합니다.
+ * 🏠 HomePage 컴포넌트
+ * 웹사이트의 메인 페이지('/')를 구성하는 여러 섹션 컴포넌트들을 조합하는 역할을 합니다.
  */
 function HomePage() {
+  // useRef: 스크롤 위치를 추적하기 위해 각 섹션 DOM 요소를 직접 참조할 때 사용합니다.
   const heroRef = useRef(null);
   const gridRef = useRef(null);
   const topgridRef = useRef(null);
+  // SideNav에 전달할 섹션 목록 데이터입니다.
   const sections = [
     { name: "소개", ref: heroRef },
     { name: "추천 기업", ref: gridRef },
@@ -82,20 +96,31 @@ function HomePage() {
 }
 
 /**
- * AppRouter 컴포넌트:
- * react-router-dom을 사용하여 URL 경로와 컴포넌트를 매핑합니다.
+ * 🗺️ AppRouter 컴포넌트
+ * react-router-dom 라이브러리를 사용하여 웹사이트의 전체적인 페이지 경로를 설정합니다.
  */
 function AppRouter() {
   return (
-    // BrowserRouter: HTML5 History API를 사용하여 URL과 UI를 동기화합니다.
+    // BrowserRouter: 웹브라우저의 주소(URL)와 React 컴포넌트를 연결해주는 최상위 컴포넌트입니다.
     <BrowserRouter>
-      {/* Routes: 여러 Route 중 현재 URL과 일치하는 첫 번째 Route를 렌더링합니다. */}
+      {/* Routes: 여러 Route 중에서 현재 URL과 일치하는 단 하나의 Route만 화면에 보여줍니다. */}
       <Routes>
-        {/* '/'(홈) 경로를 포함한 여러 페이지가 MainLayout을 공유하도록 중첩 라우팅을 사용합니다. */}
+        {/* 중첩 라우팅: element={<MainLayout />}으로 감싸진 모든 Route들은 MainLayout 컴포넌트를 부모로 갖게 됩니다. */}
+        {/* 즉, 아래의 모든 페이지에는 상단 헤더가 항상 보이게 됩니다. */}
         <Route element={<MainLayout />}>
-          {/* path="/": 웹사이트의 메인 주소. HomePage 컴포넌트를 보여줍니다. */}
+          
+          {/* path="/": 웹사이트의 가장 기본 주소일 때 HomePage 컴포넌트를 보여줍니다. */}
           <Route path="/" element={<HomePage />} />
-          {/* 예: <Route path="/users" element={<UsersPage />} /> 와 같이 새 페이지를 추가할 수 있습니다. */}
+          
+          {/* path="/resumes": '.../resumes' 주소일 때 ResumeListPage 컴포넌트를 보여줍니다. */}
+          <Route path="/resumes" element={<ResumeListPage />} />
+          
+          {/* path="/resumes/new": '.../resumes/new' 주소일 때 ResumeEditorPage 컴포넌트를 보여줍니다. */}
+          <Route path="/resumes/new" element={<ResumeEditorPage />} />
+          
+          {/* path="/resumes/edit/:id": '.../resumes/edit/1' 처럼 동적인 id 값을 가진 주소일 때 ResumeEditorPage 컴포넌트를 보여줍니다. */}
+          <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
+
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,0 +1,125 @@
+/* src/css/ResumeListPage.css */
+.resume-list-page {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
+.list-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.list-page-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.new-resume-buttons { display: flex; gap: 10px; }
+.new-resume-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 8px; font-weight: 600;
+  border: 1px solid #e0e0e0; background-color: white; transition: all 0.2s;
+}
+.new-resume-btn:hover { background-color: #f8f8f8; }
+.new-resume-btn.primary {
+  background-color: var(--c-accent); color: white; border-color: var(--c-accent);
+}
+.new-resume-btn.primary:hover { background-color: #3a75c4; }
+
+.resume-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
+  margin-bottom: 60px;
+}
+
+.resume-card {
+  background-color: white; border: 1px solid #e0e0e0; border-radius: 8px;
+  padding: 20px; display: flex; flex-direction: column;
+  justify-content: space-between; height: 180px; transition: all 0.2s;
+}
+.resume-card:hover { border-color: var(--c-accent); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+.resume-card.representative { border: 2px solid var(--c-accent); }
+
+.card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.card-title-group { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.rep-badge {
+  background-color: var(--c-accent); color: white; padding: 4px 8px;
+  border-radius: 4px; font-size: 0.8rem; font-weight: 700; flex-shrink: 0;
+}
+
+.resume-title {
+  font-size: 1.2rem; font-weight: 700; margin: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.more-button {
+  color: #aaa; padding: 2px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.more-button:hover {
+  background-color: transparent; color: var(--c-accent);
+}
+
+.card-body { text-align: right; }
+.status-tag {
+  display: inline-block; padding: 4px 10px; border-radius: 15px;
+  font-size: 0.8rem; font-weight: 600; margin-bottom: 8px;
+}
+.status-tag.writing { background-color: #f0f0f0; color: #888; }
+.status-tag.completed { background-color: #e7f5ff; color: #1c7ed6; }
+.resume-meta { font-size: 0.9rem; color: #888; margin: 0; }
+
+.card-footer { border-top: 1px solid #f0f0f0; padding-top: 15px; margin-top: 15px; }
+.action-button.main-action {
+  width: 100%; padding: 10px; font-size: 0.9rem; font-weight: 600;
+  border-radius: 6px; background-color: transparent; border: 1px solid transparent;
+}
+.action-button.main-action:hover {
+  background-color: #f0f0f0; border-color: #e0e0e0;
+}
+
+.more-button-wrapper { position: relative; }
+.dropdown-menu {
+  position: absolute; top: 100%; right: 0; background-color: white;
+  border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  border: 1px solid #e0e0e0; z-index: 10; width: 100px; overflow: hidden;
+}
+.dropdown-menu button {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 10px 12px; font-size: 0.9rem; font-weight: 500; text-align: left;
+}
+.dropdown-menu button:hover { background-color: #f0f0f0; }
+.dropdown-menu button.delete { color: #e03131; }
+
+.activity-stats-container { margin-top: 60px; }
+.activity-stats-container h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; }
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  background-color: white; border: 1px solid #e0e0e0; border-radius: 8px; text-align: center;
+}
+.stat-item { padding: 30px; }
+.stat-item + .stat-item { border-left: 1px solid #e0e0e0; }
+.stat-item span { font-size: 2rem; font-weight: 700; color: var(--c-accent); }
+.stat-item p { font-size: 1rem; color: #555; margin: 8px 0 0 0; }
+
+.upload-modal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background-color: white; padding: 30px 40px; border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15); z-index: 1002; width: 400px;
+}
+.upload-modal h2 { margin: 0 0 10px 0; }
+.upload-modal p { margin: 0 0 20px 0; color: #888; }
+.upload-area {
+  border: 2px dashed #e0e0e0; border-radius: 8px;
+  padding: 40px; text-align: center; margin-bottom: 20px;
+}
+.upload-modal input {
+  width: 100%; padding: 12px; border: 1px solid #e0e0e0;
+  border-radius: 6px; margin-bottom: 20px; box-sizing: border-box;
+}
