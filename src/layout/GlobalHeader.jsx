@@ -91,9 +91,7 @@ function GlobalHeader({ onLoginClick }) {
     setJobOpen(prev => !prev);
     setRegionOpen(false);
   };
-  const jobPosting = () => {
-    navigate('/jobposting');
-  }
+ 
 
   // 공통 드롭다운 패널 렌더링 함수
   const renderDropdownPanels = () => (
