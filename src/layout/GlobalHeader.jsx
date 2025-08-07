@@ -5,7 +5,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Search, MapPin, Briefcase, ChevronDown } from 'lucide-react';
 
-// 커스텀 훅: 컴포넌트 바깥을 클릭했을 때를 감지
 const useOnClickOutside = (ref, handler) => {
   useEffect(() => {
     const listener = (event) => {
@@ -91,10 +90,9 @@ function GlobalHeader({ onLoginClick }) {
     setJobOpen(prev => !prev);
     setRegionOpen(false);
   };
-
   const jobPosting = () => {
     navigate('/jobposting');
-  };
+  }
 
   // 공통 드롭다운 패널 렌더링 함수
   const renderDropdownPanels = () => (
@@ -123,7 +121,6 @@ function GlobalHeader({ onLoginClick }) {
   );
 
 
-  
   return (
     <header className={`global-header ${isScrolled ? 'scrolled' : ''}`}>
       <div className="header-content">
