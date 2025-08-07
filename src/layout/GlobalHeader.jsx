@@ -150,6 +150,9 @@ function GlobalHeader({ onLoginClick }) {
       )}
     </>
   );
+  const jobPosting = () => {
+    navigate("/jobposting");
+  };
 
   return (
     <header className={`global-header ${isScrolled ? "scrolled" : ""}`}>
