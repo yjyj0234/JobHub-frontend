@@ -111,7 +111,7 @@ function App() {
           <Route element={<MainLayout />}>
             {/* path="/": 메인 페이지 경로일 때 <HomePage>를 보여줍니다. */}
             <Route path="/" element={<HomePage />} />
-            <Route path="/jobposting" element={<Jobposting />} />
+            
           </Route>
         </Routes>
       </AuthProvider>
