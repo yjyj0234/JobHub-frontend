@@ -70,9 +70,6 @@ function GlobalHeader({ onLoginClick }) {
     }
   };
   
-  const jobPosting = () => {
-    navigate('/jobposting');
-  };
 
   const toggleRegion = () => {
     setRegionOpen(prev => !prev);
@@ -119,6 +116,7 @@ function GlobalHeader({ onLoginClick }) {
           <nav className="nav">
             <button type="button">채용정보</button>
             <button type="button">커뮤니티</button>
+
             <button type="button" onClick={handleResumeClick}>이력서</button>
             <button type="button" onClick={jobPosting}>공고 등록</button>
             <button type="button">취업툴</button>

@@ -22,6 +22,7 @@ import ResumeEditorPage from '../pages/ResumeEditorPage.jsx'; // 이력서 편�
 import GlobalFooter from '../layout/GlobalFooter.jsx'; // 공통 푸터
 import Jobposting from '../components/Companies/Jobposting.jsx';
 
+import Jobposting from '../components/Companies/Jobposting.jsx';
 /**
  * 🏢 MainLayout 컴포넌트
  * 이 컴포넌트는 모든 페이지를 감싸는 '공통 뼈대' 역할을 합니다.
@@ -91,17 +92,21 @@ function HomePage() {
  */
 function AppRouter() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/resumes" element={<ResumeListPage />} />
-          <Route path="/resumes/new" element={<ResumeEditorPage />} />
-          <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
-          <Route path="/jobposting" element={<Jobposting />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    // BrowserRouter: HTML5 History API를 사용하여 URL과 UI를 동기화합니다.
+
+
+    // <AuthProvider>
+    <Routes>
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/resumes" element={<ResumeListPage />} />
+        <Route path="/resumes/new" element={<ResumeEditorPage />} />
+        <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
+        <Route path="/jobposting" element={<Jobposting/>}/>
+      </Route>
+    </Routes>
+    // </AuthProvider>
+
   );
 }
 
