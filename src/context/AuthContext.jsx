@@ -1,10 +1,9 @@
-import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useContext, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
-// 1. 새로운 Context를 생성합니다. 외부에서 이 데이터를 바로 사용하지는 않습니다.
 const AuthContext = createContext(null);
 
-// 2. AuthProvider 컴포넌트: 이 컴포넌트가 감싸는 모든 자식들은 value 객체에 접근할 수 있습니다.
 export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => !!localStorage.getItem("token")
@@ -12,6 +11,16 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(
     () => JSON.parse(localStorage.getItem("user")) || null
   );
+  const [redirectAfterLogin, setRedirectAfterLogin] = useState(null);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!isLoggedIn && location.pathname !== "/login") {
+      setRedirectAfterLogin(location.pathname);
+    }
+  }, [isLoggedIn, location.pathname]);
 
   const login = async ({ email, password }) => {
     try {
@@ -29,44 +38,71 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("user", JSON.stringify(userData));
       setUser(userData);
       setIsLoggedIn(true);
+
+      // 리다이렉션 처리
+      if (redirectAfterLogin) {
+        navigate(redirectAfterLogin);
+        setRedirectAfterLogin(null);
+      } else {
+        navigate("/");
+      }
+
       return userData;
     } catch (err) {
-      throw new Error("로그인 실패: " + err.response?.data || err.message);
+      throw new Error("로그인 실패: " + (err.response?.data || err.message));
     }
   };
 
-  // 로그아웃 함수
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setIsLoggedIn(false);
     setUser(null);
+    navigate("/");
   };
 
-  const signup = async ({ email, password, name, userType }) => {
+  const signup = async (userData) => {
     try {
-      await axios.post("http://localhost:8080/auth/register", {
-        email,
-        password,
-        name,
-        userType,
+      const formData = new FormData();
+      formData.append("email", userData.email);
+      formData.append("password", userData.password);
+      formData.append(
+        "name",
+        userData.accountType === "user" ? "개인회원" : userData.companyName
+      );
+      formData.append("userType", userData.accountType.toLowerCase());
+
+      if (userData.accountType === "company") {
+        formData.append(
+          "businessRegistrationNumber",
+          userData.businessRegistrationNumber
+        );
+        formData.append(
+          "businessCertificationFile",
+          userData.businessCertificationFile
+        );
+      }
+
+      await axios.post("http://localhost:8080/auth/register", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
-      return await login({ email, password });
+
+      await login({ email: userData.email, password: userData.password });
+      navigate("/"); // 회원가입 성공 후 메인페이지로 리다이렉트
     } catch (err) {
-      throw new Error("회원가입 실패: " + err.response?.data || err.message);
+      throw new Error("회원가입 실패: " + (err.response?.data || err.message));
     }
   };
 
-  // Context를 통해 하위 컴포넌트에 전달할 값들을 객체로 묶습니다.
   const value = { isLoggedIn, user, login, logout, signup };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// 3. useAuth 커스텀 훅: 컴포넌트에서 손쉽게 AuthContext의 값들을 사용할 수 있게 해줍니다.
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  // 만약 AuthProvider 외부에서 useAuth를 사용하면 에러를 발생시켜 실수를 방지합니다.
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
