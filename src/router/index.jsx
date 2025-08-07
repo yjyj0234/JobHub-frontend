@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { Routes, Route, Outlet } from "react-router-dom";
 
 // --- 1. 페이지와 컴포넌트 불러오기 ---
 // 라우터에서 사용할 모든 페이지와 공통 컴포넌트들을 미리 불러옵니다.
@@ -23,7 +23,7 @@ import TopGrid from "../components/UX/TopGrid.jsx"; // 홈페이지의 TopGrid �
 import ResumeListPage from "../pages/ResumeListPage.jsx"; // 이력서 목록 페이지
 import ResumeEditorPage from "../pages/ResumeEditorPage.jsx"; // 이력서 편집 페이지
 import GlobalFooter from "../layout/GlobalFooter.jsx"; // 공통 푸터
-
+import { AuthProvider } from "../context/AuthContext.jsx";
 /**
  * 🏢 MainLayout 컴포넌트
  * 이 컴포넌트는 모든 페이지를 감싸는 '공통 뼈대' 역할을 합니다.
@@ -103,26 +103,16 @@ function AppRouter() {
   return (
     // BrowserRouter: HTML5 History API를 사용하여 URL과 UI를 동기화합니다.
 
-    <AuthProvider>
-      {/* Routes: 여러 Route 중 현재 URL과 일치하는 첫 번째 Route를 렌더링합니다. */}
-      <Routes>
-        {/* 중첩 라우팅: element={<MainLayout />}으로 감싸진 모든 Route들은 MainLayout 컴포넌트를 부모로 갖게 됩니다. */}
-        {/* 즉, 아래의 모든 페이지에는 상단 헤더가 항상 보이게 됩니다. */}
-        <Route element={<MainLayout />}>
-          {/* path="/": 웹사이트의 가장 기본 주소일 때 HomePage 컴포넌트를 보여줍니다. */}
-          <Route path="/" element={<HomePage />} />
-
-          {/* path="/resumes": '.../resumes' 주소일 때 ResumeListPage 컴포넌트를 보여줍니다. */}
-          <Route path="/resumes" element={<ResumeListPage />} />
-
-          {/* path="/resumes/new": '.../resumes/new' 주소일 때 ResumeEditorPage 컴포넌트를 보여줍니다. */}
-          <Route path="/resumes/new" element={<ResumeEditorPage />} />
-
-          {/* path="/resumes/edit/:id": '.../resumes/edit/1' 처럼 동적인 id 값을 가진 주소일 때 ResumeEditorPage 컴포넌트를 보여줍니다. */}
-          <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
-        </Route>
-      </Routes>
-    </AuthProvider>
+    // <AuthProvider>
+    <Routes>
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/resumes" element={<ResumeListPage />} />
+        <Route path="/resumes/new" element={<ResumeEditorPage />} />
+        <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
+      </Route>
+    </Routes>
+    // </AuthProvider>
   );
 }
 

@@ -3,9 +3,9 @@
  * --------------------------------
  * 모든 페이지 하단에 공통으로 표시될 푸터 컴포넌트입니다.
  */
-import React from 'react';
-import '../css/GlobalFooter.css'; // 푸터 전용 CSS
-import logo from '../assets/img/logo3.png'; // 로고 이미지
+import React from "react";
+import "../css/GlobalFooter.css"; // 푸터 전용 CSS
+import logo from "../assets/img/logo4.png"; // 로고 이미지
 
 function GlobalFooter() {
   return (
