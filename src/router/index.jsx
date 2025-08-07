@@ -23,7 +23,7 @@ import TopGrid from '../components/UX/TopGrid.jsx';        // 홈페이지의 To
 import ResumeListPage from '../pages/ResumeListPage.jsx'; // 이력서 목록 페이지
 import ResumeEditorPage from '../pages/ResumeEditorPage.jsx'; // 이력서 편집 페이지
 import GlobalFooter from '../layout/GlobalFooter.jsx'; // 공통 푸터
-
+import Jobposting from '../components/Companies/Jobposting.jsx';
 
 /**
  * 🏢 MainLayout 컴포넌트
