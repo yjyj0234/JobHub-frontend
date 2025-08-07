@@ -70,7 +70,6 @@ function App() {
         <Routes>
           <Route element={<MainLayout />}>
             <Route path="/" element={<HomePage />} />
-            <Route path='/community/addpost' element={<AddPost/>}/>
           </Route>
         </Routes>
       </AuthProvider>
