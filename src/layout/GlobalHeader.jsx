@@ -116,7 +116,7 @@ function GlobalHeader({ onLoginClick }) {
               "경남",
               "제주",
             ].map((region) => (
-              <button key={region} className="item-button">
+              <button type="button" key={region} className="item-button">
                 {region}
               </button>
             ))}
@@ -141,7 +141,7 @@ function GlobalHeader({ onLoginClick }) {
               "의료·제약",
               "교육",
             ].map((job) => (
-              <button key={job} className="item-button">
+              <button type="button" key={job} className="item-button">
                 {job}
               </button>
             ))}
@@ -164,9 +164,9 @@ function GlobalHeader({ onLoginClick }) {
             <button type="button" onClick={handleResumeClick}>
               이력서
             </button>
-            <button type="button" onClick={jobPosting}>
+            {/* <button type="button" onClick={jobPosting}>
               공고 등록
-            </button>
+            </button> */}
             <button type="button">취업툴</button>
             <button type="button">이력서 코칭 AI</button>
           </nav>
@@ -180,6 +180,7 @@ function GlobalHeader({ onLoginClick }) {
                   <input type="text" placeholder="검색" />
                 </div>
                 <button
+                  type="button"
                   className="dropdown-trigger-scrolled"
                   onClick={toggleRegion}
                 >
@@ -187,6 +188,7 @@ function GlobalHeader({ onLoginClick }) {
                   <span>지역</span>
                 </button>
                 <button
+                  type="button"
                   className="dropdown-trigger-scrolled"
                   onClick={toggleJob}
                 >
@@ -222,6 +224,7 @@ function GlobalHeader({ onLoginClick }) {
         <div className="search-container">
           {!isExpanded ? (
             <button
+              type="button"
               className="pre-search-button"
               onClick={() => setIsExpanded(true)}
             >
@@ -241,18 +244,28 @@ function GlobalHeader({ onLoginClick }) {
                 />
               </div>
               <div className="divider"></div>
-              <button className="dropdown-trigger" onClick={toggleRegion}>
+              <button
+                type="button"
+                className="dropdown-trigger"
+                onClick={toggleRegion}
+              >
                 <MapPin size={20} color="#888" />
                 <span>지역</span>
                 <ChevronDown size={16} color="#aaa" />
               </button>
               <div className="divider"></div>
-              <button className="dropdown-trigger" onClick={toggleJob}>
+              <button
+                type="button"
+                className="dropdown-trigger"
+                onClick={toggleJob}
+              >
                 <Briefcase size={20} color="#888" />
                 <span>직무</span>
                 <ChevronDown size={16} color="#aaa" />
               </button>
-              <button className="search-submit-button">검색</button>
+              <button type="button" className="search-submit-button">
+                검색
+              </button>
               {renderDropdownPanels()}
             </div>
           )}

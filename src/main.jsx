@@ -24,9 +24,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   // React.StrictMode는 개발 중에 잠재적인 문제를 감지하기 위한 래퍼입니다.
   <React.StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <AppRouter />
-      </AuthProvider>
+      <AppRouter />
     </BrowserRouter>
   </React.StrictMode>
 );
