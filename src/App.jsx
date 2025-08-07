@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
 import './App.css';
-import GlobalHeader from './components/GlobalHeader/GlobalHeader.jsx';
-import Hero from './components/Hero/Hero.jsx';
-import Grid from './components/Grid/Grid.jsx';
-import TopGrid from './components/TopGrid/TopGrid.jsx';
-import SideNav from './components/SideNav/SideNav.jsx';
-import AuthPage from './components/Auth/AuthPage.jsx';
-import Modal from './components/Modal/Modal.jsx';
+import GlobalHeader from './layout/GlobalHeader.jsx';
+import Hero from './UX/Hero.jsx';
+import Grid from './UX/Grid.jsx';
+import TopGrid from './UX/TopGrid.jsx';
+import SideNav from './layout/SideNav.jsx';
+import AuthPage from './UX/AuthPage.jsx';
+import Modal from './UI/Modal.jsx';
 
 function MainLayout() {
   const [isModalOpen, setIsModalOpen] = useState(false);
