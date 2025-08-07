@@ -24,6 +24,7 @@ import ResumeListPage from '../pages/ResumeListPage.jsx'; // 이력서 목록 �
 import ResumeEditorPage from '../pages/ResumeEditorPage.jsx'; // 이력서 편집 페이지
 import GlobalFooter from '../layout/GlobalFooter.jsx'; // 공통 푸터
 
+import Jobposting from '../components/Companies/Jobposting.jsx';
 /**
  * 🏢 MainLayout 컴포넌트
  * 이 컴포넌트는 모든 페이지를 감싸는 '공통 뼈대' 역할을 합니다.
@@ -121,7 +122,11 @@ function AppRouter() {
           {/* path="/resumes/edit/:id": '.../resumes/edit/1' 처럼 동적인 id 값을 가진 주소일 때 ResumeEditorPage 컴포넌트를 보여줍니다. */}
           <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
 
+
+           <Route path='/jobposting' element={<Jobposting/>}/>
+
         </Route>
+
       </Routes>
     </BrowserRouter>
   );
