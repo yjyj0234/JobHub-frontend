@@ -5,7 +5,6 @@ import { useAuth } from '../../context/AuthContext.jsx';
 
 function AuthPage({ onSuccess }) {
   const { login, signup } = useAuth();
-
   const [mode, setMode] = useState('login');
   const [accountType, setAccountType] = useState('user');
   const [email, setEmail] = useState('');
