@@ -1,6 +1,6 @@
 import React from 'react';
 import Card from '../UI/Card.jsx';
-import '../../css/TopGrid.css';
+import '../css/TopGrid.css';
 
 const top100Data = [
   { icon: '🥇', name: '네이버', desc: '국내 No.1 검색 포털', skills: ['AI', 'Big Data', 'Frontend'], talent: '세상을 바꾸는 인재' },

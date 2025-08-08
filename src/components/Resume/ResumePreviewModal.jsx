@@ -5,7 +5,7 @@
  * 이력서의 제목과 각 섹션의 데이터를 받아서 실제 이력서처럼 보여줍니다.
  */
 import React from 'react';
-import '../../../css/ResumePreviewModal.css'; // 미리보기 전용 CSS
+import '../css/ResumePreviewModal.css'; // 미리보기 전용 CSS
 
 function ResumePreviewModal({ isOpen, onClose, title, sections, sectionComponents }) {
   // isOpen이 false이면 아무것도 렌더링하지 않습니다.

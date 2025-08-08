@@ -10,17 +10,18 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
-import GlobalHeader from '../layout/GlobalHeader.jsx';     // 공통 상단 헤더
-import SideNav from '../layout/SideNav.jsx';             // 공통 사이드 네비게이션
-import Modal from '../components/UI/Modal.jsx';          // 공통 모달 UI
-import AuthPage from '../components/UX/AuthPage.jsx';      // 로그인/회원가입 기능
-import Hero from '../components/UX/Hero.jsx';              // 홈페이지의 Hero 섹션
-import Grid from '../components/UX/Grid.jsx';              // 홈페이지의 Grid 섹션
-import TopGrid from '../components/UX/TopGrid.jsx';        // 홈페이지의 TopGrid 섹션
-import ResumeListPage from '../pages/ResumeListPage.jsx'; // 이력서 목록 페이지
-import ResumeEditorPage from '../pages/ResumeEditorPage.jsx'; // 이력서 편집 페이지
-import GlobalFooter from '../layout/GlobalFooter.jsx'; // 공통 푸터
-import Jobposting from '../components/Companies/Jobposting.jsx';
+// 1. layout 컴포넌트 그룹
+import { GlobalHeader, SideNav, GlobalFooter } from '../layout';
+
+// 2. UI/UX 컴포넌트 그룹
+import { Modal } from '../UI';
+import { AuthPage, Hero, Grid, TopGrid } from '../UX';
+
+// 3. resume 관련 페이지 그룹
+import { ResumeListPage, ResumeEditorPage } from '../resume';
+
+// 4. Companies 관련 페이지 그룹
+import { Jobposting } from '../Companies';
 
 
 /**
