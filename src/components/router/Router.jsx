@@ -96,7 +96,7 @@ function AppRouter() {
     // BrowserRouter: HTML5 History API를 사용하여 URL과 UI를 동기화합니다.
 
 
-     <AuthProvider>
+     //<AuthProvider>
     <Routes>
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
@@ -106,7 +106,7 @@ function AppRouter() {
         <Route path="/jobposting" element={<Jobposting/>}/>
       </Route>
     </Routes>
-     </AuthProvider>
+     //</AuthProvider>
 
   );
 }
