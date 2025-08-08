@@ -70,6 +70,9 @@ function GlobalHeader({ onLoginClick }) {
     }
   };
   
+  const jobPosting = () =>{
+    navigate('/jobposting');
+  }
 
   const toggleRegion = () => {
     setRegionOpen(prev => !prev);
