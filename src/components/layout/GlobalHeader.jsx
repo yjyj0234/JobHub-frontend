@@ -84,6 +84,7 @@ function GlobalHeader({ onLoginClick }) {
     setRegionOpen(false);
   };
   
+  
 
   const renderDropdownPanels = () => (
     <>
