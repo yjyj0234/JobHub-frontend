@@ -1,13 +1,3 @@
-/**
- * src/router/index.jsx
- * --------------------------------
- * React 애플리케이션의 모든 페이지 경로(라우팅) 규칙을 정의하는 '교통 안내원' 같은 파일입니다.
- *
- * 이 파일의 주요 역할은 다음과 같습니다:
- * 1. 사용자가 접속하는 웹사이트 주소(URL)에 따라 어떤 페이지 컴포넌트를 보여줄지 결정합니다.
- * 2. 여러 페이지에 공통적으로 나타나는 레이아웃(예: 상단 헤더, 로그인 모달)을 관리합니다.
- */
-
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 // 1. layout 컴포넌트 그룹
