@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../css/GlobalHeader.css';
-import logo from '../assets/img/logo4.png';
+import logo from '../../assets/img/logo4.png';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Search, MapPin, Briefcase, ChevronDown } from 'lucide-react';
@@ -81,6 +81,9 @@ function GlobalHeader({ onLoginClick }) {
     setRegionOpen(false);
   };
   
+  const jobPosting =()=>{
+    navigate('/jobposting')
+  }
   const renderDropdownPanels = () => (
     <>
       {isRegionOpen && (

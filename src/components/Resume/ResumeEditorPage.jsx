@@ -3,15 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import '../css/ResumeEditorPage.css';
 import { Briefcase, GraduationCap, Award, Languages, Star, Link as LinkIcon, Trash2, Eye, Server, Save } from 'lucide-react';
 
-import ExperienceForm from '../components/domain/Resume/ExperienceForm.jsx';
-import EducationForm from '../components/domain/Resume/EducationForm.jsx';
-import ActivityForm from '../components/domain/Resume/ActivityForm.jsx';
-import AwardForm from '../components/domain/Resume/AwardForm.jsx';
-import CertificationForm from '../components/domain/Resume/CertificationForm.jsx';
-import LanguageForm from '../components/domain/Resume/LanguageForm.jsx';
-import PortfolioForm from '../components/domain/Resume/PortfolioForm.jsx';
-import ProjectForm from '../components/domain/Resume/ProjectForm.jsx';
-import ResumePreviewModal from '../components/domain/Resume/ResumePreviewModal.jsx';
+import {ExperienceForm,EducationForm,ActivityForm,AwardForm,CertificationForm
+  ,LanguageForm,PortfolioForm,ProjectForm,ResumePreviewModal} from './';
+
 
 const EditorSection = ({ title, onRemove, children }) => (
     <section className="editor-section">

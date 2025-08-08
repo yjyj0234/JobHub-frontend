@@ -6,7 +6,7 @@
 
 import React from "react";
 import "../css/GlobalFooter.css"; // 푸터 전용 CSS
-import logo from "../assets/img/logo4.png"; // 로고 이미지
+import logo from "../../assets/img/logo4.png"; // 로고 이미지
 
 
 function GlobalFooter() {
