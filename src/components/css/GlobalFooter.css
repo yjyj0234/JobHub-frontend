@@ -2,9 +2,12 @@
 .global-footer {
   background-color: #ffffff;
   border-top: 1px solid var(--c-border);
-  padding: 40px 0;
   color: var(--c-subtext);
-  margin-top: 80px; /* 메인 컨텐츠와 푸터 사이의 여백 */
+  padding: 25px 0; /* 위아래 패딩으로 높이를 자연스럽게 조절 */
+  
+  /* --- 👇 [핵심] --- */
+  flex-shrink: 0; /* 내용이 많아져도 푸터가 찌그러지지 않도록 설정 */
+  /* --- 👆 수정 끝 --- */
 }
 
 .footer-content {
@@ -14,13 +17,15 @@
 }
 
 .footer-left {
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 .footer-logo {
   height: 25px;
-  margin-bottom: 10px;
   opacity: 0.8;
+  margin: 0;
 }
 
 .footer-description {
@@ -35,7 +40,7 @@
 .footer-links {
   display: flex;
   gap: 20px;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
   justify-content: flex-end;
 }
 
