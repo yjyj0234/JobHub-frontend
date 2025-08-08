@@ -35,18 +35,18 @@ const PostList = () => {
     {
       id: 'p2',
       title: '',
-      preview:
+      content:
         '',
       comments: 2,
-      views: 275,
+      viewCount: 275,
     },
     {
       id: 'p3',
       title: '이직 하는게 맞겠죠?',
-      preview:
+      content:
         '대기업 자회사 정규직으로 근무 중인데, 커리어 성장 측면에서 이직을 고민하고 있습니다...',
       comments: 8,
-      views: 207,
+      viewCount: 207,
     },
   ])
   //네이게이트
@@ -80,11 +80,11 @@ const PostList = () => {
               <a key={item.id} href="#" className="pl-popular-item">
                 <span className="pl-badge">인기글</span>
                 <h3 className="pl-popular-item-title">{item.title}</h3>
-                <p className="pl-popular-item-preview">{item.preview}</p>
+                <p className="pl-popular-item-preview">{item.content}</p>
                 <div className="pl-popular-meta">
                   <span>댓글 {item.comments}</span>
                   <span className="pl-meta-sep">|</span>
-                  <span>조회 {item.views}</span>
+                  <span>조회 {item.viewCount}</span>
                 </div>
               </a>
             ))}
