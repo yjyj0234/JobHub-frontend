@@ -1,6 +1,6 @@
 import React from "react";
 import Card from "../UI/Card.jsx";
-import "../../css/Grid.css";
+import "../css/Grid.css";
 
 const companyData = [
   {

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import "../../css/Auth.css";
+import "../css/Auth.css";
 import { ChevronLeft, FileUp } from "lucide-react";
-import { useAuth } from "../../context/AuthContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 function AuthPage({ onSuccess }) {
   const { login, signup } = useAuth();

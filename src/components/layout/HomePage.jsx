@@ -1,10 +1,9 @@
 import React, { useRef } from 'react';
 
 // --- 경로 수정 ---
-import Hero from '../components/UX/Hero.jsx';
-import Grid from '../components/UX/Grid.jsx';
-import TopGrid from '../components/UX/TopGrid.jsx';
-import SideNav from '../layout/SideNav.jsx';
+import { Hero, Grid, TopGrid } from '../UX';
+import { SideNav } from '../layout';
+
 // --- 경로 수정 끝 ---
 
 function HomePage() {
