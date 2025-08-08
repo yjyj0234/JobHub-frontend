@@ -9,7 +9,7 @@
  * 3. 입력 필드의 내용이 변경될 때마다, `onUpdate` 함수를 호출하여 부모(ResumeEditorPage)에게 최신 데이터를 전달합니다.
  */
 import React, { useState } from 'react';
-import '../../../css/Form.css';
+import '../css/Form.css';
 
 function ExperienceForm({ data, onUpdate }) {
   // 각 입력 필드의 값을 관리하는 상태. 부모로부터 받은 `data`로 초기화합니다.
