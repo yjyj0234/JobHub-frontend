@@ -80,7 +80,9 @@ function GlobalHeader({ onLoginClick }) {
     setJobOpen(prev => !prev);
     setRegionOpen(false);
   };
-  
+  const jobPosting = () => {
+    navigate('/jobposting');
+  };
   const renderDropdownPanels = () => (
     <>
       {isRegionOpen && (

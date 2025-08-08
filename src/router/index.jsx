@@ -22,7 +22,6 @@ import ResumeEditorPage from '../pages/ResumeEditorPage.jsx'; // 이력서 편�
 import GlobalFooter from '../layout/GlobalFooter.jsx'; // 공통 푸터
 import Jobposting from '../components/Companies/Jobposting.jsx';
 
-import Jobposting from '../components/Companies/Jobposting.jsx';
 /**
  * 🏢 MainLayout 컴포넌트
  * 이 컴포넌트는 모든 페이지를 감싸는 '공통 뼈대' 역할을 합니다.
