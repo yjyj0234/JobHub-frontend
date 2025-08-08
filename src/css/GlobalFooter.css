@@ -3,8 +3,11 @@
   background-color: #ffffff;
   border-top: 1px solid var(--c-border);
   color: var(--c-subtext);
-  padding: 40px 0; /* 푸터 영역에 충분한 공간을 줍니다. */
+  padding: 25px 0; /* 위아래 패딩으로 높이를 자연스럽게 조절 */
+  
+  /* --- 👇 [핵심] --- */
   flex-shrink: 0; /* 내용이 많아져도 푸터가 찌그러지지 않도록 설정 */
+  /* --- 👆 수정 끝 --- */
 }
 
 .footer-content {
