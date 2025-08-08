@@ -1,13 +1,78 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import "../css/Jobposting.css"
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { locations } from '../locationcode/LocationData';
 
 const Jobposting = () => {
   const navigate = useNavigate();
-  const handleSubmit = (e)=>{
-    e.preventDefault();
+  
+  const [selectedLocation,setSelectedLocation]=useState('');
+  const [subLocations,setSubLocations]=useState([]);
+  const [selectedSubLocation,setSelectedSubLocation]=useState('');
+
+  //2. 상세 설명을 위한 state
+  const [description,setDescription]=useState('');
+  const textareaRef = useRef(null);
+
+  const handleLocationChange = (e) =>{
+    const locationName=e.target.value;
+    setSelectedLocation(locationName);
+      const locationData=locations.find(loc=>loc.name===locationName);
+
+  if(locationData){
+    setSubLocations(locationData.subLocations);
+    setSelectedSubLocation(locationData.subLocations[0]?.code || '');
+
+  }else{
+    setSubLocations([]);
+    setSelectedSubLocation('');
+   }
+  };
+
+  // 텍스트 스타일링 함수들
+  const formatText = (command, value = null) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = description.substring(start, end);
+    let formattedText = '';
+
+    switch (command) {
+      case 'bold':
+        formattedText = `**${selectedText}**`;
+        break;
+      case 'underline':
+        formattedText = `__${selectedText}__`;
+        break;
+      case 'fontSize':
+        // 글자 크기를 바로 적용
+        textarea.focus();
+        document.execCommand('fontSize', false, value);
+        return; // 마크다운 형태로 변환하지 않고 바로 적용
+      case 'hr':
+        formattedText = '\n---\n';
+        break;
+      default:
+        return;
+    }
+
+    const newText = description.substring(0, start) + formattedText + description.substring(end);
+    setDescription(newText);
     
+    // 커서 위치 조정
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + formattedText.length, start + formattedText.length);
+    }, 0);
+  };
+
+   const handleSubmit = (e)=>{
+    e.preventDefault();
+    console.log("선택된 지역 코드:", selectedSubLocation);
+
   }
 
   return (
@@ -23,11 +88,91 @@ const Jobposting = () => {
           </div>
           <div className="form-group">
             <label htmlFor="description">상세 설명</label>
-            <textarea id="description" name="description" rows="8" placeholder="업무 내용, 자격 요건 등"></textarea>
+            <div className='form-group-inline' style={{ gap: '20px', alignItems: 'center', marginBottom: '10px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <input type="radio" name="descriptionType" value="template" />
+                JobHub 템플릿 사용
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <input type="radio" name="descriptionType" value="direct" />
+                직접 작성
+              </label>
+            </div>
+            
+            {/* 텍스트 스타일링 툴바 */}
+            <div className="text-editor-toolbar">
+              <button 
+                type="button" 
+                className="toolbar-btn" 
+                onClick={() => formatText('bold')}
+                title="굵게"
+              >
+                <strong>B</strong>
+              </button>
+              <button 
+                type="button" 
+                className="toolbar-btn" 
+                onClick={() => formatText('underline')}
+                title="밑줄"
+              >
+                <u>U</u>
+              </button>
+              <select 
+                className="toolbar-select"
+                onChange={(e) => formatText('fontSize', e.target.value)}
+                title="글자 크기"
+              >
+                <option value="">크기</option>
+                <option value="12">12px</option>
+                <option value="14">14px</option>
+                <option value="16">16px</option>
+                <option value="18">18px</option>
+                <option value="20">20px</option>
+              </select>
+              <button 
+                type="button" 
+                className="toolbar-btn" 
+                onClick={() => formatText('hr')}
+                title="구분선"
+              >
+                ───
+              </button>
+            </div>
+            
+            <textarea 
+              ref={textareaRef}
+              id="description" 
+              name="description" 
+              rows="12" 
+              placeholder="업무 내용, 자격 요건 등을 입력하세요. 위의 버튼들을 사용하여 텍스트를 꾸밀 수 있습니다."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="styled-textarea"
+            />
           </div>
           <div className="form-group">
-            <label htmlFor="location">근무 지역</label>
-            <input type="text" id="location" name="location" placeholder="예: 서울, 재택" />
+
+            <label>근무 지역</label>
+            <div className='form-group-inline' style={{gap:'10px'}}>
+              <select 
+                value={selectedLocation} 
+                onChange={handleLocationChange}
+                style={{flex:1}}>
+                <option value="">시/도 선택</option>
+                {locations.map(loc=>(
+                  <option key={loc.code} value={loc.name}>{loc.name}</option>
+                ))}
+              </select>
+              <select value={selectedSubLocation} onChange={(e)=>
+                setSelectedSubLocation(e.target.value)}
+                disabled={!selectedLocation}
+                style={{flex:1}}>
+                <option value="">시/군/구 선택</option>
+                {subLocations.map(sub=>(
+                  <option key={sub.code} value={sub.code}>{sub.name}</option>
+                ))}
+                </select>
+            </div>
           </div>
           <div className="form-group">
             <label htmlFor="is_remote">
@@ -138,7 +283,7 @@ const Jobposting = () => {
             <input type="text" id="etc" name="etc" placeholder="예: 관련 자격증, 외국어 능력 등" />
           </div>
         </fieldset>
-
+      
         <button type="submit" className="cta-button large">등록하기</button>
       </form>
     </div>

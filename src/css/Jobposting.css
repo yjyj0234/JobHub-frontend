@@ -1,0 +1,222 @@
+.jobposting-container {
+  max-width: 700px;
+  margin: 48px auto;
+  background: #fff;
+  border-radius: 28px;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.10);
+  padding: 48px 44px 44px 44px;
+  box-sizing: border-box;
+}
+.jobposting-container.large {
+  max-width: 900px;
+  padding: 64px 56px 56px 56px;
+}
+
+.jobposting-title {
+  font-size: 2.1rem;
+  font-weight: 800;
+  margin-bottom: 36px;
+  color: #1a1a1a;
+  text-align: center;
+}
+
+.jobposting-form {
+  display: flex;
+  flex-direction: column;
+  gap: 38px;
+}
+
+.form-section {
+  border: 1.5px solid #e0e0e0;
+  border-radius: 18px;
+  padding: 32px 28px 24px 28px;
+  margin-bottom: 0;
+}
+.form-section legend {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--c-accent, #4f8cff);
+  padding: 0 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.form-group-inline {
+  display: flex;
+  gap: 32px;
+}
+
+.form-group label {
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  font-size: 1.15rem;
+  padding: 16px 20px;
+  border: 1.5px solid #ddd;
+  border-radius: 14px;
+  background: #f7f7f7;
+  transition: border-color 0.2s;
+  outline: none;
+  resize: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: var(--c-accent, #4f8cff);
+}
+
+.cta-button {
+  background-color: var(--c-accent, #4f8cff);
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 800;
+  padding: 18px 0;
+  border: none;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 18px;
+  width: 100%;
+}
+.cta-button.large {
+  font-size: 1.45rem;
+  padding: 22px 0;
+  border-radius: 28px;
+}
+
+.cta-button:hover {
+  background-color: #2563eb;
+}
+
+/* 텍스트 에디터 툴바 스타일 */
+.text-editor-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  background: #f0f4ff;
+  border-radius: 10px;
+  padding: 10px 16px;
+  align-items: center;
+  border: 1px solid #e0e8ff;
+}
+
+.toolbar-btn {
+  background: #e6eaff;
+  color: #2563eb;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+}
+
+.toolbar-btn:hover {
+  background: #d0dbff;
+  color: #1741a6;
+}
+
+.toolbar-select {
+  background: #e6eaff;
+  color: #2563eb;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  outline: none;
+}
+
+.toolbar-select:hover {
+  background: #d0dbff;
+}
+
+.toolbar-select:focus {
+  background: #d0dbff;
+}
+
+/* 스타일된 텍스트에어리어 */
+.styled-textarea {
+  font-size: 1.15rem;
+  padding: 16px 20px;
+  border: 1.5px solid #ddd;
+  border-radius: 14px;
+  background: #f7f7f7;
+  transition: border-color 0.2s;
+  outline: none;
+  resize: vertical;
+  min-height: 200px;
+  line-height: 1.5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.styled-textarea:focus {
+  border-color: var(--c-accent, #4f8cff);
+}
+
+/* 스타일된 contentEditable */
+.styled-content-editable {
+  font-size: 1.15rem;
+  padding: 16px 20px;
+  border: 1.5px solid #ddd;
+  border-radius: 14px;
+  background: #f7f7f7;
+  transition: border-color 0.2s;
+  outline: none;
+  min-height: 200px;
+  line-height: 1.5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  overflow-y: auto;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.styled-content-editable:focus {
+  border-color: var(--c-accent, #4f8cff);
+}
+
+.styled-content-editable:empty:before {
+  content: attr(placeholder);
+  color: #aaa;
+  pointer-events: none;
+}
+
+.styled-content-editable:focus:empty:before {
+  content: '';
+}
+
+@media (max-width: 700px) {
+  .jobposting-container, .jobposting-container.large {
+    max-width: 98vw;
+    padding: 18px 4vw;
+  }
+  .form-section {
+    padding: 18px 2vw 12px 2vw;
+  }
+  .form-group-inline {
+    flex-direction: column;
+    gap: 0;
+  }
+  .text-editor-toolbar {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+} 

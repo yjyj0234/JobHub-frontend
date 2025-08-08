@@ -129,7 +129,7 @@ function ResumeListPage() {
         </div>
 
         <div className="activity-stats-container">
-          <h2>나의 활동 현황</h2>
+          <h2>나의 활동 현황 </h2>
           <div className="stats-grid">
             <div className="stat-item"><span>0</span><p>입사지원</p></div>
             <div className="stat-item"><span>0</span><p>스크랩</p></div>
