@@ -1,5 +1,5 @@
 import React from 'react';
-import './Jobposting.css';
+import "../css/Jobposting.css"
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
