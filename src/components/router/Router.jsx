@@ -23,6 +23,8 @@ import { ResumeListPage, ResumeEditorPage } from '../resume';
 // 4. Companies 관련 페이지 그룹
 import { Jobposting } from '../Companies';
 
+import { PostList } from '../Community';
+
 
 /**
  * 🏢 MainLayout 컴포넌트
@@ -96,7 +98,7 @@ function AppRouter() {
     // BrowserRouter: HTML5 History API를 사용하여 URL과 UI를 동기화합니다.
 
 
-    // <AuthProvider>
+     //<AuthProvider>
     <Routes>
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
@@ -104,9 +106,10 @@ function AppRouter() {
         <Route path="/resumes/new" element={<ResumeEditorPage />} />
         <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
         <Route path="/jobposting" element={<Jobposting/>}/>
+        <Route path="/postlist" element={<PostList/>}/>
       </Route>
     </Routes>
-    // </AuthProvider>
+     //</AuthProvider>
 
   );
 }
