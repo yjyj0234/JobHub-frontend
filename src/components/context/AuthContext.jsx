@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
       );
       formData.append("userType", userData.accountType.toLowerCase());
 
-      if (userData.accountType === "company") {
+      if (userData.accountType === "COMPANY") {
         formData.append(
           "businessRegistrationNumber",
           userData.businessRegistrationNumber
