@@ -49,7 +49,7 @@ function Chat() {
     // 서버가 JSON 파싱해서 DB 저장 → 같은 포맷으로 다시 브로드캐스트
     ws.current?.send(JSON.stringify({ userId: USER_ID, roomKey: ROOM_KEY, message: input }));
     setInput(""); // 내 메시지는 서버 에코를 받아서 렌더(중복 방지)
-  };
+  }; 
 
   const formatTime = (date) =>
     date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false });
