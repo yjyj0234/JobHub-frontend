@@ -1,110 +1,70 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+axios.defaults.baseURL = "http://localhost:8080";
+axios.defaults.withCredentials = true; // 쿠키 포함
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    () => !!localStorage.getItem("token")
-  );
-  const [user, setUser] = useState(
-    () => JSON.parse(localStorage.getItem("user")) || null
-  );
-  const [redirectAfterLogin, setRedirectAfterLogin] = useState(null);
-
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    if (!isLoggedIn && location.pathname !== "/login") {
-      setRedirectAfterLogin(location.pathname);
-    }
-  }, [isLoggedIn, location.pathname]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // 쿠키 기반이라 부팅 시 별도 체크 필요하면 /auth/me 같은 엔드포인트 만들어도 됨
+  const [user, setUser] = useState(null);
 
   const login = async ({ email, password }) => {
-    try {
-      const res = await axios.post("http://localhost:8080/auth/login", {
-        email,
-        password,
-      });
-      const userData = {
-        token: res.data.token,
-        email: res.data.email,
-        role: res.data.role,
-        userId: res.data.userId,
-      };
-      localStorage.setItem("token", userData.token);
-      localStorage.setItem("user", JSON.stringify(userData));
-      setUser(userData);
-      setIsLoggedIn(true);
-
-      // 리다이렉션 처리
-      if (redirectAfterLogin) {
-        navigate(redirectAfterLogin);
-        setRedirectAfterLogin(null);
-      } else {
-        navigate("/");
-      }
-
-      return userData;
-    } catch (err) {
-      throw new Error("로그인 실패: " + (err.response?.data || err.message));
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setIsLoggedIn(false);
-    setUser(null);
-    navigate("/");
+    const res = await axios.post("/auth/login", { email, password });
+    // 서버가 Set-Cookie 로 JWT 내려줌. 프론트에서는 user정보만 메모리 보관
+    const userData = {
+      email: res.data.email,
+      role: res.data.role,
+      userId: res.data.userId,
+    };
+    setUser(userData);
+    setIsLoggedIn(true);
+    return userData;
   };
 
   const signup = async (userData) => {
-    try {
-      const formData = new FormData();
-      formData.append("email", userData.email);
-      formData.append("password", userData.password);
+    const formData = new FormData();
+    formData.append("email", userData.email);
+    formData.append("password", userData.password);
+    formData.append(
+      "name",
+      userData.accountType === "user" ? "개인회원" : userData.companyName
+    );
+    formData.append("userType", userData.accountType.toLowerCase());
+    if (userData.accountType === "company") {
       formData.append(
-        "name",
-        userData.accountType === "user" ? "개인회원" : userData.companyName
+        "businessRegistrationNumber",
+        userData.businessRegistrationNumber
       );
-      formData.append("userType", userData.accountType.toLowerCase());
-
-      if (userData.accountType === "company") {
-        formData.append(
-          "businessRegistrationNumber",
-          userData.businessRegistrationNumber
-        );
-        formData.append(
-          "businessCertificationFile",
-          userData.businessCertificationFile
-        );
-      }
-
-      await axios.post("http://localhost:8080/auth/register", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      await login({ email: userData.email, password: userData.password });
-      navigate("/"); // 회원가입 성공 후 메인페이지로 리다이렉트
-    } catch (err) {
-      throw new Error("회원가입 실패: " + (err.response?.data || err.message));
+      formData.append(
+        "businessCertificationFile",
+        userData.businessCertificationFile
+      );
     }
+    await axios.post("/auth/register", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    // 바로 로그인
+    return await login({ email: userData.email, password: userData.password });
   };
 
-  const value = { isLoggedIn, user, login, logout, signup };
+  const logout = async () => {
+    await axios.post("/auth/logout");
+    setIsLoggedIn(false);
+    setUser(null);
+  };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ isLoggedIn, user, login, logout, signup }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
+  return ctx;
 };
