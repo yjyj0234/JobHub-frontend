@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import '../css/ResumeEditorPage.css';
 import { Briefcase, GraduationCap, Award, Languages, Star, Link as LinkIcon, Trash2, Eye, Server, Save } from 'lucide-react';
-
 import {ExperienceForm,EducationForm,ActivityForm,AwardForm,CertificationForm
   ,LanguageForm,PortfolioForm,ProjectForm,ResumePreviewModal} from './';
+import { useAuth } from '../context/AuthContext.jsx';
 
 
 const EditorSection = ({ title, onRemove, children }) => (
@@ -44,6 +44,7 @@ const EditorPalette = ({ onAddItem }) => {
 
 function ResumeEditorPage() {
   const navigate = useNavigate();
+  const { user } = useAuth(); // AuthContext에서 사용자 정보 가져오기
   const [sections, setSections] = useState([]);
   const [resume, setResume] = useState({ title: '' });
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -70,27 +71,53 @@ function ResumeEditorPage() {
   };
 
   const handleSectionChange = (sectionId, updatedData) => {
-    setSections(prevSections => 
-      prevSections.map(section => 
+    setSections(prevSections =>
+      prevSections.map(section =>
         section.id === sectionId ? { ...section, data: updatedData } : section
       )
     );
   };
-  
+
   const handleSave = () => {
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+     if (!resume.title.trim()) {
+        alert("이력서 제목을 입력해주세요.");
+        return;
+    }
+
     setIsSaving(true);
-    console.log("---서버로 전송될 데이터---", { title: resume.title, sections });
+
+    // localStorage에서 기존 이력서 목록을 가져옵니다.
+    const allResumes = JSON.parse(localStorage.getItem('resumes') || '[]');
+
+    const newResume = {
+      id: Date.now(),
+      userId: user.userId, // 현재 사용자 ID 추가
+      title: resume.title,
+      sections,
+      isRepresentative: false,
+      lastModified: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
+      status: '작성 완료',
+      type: 'written',
+    };
+
+    // 새로운 이력서를 추가하여 다시 저장합니다.
+    localStorage.setItem('resumes', JSON.stringify([...allResumes, newResume]));
+
     setTimeout(() => {
-      setIsSaving(false);
-      alert("이력서가 성공적으로 저장되었습니다!");
-      navigate('/resumes');
-    }, 1500);
+        setIsSaving(false);
+        alert("이력서가 성공적으로 저장되었습니다!");
+        navigate('/resumes');
+    }, 1000);
   };
 
   return (
     <>
-      <ResumePreviewModal 
-        isOpen={isPreviewOpen} 
+      <ResumePreviewModal
+        isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
         title={resume.title}
         sections={sections}
@@ -99,8 +126,8 @@ function ResumeEditorPage() {
       <div className="resume-editor-page">
         <main className="editor-main">
           <div className="editor-header">
-            <input 
-              type="text" 
+            <input
+              type="text"
               className="resume-title-input"
               placeholder="이력서 제목 입력"
               value={resume.title}
@@ -121,7 +148,7 @@ function ResumeEditorPage() {
               if (!Comp) return null;
               return (
                 <EditorSection key={section.id} title={title} onRemove={() => handleRemoveItem(section.id)}>
-                  <Comp 
+                  <Comp
                     data={section.data}
                     onUpdate={(updatedData) => handleSectionChange(section.id, updatedData)}
                   />

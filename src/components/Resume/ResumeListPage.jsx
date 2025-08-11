@@ -1,63 +1,66 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FilePlus, Link, FileText, Star, MoreVertical, Trash2, Copy, Briefcase, BarChart2, Eye } from 'lucide-react';
+import { FilePlus, Link, FileText, MoreVertical, Trash2, Copy } from 'lucide-react';
 import '../css/ResumeListPage.css';
+import { useAuth } from '../context/AuthContext.jsx';
+import { Modal } from '../UI'; // 재사용 Modal 컴포넌트 임포트
 
-const mockResumes = [
-  { id: 1, title: '웹 프론트엔드 개발자 (신입)', isRepresentative: true, type: 'written', lastModified: '2025.08.06', status: '작성 중' },
-  { id: 2, title: '백엔드 개발자 포트폴리오 (PDF)', isRepresentative: false, type: 'file', lastModified: '2025.08.05', status: '작성 완료' },
-  { id: 3, title: '아주 긴 이력서 제목 테스트입니다. 이력서 제목이 길어지면 어떻게 되는지 확인하기 위한 용도입니다.', isRepresentative: false, type: 'url', lastModified: '2025.08.04', status: '작성 완료' },
-];
-
-const FileUploadModal = ({ onClose }) => (
-  <div className="upload-modal">
+// 파일 업로드 모달에 들어갈 내용
+const FileUploadForm = () => (
+  <>
     <h2>파일 업로드</h2>
     <p>이력서 파일을 이곳에 올려주세요.</p>
     <div className="upload-area">파일을 드래그하거나 클릭하여 업로드</div>
-    <button onClick={onClose} className="action-button">닫기</button>
-  </div>
+  </>
 );
 
-const UrlUploadModal = ({ onClose }) => (
-  <div className="upload-modal">
+// URL 등록 모달에 들어갈 내용
+const UrlUploadForm = () => (
+  <>
     <h2>URL로 등록</h2>
     <p>Notion, GitHub 등 이력서 URL을 입력해주세요.</p>
-    <input type="url" placeholder="https://..." />
-    <button onClick={onClose} className="action-button">닫기</button>
-  </div>
+    <input type="url" placeholder="https://..." className="url-input" />
+    <button className="action-button primary url-submit-btn">등록</button>
+  </>
 );
+
 
 function ResumeListPage() {
   const navigate = useNavigate();
+  const { user, isLoggedIn } = useAuth();
   const [resumes, setResumes] = useState([]);
-  const [isFileModalOpen, setFileModalOpen] = useState(false);
-  const [isUrlModalOpen, setUrlModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState(null); // 'file', 'url', 또는 null
+
+  const openModal = (type) => setModalContent(type);
+  const closeModal = () => setModalContent(null);
 
   useEffect(() => {
-    const sortedResumes = mockResumes.sort((a, b) => (b.isRepresentative - a.isRepresentative));
-    setResumes(sortedResumes);
-  }, []);
-
-  const handleCopyResume = (resumeId) => {
-    const resumeToCopy = resumes.find(r => r.id === resumeId);
-    if (resumeToCopy) {
-      const newResume = {
-        ...resumeToCopy,
-        id: Date.now(),
-        title: `${resumeToCopy.title} (복사본)`,
-        isRepresentative: false,
-      };
-      setResumes(prev => [newResume, ...prev]);
-      alert('이력서가 복사되었습니다.');
+    if (isLoggedIn) {
+      const allResumes = JSON.parse(localStorage.getItem('resumes') || '[]');
+      const userResumes = allResumes.filter(r => r.userId === user.userId);
+      const sortedResumes = userResumes.sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified));
+      setResumes(sortedResumes);
+    } else {
+      setResumes([]);
     }
-  };
+  }, [isLoggedIn, user]);
 
   const handleDeleteResume = (resumeId) => {
-    if (window.confirm("정말로 이 이력서를 삭제하시겠습니까?")) {
-      setResumes(prev => prev.filter(r => r.id !== resumeId));
-      alert('이력서가 삭제되었습니다.');
+     if (window.confirm("정말로 이 이력서를 삭제하시겠습니까?")) {
+        const updatedResumes = resumes.filter(r => r.id !== resumeId);
+        setResumes(updatedResumes);
+        const allResumes = JSON.parse(localStorage.getItem('resumes') || '[]');
+        const otherUserResumes = allResumes.filter(r => r.userId !== user.userId);
+        localStorage.setItem('resumes', JSON.stringify([...otherUserResumes, ...updatedResumes]));
+        alert('이력서가 삭제되었습니다.');
     }
   };
+  
+    const handleCopyResume = (resumeId) => {
+    // ... localStorage 로직 구현 ...
+    alert('이력서 복사 기능은 구현이 필요합니다.');
+  };
+
 
   const ResumeCard = ({ resume }) => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -111,21 +114,31 @@ function ResumeListPage() {
 
   return (
     <>
-      {isFileModalOpen && <FileUploadModal onClose={() => setFileModalOpen(false)} />}
-      {isUrlModalOpen && <UrlUploadModal onClose={() => setUrlModalOpen(false)} />}
+      <Modal isOpen={!!modalContent} onClose={closeModal}>
+        {modalContent === 'file' && <FileUploadForm />}
+        {modalContent === 'url' && <UrlUploadForm />}
+      </Modal>
 
       <div className="resume-list-page">
         <div className="list-page-header">
           <h1>나의 이력서</h1>
           <div className="new-resume-buttons">
-            <button className="new-resume-btn" onClick={() => setFileModalOpen(true)}><FilePlus size={16} /> 파일 등록</button>
-            <button className="new-resume-btn" onClick={() => setUrlModalOpen(true)}><Link size={16} /> URL 등록</button>
+            <button className="new-resume-btn" onClick={() => openModal('file')}><FilePlus size={16} /> 파일 등록</button>
+            <button className="new-resume-btn" onClick={() => openModal('url')}><Link size={16} /> URL 등록</button>
             <button className="new-resume-btn primary" onClick={() => navigate('/resumes/new')}><FileText size={16} /> 이력서 새로 작성</button>
           </div>
         </div>
-        
+
         <div className="resume-grid-container">
-          {resumes.map(resume => <ResumeCard key={resume.id} resume={resume} />)}
+           {isLoggedIn ? (
+              resumes.length > 0 ? (
+                resumes.map(resume => <ResumeCard key={resume.id} resume={resume} />)
+              ) : (
+                <div className="empty-list-message">작성된 이력서가 없습니다. 새 이력서를 작성해보세요.</div>
+              )
+            ) : (
+              <div className="empty-list-message">로그인 후 이력서를 관리할 수 있습니다.</div>
+            )}
         </div>
 
         <div className="activity-stats-container">
