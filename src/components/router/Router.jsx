@@ -40,16 +40,18 @@ function MainLayout() {
   }, [isModalOpen]);
 
   return (
-    <>
+    <div className="app-container">
       <GlobalHeader onLoginClick={openModal} />
-      <div className="container">
-        <Outlet />
-      </div>
+      <main className="main-content">
+        <div className="container">
+          <Outlet />
+        </div>
+      </main>
       <Modal isOpen={isModalOpen} onClose={closeModal}>
         <AuthPage onSuccess={closeModal} />
       </Modal>
       <GlobalFooter />
-    </>
+    </div>
   );
 }
 

@@ -1,41 +1,82 @@
-/**
- * src/components/domain/Resume/ResumePreviewModal.jsx
- * --------------------------------
- * '미리보기' 기능을 위한 모달 컴포넌트입니다.
- * 이력서의 제목과 각 섹션의 데이터를 받아서 실제 이력서처럼 보여줍니다.
- */
 import React from 'react';
-import '../css/ResumePreviewModal.css'; // 미리보기 전용 CSS
+import '../css/ResumePreviewModal.css';
+
+// 각 섹션 타입에 맞는 뷰 컴포넌트
+const SectionView = ({ section, sectionInfo }) => {
+  const { data } = section;
+  const { title } = sectionInfo;
+
+  // 데이터가 비어있으면 표시하지 않음
+  if (!data || Object.values(data).every(val => !val)) {
+    return <div className="preview-data-item empty">작성된 내용이 없습니다.</div>;
+  }
+
+  // 각 타입별로 다른 UI를 렌더링
+  switch (section.type) {
+    case 'experiences':
+      return (
+        <div className="preview-data-item">
+          <p><strong>{data.companyName || '회사명 미입력'}</strong> | {data.role || '직책 미입력'}</p>
+          <p className="period">{data.startDate || '시작일'} ~ {data.endDate || '종료일'}</p>
+        </div>
+      );
+    case 'educations':
+       return (
+        <div className="preview-data-item">
+          <p><strong>{data.schoolName || '학교명 미입력'}</strong></p>
+          <p>{data.major || '전공 미입력'} ({data.degree || '학위 미입력'})</p>
+          <p className="period">{data.startDate || '입학일'} ~ {data.endDate || '졸업일'}</p>
+          {data.gpa && <p>학점: {data.gpa} / {data.maxGpa || '4.5'}</p>}
+        </div>
+      );
+    case 'projects':
+      return (
+        <div className="preview-data-item">
+          <p><strong>{data.projectName || '프로젝트명 미입력'}</strong> ({data.institution || '수행기관 미입력'})</p>
+          <p className="period">{data.startDate || '시작일'} ~ {data.endDate || '종료일'}</p>
+          {data.url && <p><a href={data.url} target="_blank" rel="noopener noreferrer">프로젝트 링크</a></p>}
+          <p className="description">{data.description || '설명 없음'}</p>
+           {data.techStack && <p><strong>사용 기술:</strong> {data.techStack}</p>}
+        </div>
+      );
+    // 다른 타입(수상, 자격증 등)에 대한 케이스 추가
+    default:
+      // 기본적으로 모든 키-값 쌍을 보여주는 fallback
+      return (
+          <div className="preview-data-item default-view">
+              {Object.entries(data).map(([key, value]) => value && <p key={key}><strong>{key}:</strong> {value}</p>)}
+          </div>
+      )
+  }
+};
+
 
 function ResumePreviewModal({ isOpen, onClose, title, sections, sectionComponents }) {
-  // isOpen이 false이면 아무것도 렌더링하지 않습니다.
   if (!isOpen) return null;
 
   return (
-    // 모달 배경 (클릭하면 닫힘)
     <div className="preview-modal-overlay" onClick={onClose}>
-      {/* 모달 본문 (클릭해도 안 닫힘) */}
       <div className="preview-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="preview-header">
           <h1>{title || '이력서 미리보기'}</h1>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
         <div className="preview-body">
-          {/* sections 배열을 순회하며 각 항목의 데이터를 예쁘게 표시합니다. */}
-          {sections.map(section => {
-            const sectionInfo = sectionComponents[section.type];
-            if (!sectionInfo) return null;
-            
-            return (
-              <div key={section.id} className="preview-section">
-                <h2>{sectionInfo.title}</h2>
-                {/* 실제로는 각 데이터에 맞는 예쁜 UI로 렌더링해야 하지만,
-                  지금은 데이터를 JSON 형태로 간단히 보여줍니다.
-                */}
-                <pre>{JSON.stringify(section.data, null, 2)}</pre>
-              </div>
-            );
-          })}
+          {sections.length > 0 ? (
+            sections.map(section => {
+              const sectionInfo = sectionComponents[section.type];
+              if (!sectionInfo) return null;
+
+              return (
+                <div key={section.id} className="preview-section">
+                  <h2>{sectionInfo.title}</h2>
+                  <SectionView section={section} sectionInfo={sectionInfo} />
+                </div>
+              );
+            })
+          ) : (
+             <div className="preview-section"><p>추가된 항목이 없습니다.</p></div>
+          )}
         </div>
       </div>
     </div>
