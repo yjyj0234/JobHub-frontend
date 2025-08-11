@@ -50,7 +50,7 @@ const PostDetail = () => {
         <div className="post-meta">
           <div className="author-info">
             <img src="https://via.placeholder.com/32" alt="작성자" className="author-avatar" />
-            <span className="author-name">{post.user?.name ?? post.userName ?? ''}</span>
+            {/* <span className="author-name">{post.user?.name ?? post.userName ?? ''}</span> */}
           </div>
           <div className="post-stats">
             <span className="post-date">{post.createdAt}</span>
