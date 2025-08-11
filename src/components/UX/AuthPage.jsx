@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import "../../css/Auth.css";
+import "../css/Auth.css";
 import { ChevronLeft, FileUp } from "lucide-react";
-import { useAuth } from "../../context/AuthContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 function AuthPage({ onSuccess }) {
   const { login, signup } = useAuth();
@@ -72,7 +72,7 @@ function AuthPage({ onSuccess }) {
           <div className="type-selection">
             <button
               type="button"
-              onClick={() => setAccountType("user") || setMode("register")}
+              onClick={() => setAccountType("USER") || setMode("register")}
               className="type-button"
               disabled={isLoading}
             >
@@ -80,7 +80,7 @@ function AuthPage({ onSuccess }) {
             </button>
             <button
               type="button"
-              onClick={() => setAccountType("company") || setMode("register")}
+              onClick={() => setAccountType("COMPANY") || setMode("register")}
               className="type-button"
               disabled={isLoading}
             >
@@ -120,7 +120,7 @@ function AuthPage({ onSuccess }) {
             </h2>
           </div>
           <form className="auth-form" onSubmit={handleSubmit}>
-            {accountType === "company" && (
+            {accountType === "COMPANY" && (
               <>
                 <div className="input-group">
                   <label htmlFor="companyName">회사명</label>
