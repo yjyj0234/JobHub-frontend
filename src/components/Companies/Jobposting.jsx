@@ -1,36 +1,76 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import "../css/Jobposting.css"
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { locations } from '../locationcode/LocationData';
 
 const Jobposting = () => {
+  axios.defaults.baseURL = 'http://localhost:8080';
   const navigate = useNavigate();
   
+  //지역코드
+  const [locations, setLocations] = useState([]);
   const [selectedLocation,setSelectedLocation]=useState('');
   const [subLocations,setSubLocations]=useState([]);
   const [selectedSubLocation,setSelectedSubLocation]=useState('');
+
+  //직무코드(DB)
+  const [jobCategories, setJobCategories] = useState([]); // DB에서 받은 대분류
+  const [jobKeywords, setJobKeywords] = useState([]);     // DB에서 받은 세부분류
+  const [selectedJobMid, setSelectedJobMid] = useState("");   // 1Depth(대분류) 코드
+  const [selectedJobCode, setSelectedJobCode] = useState(""); // 3Depth 코드
 
   //2. 상세 설명을 위한 state
   const [description,setDescription]=useState('');
   const textareaRef = useRef(null);
 
-  const handleLocationChange = (e) =>{
-    const locationName=e.target.value;
-    setSelectedLocation(locationName);
-      const locationData=locations.find(loc=>loc.name===locationName);
+//초기 로딩 : 직무 , 지역 분류
+useEffect(()=>{
+  axios.get('/api/search/job-categories')
+    .then(res => 
+      setJobCategories(res.data?.categories||[]))
+    .catch(console.error);
+  axios.get('/api/search/regions')
+  .then(res=>setLocations(res.data?.regions||[]))
+  .catch(console.error);
+},[]);
 
-  if(locationData){
-    setSubLocations(locationData.subLocations);
-    setSelectedSubLocation(locationData.subLocations[0]?.code || '');
+  // 직업 대분류 변경시
+  const handleJobMidChange = (e) => {
+    const parentId = e.target.value;
+    setSelectedJobMid(parentId);
+    setSelectedJobCode('');
+    setJobKeywords([]);
 
-  }else{
-    setSubLocations([]);
-    setSelectedSubLocation('');
-   }
+    if(!parentId) return;
+
+    axios.get('/api/search/job-categories',{params:{parentId}})
+    .then(res => {
+      const list = res.data?.categories || [];
+      setJobKeywords(list);
+      setSelectedJobCode(list[0]?.id ? String(list[0].id): '');
+    })
+    .catch(console.error);
   };
 
-  // 텍스트 스타일링 함수들
+
+   //지역변경
+   const handleLocationChange = (e) => {
+    const parentId=e.target.value;
+    setSelectedLocation(parentId);
+    setSelectedSubLocation('');
+    setSubLocations([]);
+
+    if(!parentId) return;
+      axios.get('/api/search/regions', { params: { parentId } })
+        .then(res => {
+          const list=res.data?.regions||[];
+          setSubLocations(list);
+          setSelectedSubLocation(list[0]?.id? String(list[0].id): '');
+        })
+        .catch(console.error);  
+  };
+
+  // 텍스트 스타일링
   const formatText = (command, value = null) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -48,10 +88,9 @@ const Jobposting = () => {
         formattedText = `__${selectedText}__`;
         break;
       case 'fontSize':
-        // 글자 크기를 바로 적용
         textarea.focus();
         document.execCommand('fontSize', false, value);
-        return; // 마크다운 형태로 변환하지 않고 바로 적용
+        return;
       case 'hr':
         formattedText = '\n---\n';
         break;
@@ -61,24 +100,66 @@ const Jobposting = () => {
 
     const newText = description.substring(0, start) + formattedText + description.substring(end);
     setDescription(newText);
-    
-    // 커서 위치 조정
     setTimeout(() => {
       textarea.focus();
       textarea.setSelectionRange(start + formattedText.length, start + formattedText.length);
     }, 0);
   };
 
-   const handleSubmit = (e)=>{
-    e.preventDefault();
-    console.log("선택된 지역 코드:", selectedSubLocation);
-
+  const handleSubmit = (e)=>{
+   e.preventDefault();
+    console.log('직무 대분류 id:', selectedJobMid);
+    console.log('직무 소분류 id:', selectedJobCode);
+    console.log('시/도 id:', selectedLocation);
+    console.log('시/군/구 id:', selectedSubLocation);
+    console.log('description:', description);
+  
   }
-
   return (
     <div className="jobposting-container large">
       <h2 className="jobposting-title">채용공고 등록</h2>
       <form className="jobposting-form" onSubmit={handleSubmit} >
+
+        {/* 🔹 직무 분류 (GET /api/search/job-categories, ?parentId=) */}
+        <fieldset className="form-section">
+          <legend>직무 분류</legend>
+          <div className="form-group-inline" style={{ gap: '10px' }}>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label htmlFor="job_mid_cd">직무 대분류</label>
+              <select
+                id="job_mid_cd"
+                value={selectedJobMid}
+                onChange={handleJobMidChange}
+              >
+                <option value="">대분류 선택</option>
+                {jobCategories.map(cat => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group" style={{ flex: 1 }}>
+              <label htmlFor="job_cd">세부 직무/키워드</label>
+              <select
+                id="job_cd"
+                value={selectedJobCode}
+                onChange={(e) => setSelectedJobCode(e.target.value)}
+                disabled={!selectedJobMid}
+              >
+                <option value="">세부 직무 선택</option>
+                {jobKeywords.map(k => (
+                  <option key={k.id} value={k.id}>
+                    {k.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </fieldset>
+
+
         {/* 기본 정보 */}
         <fieldset className="form-section">
           <legend>기본 정보</legend>
@@ -150,28 +231,36 @@ const Jobposting = () => {
               className="styled-textarea"
             />
           </div>
+          {/* 🔹 근무 지역 (GET /api/search/regions, ?parentId=) */}
           <div className="form-group">
-
             <label>근무 지역</label>
-            <div className='form-group-inline' style={{gap:'10px'}}>
-              <select 
-                value={selectedLocation} 
+            <div className='form-group-inline' style={{ gap: '10px' }}>
+              <select
+                value={selectedLocation}
                 onChange={handleLocationChange}
-                style={{flex:1}}>
+                style={{ flex: 1 }}
+              >
                 <option value="">시/도 선택</option>
-                {locations.map(loc=>(
-                  <option key={loc.code} value={loc.name}>{loc.name}</option>
+                {locations.map(loc => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name}
+                  </option>
                 ))}
               </select>
-              <select value={selectedSubLocation} onChange={(e)=>
-                setSelectedSubLocation(e.target.value)}
+
+              <select
+                value={selectedSubLocation}
+                onChange={(e) => setSelectedSubLocation(e.target.value)}
                 disabled={!selectedLocation}
-                style={{flex:1}}>
+                style={{ flex: 1 }}
+              >
                 <option value="">시/군/구 선택</option>
-                {subLocations.map(sub=>(
-                  <option key={sub.code} value={sub.code}>{sub.name}</option>
+                {subLocations.map(sub => (
+                  <option key={sub.id} value={sub.id}>
+                    {sub.name}
+                  </option>
                 ))}
-                </select>
+              </select>
             </div>
           </div>
           <div className="form-group">
