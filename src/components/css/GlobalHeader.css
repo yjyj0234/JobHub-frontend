@@ -1,260 +1,457 @@
+/* src/components/css/GlobalHeader.css */
+/* 기존 스타일은 그대로 유지 */
+/* 전체 헤더 스타일 */
 .global-header {
   width: 100%;
-  background-color: #fff;
-  padding: 0 40px;
-  box-sizing: border-box;
-  position: sticky;
-  top: 0;
-  z-index: 999;
-  transition: all 0.3s ease-in-out;
-  border-bottom: 1px solid #e0e0e0;
+  background-color: #fff; /* 배경색 */
+  padding: 0 40px; /* 좌우 패딩 */
+  box-sizing: border-box; /* 박스 사이즈 조정 */
+  position: sticky; /* 스크롤 시 고정 */
+  top: 0; /* 상단 고정 위치 */
+  z-index: 999; /* 다른 요소 위에 위치 */
+  border-bottom: 1px solid #e0e0e0; /* 하단 경계선 */
 }
-
+/* 헤더 내용 영역 */
 .header-content {
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 1200px; /* 최대 너비 */
+  margin: 0 auto; /* 중앙 정렬 */
 }
-
+/* 상단 바 스타일 */
 .top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 70px;
-  transition: height 0.3s ease-in-out;
+  display: flex; /* 플렉스 박스 사용 */
+  justify-content: space-between; /* 좌우 정렬 */
+  align-items: center; /* 수직 중앙 정렬 */
+  height: 70px; /* 높이 */
+  transition: height 0.3s ease-in-out; /* 높이 변화 애니메이션 */
 }
-
+/* 로고 이미지 스타일 */
 .logo img {
-  height: 30px;
-  display: block;
+  height: 30px; /* 로고 높이 */
+  display: block; /* 블록 요소로 설정 */
 }
-
+/* 내비게이션 스타일 */
 .nav {
-  display: flex;
-  gap: 30px;
+  display: flex; /* 플렉스 박스 사용 */
+  gap: 30px; /* 요소 간 간격 */
 }
+/* 내비게이션 버튼 스타일 */
 .nav button {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #333;
-  background-color: transparent;
-  transition: color 0.2s ease;
-  white-space: nowrap; 
-}
-.nav button:hover {
-  color: var(--c-accent);
-}
-
-.top-right-section {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.auth-buttons .cta-button {
-  background-color: var(--c-accent);
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 10px 20px;
-  border-radius: 20px;
-  white-space: nowrap;
-}
-.auth-buttons .cta-button.logout {
-  background-color: transparent;
-  color: #555;
-  border: 1px solid #ddd;
-}
-.auth-buttons .cta-button.logout:hover {
-  background-color: #f5f5f5;
-  border-color: #ccc;
-}
-
-/* --- 스크롤 시 보이는 검색창 --- */
-.scrolled-search {
-  display: flex;
-  align-items: center;
-  border: 1px solid #e0e0e0;
-  border-radius: 20px;
-  height: 38px;
-  background-color: #f7f7f7;
-  position: relative;
-}
-
-.search-input-wrapper-scrolled {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 12px;
-}
-.search-input-wrapper-scrolled input {
-  width: 120px;
-  font-size: 0.9rem;
-}
-
-.dropdown-trigger-scrolled {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 12px;
-  height: 100%;
-  border-left: 1px solid #e0e0e0;
-  font-size: 0.9rem;
-  color: #555;
-  background-color: transparent;
-  transition: background-color 0.2s ease;
-}
-.dropdown-trigger-scrolled:hover {
-  background-color: #efefef;
-}
-
-.search-container {
-  display: flex;
-  justify-content: center;
-  padding: 20px 0 30px 0;
-  position: relative;
-  transition: all 0.6s ease-in-out;
-}
-
-.pre-search-button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  max-width: 600px;
-  height: 50px;
-  border: 1px solid #ddd;
-  border-radius: 25px;
-  padding: 0 25px;
-  font-size: 1rem;
-  color: #888;
-  background-color: #f7f7f7;
-  transition: all 0.2s ease;
-}
-
-.pre-search-button:hover { 
-  border-color: #aaa; 
-}
-
-.expanded-search {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr auto 1fr auto;
-  align-items: center;
-  width: 100%;
-  max-width: 800px;
-  height: 56px;
-  border: 2px solid var(--c-accent);
-  border-radius: 30px;
-  background-color: #fff;
-  padding: 0 10px;
-  position: relative;
-}
-
-.search-input-wrapper {
-  display: flex;
-  align-items: center;
-  padding: 0 15px;
-  gap: 10px;
-}
-
-.search-input-wrapper label { 
-  display: flex; 
-  align-items: center; 
-}
-
-.search-input-wrapper input {
-  width: 100%;
-  height: 100%;
-  font-size: 1rem;
-}
-
-.divider {
-  width: 1px;
-  height: 24px;
-  background-color: #e0e0e0;
-}
-
-/* --- 👇 수정된 부분 2 --- */
-.dropdown-trigger {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 100%;
-  padding: 0 20px;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #555;
+  font-size: 1rem; /* 글자 크기 */
+  font-weight: 600; /* 글자 두께 */
+  color: #333; /* 글자 색상 */
   background-color: transparent; /* 배경 투명 */
-  transition: color 0.2s ease;
+  transition: color 0.2s ease; /* 색상 변화 애니메이션 */
+  white-space: nowrap; /* 줄 바꿈 방지 */
 }
-.dropdown-trigger:hover {
-  color: var(--c-accent);
+/* 내비게이션 버튼 호버 스타일 */
+.nav button:hover {
+  color: var(--c-accent); /* 호버 시 색상 변화 */
 }
-
+/* 상단 오른쪽 섹션 스타일 */
+.top-right-section {
+  display: flex; /* 플렉스 박스 사용 */
+  align-items: center; /* 수직 중앙 정렬 */
+  gap: 16px; /* 요소 간 간격 */
+}
+/* 인증 버튼 스타일 */
+.auth-buttons .cta-button {
+  background-color: var(--c-accent); /* 강조 색상 */
+  color: white; /* 글자 색상 */
+  font-size: 1rem; /* 글자 크기 */
+  font-weight: 600; /* 글자 두께 */
+  padding: 10px 20px; /* 패딩 */
+  border-radius: 20px; /* 둥근 모서리 */
+  white-space: nowrap; /* 줄 바꿈 방지 */
+}
+/* 로그아웃 버튼 스타일 */
+.auth-buttons .cta-button.logout {
+  background-color: transparent; /* 배경 투명 */
+  color: #555; /* 글자 색상 */
+  border: 1px solid #ddd; /* 테두리 */
+}
+/* 로그아웃 버튼 호버 스타일 */
+.auth-buttons .cta-button.logout:hover {
+  background-color: #f5f5f5; /* 호버 시 배경색 */
+  border-color: #ccc; /* 호버 시 테두리 색상 */
+}
+/* 스크롤 시 검색 바 스타일 */
+.scrolled-search {
+  display: grid; /* 그리드 레이아웃 사용 */
+  grid-template-columns: auto 1fr auto auto; /* 열 구성 */
+  align-items: center; /* 수직 중앙 정렬 */
+  width: 300px; /* 너비 */
+  border: 1px solid #e0e0e0; /* 테두리 */
+  border-radius: 20px; /* 둥근 모서리 */
+  height: 38px; /* 높이 */
+  background-color: #f7f7f7; /* 배경색 */
+  position: relative; /* 상대 위치 */
+  overflow: hidden; /* 내용 넘침 방지 */
+}
+/* 검색 입력 래퍼 스타일 (스크롤 시) */
+.search-input-wrapper-scrolled {
+  display: contents; /* 자식 요소 스타일을 유지 */
+}
+/* 검색 아이콘 스타일 (스크롤 시) */
+.search-input-wrapper-scrolled .icon {
+  padding: 0 4px 0 12px; /* 패딩 */
+  color: #888; /* 아이콘 색상 */
+}
+/* 검색 입력 필드 스타일 (스크롤 시) */
+.search-input-wrapper-scrolled input {
+  font-size: 0.9rem; /* 글자 크기 */
+  width: 100%; /* 너비 100% */
+}
+/* 드롭다운 트리거 스타일 (스크롤 시) */
+.dropdown-trigger-scrolled {
+  display: flex; /* 플렉스 박스 사용 */
+  align-items: center; /* 수직 중앙 정렬 */
+  gap: 6px; /* 요소 간 간격 */
+  padding: 0 12px; /* 패딩 */
+  height: 100%; /* 높이 */
+  border-left: 1px solid #e0e0e0; /* 왼쪽 테두리 */
+  font-size: 0.9rem; /* 글자 크기 */
+  color: #555; /* 글자 색상 */
+  background-color: transparent; /* 배경 투명 */
+  transition: background-color 0.2s ease; /* 배경색 변화 애니메이션 */
+  white-space: nowrap; /* 줄 바꿈 방지 */
+}
+/* 드롭다운 트리거 텍스트 스타일 (스크롤 시) */
+.dropdown-trigger-scrolled span {
+  max-width: 50px; /* 최대 너비 */
+  overflow: hidden; /* 넘침 방지 */
+  text-overflow: ellipsis; /* 넘치는 텍스트 생략 */
+}
+/* 드롭다운 트리거 호버 스타일 (스크롤 시) */
+.dropdown-trigger-scrolled:hover {
+  background-color: #efefef; /* 호버 시 배경색 */
+}
+/* 검색 컨테이너 스타일 */
+.search-container {
+  display: flex; /* 플렉스 박스 사용 */
+  justify-content: center; /* 중앙 정렬 */
+  padding: 20px 0 30px 0; /* 상하 패딩 */
+  position: relative; /* 상대 위치 */
+  transition: padding 0.2s ease-in, transform 0.2s ease-in;
+}
+/* 검색 버튼 스타일 */
+.pre-search-button {
+  display: flex; /* 플렉스 박스 사용 */
+  align-items: center; /* 수직 중앙 정렬 */
+  gap: 10px; /* 요소 간 간격 */
+  width: 100%; /* 너비 100% */
+  max-width: 600px; /* 최대 너비 */
+  height: 50px; /* 높이 */
+  border: 1px solid #ddd; /* 테두리 */
+  border-radius: 25px; /* 둥근 모서리 */
+  padding: 0 25px; /* 패딩 */
+  font-size: 1rem; /* 글자 크기 */
+  color: #888; /* 글자 색상 */
+  background-color: #f7f7f7; /* 배경색 */
+  transition: all 0.2s ease; /* 모든 변화 애니메이션 */
+}
+/* 검색 버튼 호버 스타일 */
+.pre-search-button:hover {
+  border-color: #aaa; /* 호버 시 테두리 색상 */
+}
+/* 확장 검색 스타일 */
+.expanded-search {
+  display: grid; /* 그리드 레이아웃 사용 */
+  grid-template-columns: 2.5fr auto 1.5fr auto 1.5fr 90px; /* 열 구성 */
+  align-items: center; /* 수직 중앙 정렬 */
+  width: 100%; /* 너비 100% */
+  max-width: 800px; /* 최대 너비 */
+  height: 56px; /* 높이 */
+  border-radius: 30px; /* 둥근 모서리 */
+  border: 2px solid var(--c-accent); /* 강조 색상 테두리 */
+  background-color: #fff; /* 배경색 */
+  padding: 0; /* 패딩 없음 */
+  overflow: visible; /* 넘침 허용 */
+  position: relative; /* 상대 위치 */
+}
+/* 검색 입력 래퍼 스타일 */
+.search-input-wrapper,
+.dropdown-trigger {
+  height: 100%; /* 높이 */
+  display: flex; /* 플렉스 박스 사용 */
+  align-items: center; /* 수직 중앙 정렬 */
+  position: relative; /* 상대 위치 */
+}
+/* 검색 입력 래퍼 패딩 */
+.search-input-wrapper {
+  padding: 0 20px; /* 좌우 패딩 */
+  gap: 10px; /* 요소 간 간격 */
+}
+/* 검색 입력 필드 스타일 */
+.search-input-wrapper input {
+  width: 100%; /* 너비 100% */
+  height: 100%; /* 높이 100% */
+  font-size: 1rem; /* 글자 크기 */
+}
+/* 드롭다운 트리거 스타일 */
+.dropdown-trigger {
+  padding: 0 20px; /* 좌우 패딩 */
+  font-size: 1rem; /* 글자 크기 */
+  font-weight: 500; /* 글자 두께 */
+  color: #555; /* 글자 색상 */
+  background-color: transparent; /* 배경 투명 */
+  width: 100%; /* 너비 100% */
+  text-align: left; /* 왼쪽 정렬 */
+  transition: color 0.2s ease; /* 색상 변화 애니메이션 */
+  justify-content: space-between; /* 좌우 정렬 */
+}
+/* 드롭다운 트리거 내부 div 스타일 */
+.dropdown-trigger > div {
+  display: flex; /* 플렉스 박스 사용 */
+  align-items: center; /* 수직 중앙 정렬 */
+  gap: 10px; /* 요소 간 간격 */
+  overflow: hidden; /* 넘침 방지 */
+}
+/* 드롭다운 트리거 텍스트 스타일 */
+.dropdown-trigger span {
+  white-space: nowrap; /* 줄 바꿈 방지 */
+  overflow: hidden; /* 넘침 방지 */
+  text-overflow: ellipsis; /* 넘치는 텍스트 생략 */
+}
+/* 구분선 스타일 */
+.divider {
+  width: 1px; /* 너비 */
+  height: 24px; /* 높이 */
+  background-color: #e0e0e0; /* 색상 */
+}
+/* 검색 제출 버튼 스타일 */
 .search-submit-button {
-  height: 44px;
-  width: 90px;
-  border-radius: 22px;
-  background-color: var(--c-accent);
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
+  height: 100%; /* 높이 100% */
+  width: 100%; /* 너비 100% */
+  border-radius: 30px; /* 모서리 둥글지 않음 */
+  background-color: var(--c-accent); /* 강조 색상 */
+  color: white; /* 글자 색상 */
+  font-size: 1rem; /* 글자 크기 */
+  font-weight: 600; /* 글자 두께 */
 }
-
-/* --- 공통 드롭다운 패널 --- */
-.dropdown-panel {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 0;
-  width: 820px;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  padding: 25px;
-  box-sizing: border-box;
-  animation: dropdown-appear 0.3s ease;
-}
-
-.scrolled-search .dropdown-panel {
-    left: auto;
-    right: 0;
-    width: 500px;
-}
-
-
+/* ================================================================= */
+/* ▼▼▼ 드롭다운 패널 스타일 (요청사항에 맞춰 새로 작성) ▼▼▼ */
+/* ================================================================= */
+/* 드롭다운 패널 나타나는 애니메이션 */
 @keyframes dropdown-appear {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(-10px); } /* 시작 상태 */
+  to { opacity: 1; transform: translateY(0); } /* 끝 상태 */
 }
-.dropdown-panel h4 { margin: 0 0 20px 0; font-size: 1.1rem; }
-
-.region-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+/* 드롭다운 패널 스타일 */
+.dropdown-panel {
+  position: absolute; /* 절대 위치 */
+  top: calc(100% + 10px); /* 하단 위치 */
+  left: 0; /* 왼쪽 정렬 */
+  width: 100%; /* 너비 100% */
+  max-width: 800px; /* 최대 너비 (expanded-search와 동일하게 설정) */
+  background-color: #fff; /* 배경색 */
+  border: 1px solid #ddd; /* 테두리 */
+  border-radius: 20px; /* 둥근 모서리 */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* 그림자 */
+  box-sizing: border-box; /* 박스 사이즈 조정 */
+  animation: dropdown-appear .3s ease; /* 애니메이션 */
+  z-index: 10; /* 다른 요소 위에 위치 */
+  height: 450px; /* 모달의 전체 높이 고정 */
+  display: flex; /* 플렉스 박스 사용 */
+  flex-direction: column; /* 세로 방향 정렬 */
+  overflow: hidden; /* 넘침 방지 */
 }
-.job-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+/* 드롭다운 패널 본문 스타일 */
+.dropdown-panel-body {
+  flex-grow: 1; /* 헤더, 푸터를 제외한 모든 공간 차지 */
+  display: flex; /* 플렉스 박스 사용 */
+  overflow: hidden; /* 내부 패널 스크롤을 위해 */
 }
-.item-button {
-  padding: 12px;
-  border-radius: 8px;
-  text-align: center;
-  transition: background-color 0.2s;
+/* 왼쪽 패널 스타일 */
+.panel-left {
+  width: 200px; /* 너비 */
+  background-color: #f8f9fa; /* 배경색 */
+  border-right: 1px solid #e9ecef; /* 오른쪽 테두리 */
+  overflow-y: auto; /* 내용 많아지면 스크롤 */
+  padding: 10px 0; /* 상하 패딩 */
 }
-.item-button:hover { background-color: #f5f5f5; }
-
-/* --- 스크롤 시 헤더 변화 --- */
+/* 왼쪽 패널 아이템 스타일 */
+.panel-left-item {
+  display: flex; /* 플렉스 박스 사용 */
+  justify-content: space-between; /* 좌우 정렬 */
+  align-items: center; /* 수직 중앙 정렬 */
+  width: 100%; /* 너비 100% */
+  padding: 14px 20px; /* 패딩 */
+  font-size: 0.95rem; /* 글자 크기 */
+  font-weight: 500; /* 글자 두께 */
+  text-align: left; /* 왼쪽 정렬 */
+  color: #333; /* 글자 색상 */
+  transition: background-color 0.2s, color 0.2s; /* 배경색 및 색상 변화 애니메이션 */
+}
+/* 왼쪽 패널 아이템 호버 스타일 */
+.panel-left-item:hover {
+  background-color: #e9ecef; /* 호버 시 배경색 */
+}
+/* 왼쪽 패널 아이템 활성화 스타일 */
+.panel-left-item.active {
+  background-color: #fff; /* 활성화 시 배경색 */
+  font-weight: 700; /* 글자 두께 */
+  color: var(--c-accent); /* 강조 색상 */
+}
+/* 선택된 항목 수 스타일 */
+.selection-count {
+  font-size: 0.85rem; /* 글자 크기 */
+  font-weight: 700; /* 글자 두께 */
+  color: var(--c-accent); /* 강조 색상 */
+  min-width: 20px; /* 최소 너비 */
+  text-align: right; /* 오른쪽 정렬 */
+}
+/* 오른쪽 패널 스타일 */
+.panel-right {
+  flex-grow: 1; /* 남은 공간 차지 */
+  display: flex; /* 플렉스 박스 사용 */
+  flex-direction: column; /* 세로 방향 정렬 */
+  overflow: hidden; /* 넘침 방지 */
+}
+/* 오른쪽 패널 헤더 스타일 */
+.panel-right-header {
+  padding: 15px 25px; /* 패딩 */
+  border-bottom: 1px solid #e9ecef; /* 하단 테두리 */
+  flex-shrink: 0; /* 크기 축소 방지 */
+}
+/* 오른쪽 패널 헤더 체크박스 레이블 스타일 */
+.panel-right-header .checkbox-label {
+  font-weight: 700; /* 글자 두께 */
+  font-size: 1rem; /* 글자 크기 */
+}
+/* 오른쪽 패널 리스트 스타일 */
+.panel-right-list {
+  padding: 15px 25px; /* 패딩 */
+  overflow-y: auto; /* 내용 많아지면 스크롤 */
+  display: grid; /* 그리드 레이아웃 사용 */
+  grid-template-columns: repeat(3, 1fr); /* 3열 그리드 */
+  gap: 15px; /* 요소 간 간격 */
+  align-content: flex-start; /* 상단 정렬 */
+}
+/* 커스텀 체크박스 스타일 (공통) */
+.checkbox-label {
+  display: inline-flex; /* 인라인 플렉스 박스 사용 */
+  align-items: center; /* 수직 중앙 정렬 */
+  gap: 10px; /* 요소 간 간격 */
+  cursor: pointer; /* 커서 포인터 */
+  font-size: 0.95rem; /* 글자 크기 */
+  position: relative; /* 상대 위치 */
+  user-select: none; /* 텍스트 선택 방지 */
+  transition: color 0.2s; /* 색상 변화 애니메이션 */
+}
+/* 체크박스 레이블 호버 스타일 */
+.checkbox-label:hover {
+  color: var(--c-accent); /* 호버 시 색상 변화 */
+}
+/* 체크박스 입력 스타일 */
+.checkbox-label input {
+  position: absolute; /* 절대 위치 */
+  opacity: 0; /* 투명 */
+  cursor: pointer; /* 커서 포인터 */
+  height: 0; /* 높이 0 */
+  width: 0; /* 너비 0 */
+}
+/* 체크박스 스타일 */
+.checkmark {
+  position: relative; /* 상대 위치 */
+  display: inline-block; /* 인라인 블록 */
+  width: 20px; /* 너비 */
+  height: 20px; /* 높이 */
+  background-color: #fff; /* 배경색 */
+  border: 1.5px solid #ccc; /* 테두리 */
+  border-radius: 4px; /* 둥근 모서리 */
+  transition: all 0.2s; /* 모든 변화 애니메이션 */
+}
+/* 체크박스 레이블 호버 시 체크박스 테두리 색상 변화 */
+.checkbox-label:hover .checkmark {
+  border-color: var(--c-accent); /* 호버 시 테두리 색상 변화 */
+}
+/* 체크박스 선택 시 스타일 */
+input:checked ~ .checkmark {
+  background-color: var(--c-accent); /* 선택 시 배경색 */
+  border-color: var(--c-accent); /* 선택 시 테두리 색상 */
+}
+/* 체크박스 체크 표시 스타일 */
+.checkmark:after {
+  content: ""; /* 내용 없음 */
+  position: absolute; /* 절대 위치 */
+  display: none; /* 기본적으로 숨김 */
+  left: 6px; /* 왼쪽 위치 */
+  top: 2px; /* 상단 위치 */
+  width: 5px; /* 너비 */
+  height: 10px; /* 높이 */
+  border: solid white; /* 흰색 테두리 */
+  border-width: 0 2.5px 2.5px 0; /* 테두리 두께 */
+  transform: rotate(45deg); /* 45도 회전 */
+}
+/* 체크박스 선택 시 체크 표시 보이기 */
+input:checked ~ .checkmark:after {
+  display: block; /* 표시 */
+}
+/* 드롭다운 푸터 스타일 */
+.dropdown-footer {
+  flex-shrink: 0; /* 크기 축소 방지 */
+  padding: 15px 30px; /* 패딩 */
+  border-top: 1px solid #e0e0e0; /* 상단 테두리 */
+  background-color: #f8f9fa; /* 배경색 */
+  display: flex; /* 플렉스 박스 사용 */
+  justify-content: space-between; /* 좌우 정렬 */
+  align-items: center; /* 수직 중앙 정렬 */
+}
+/* 선택 정보 스타일 */
+.selection-info {
+  font-size: 0.9rem; /* 글자 크기 */
+  font-weight: 500; /* 글자 두께 */
+  color: #555; /* 글자 색상 */
+  display: flex; /* 플렉스 박스 사용 */
+  align-items: center; /* 수직 중앙 정렬 */
+  gap: 6px; /* 요소 간 간격 */
+}
+/* 선택 정보 아이콘 색상 */
+.selection-info svg {
+  color: var(--c-accent); /* 강조 색상 */
+}
+/* 선택 정보 강조 텍스트 스타일 */
+.selection-info strong {
+  color: var(--c-accent); /* 강조 색상 */
+}
+/* 푸터 버튼 스타일 */
+.footer-buttons {
+  display: flex; /* 플렉스 박스 사용 */
+  gap: 10px; /* 요소 간 간격 */
+}
+/* 푸터 버튼 스타일 */
+.footer-btn {
+  padding: 8px 18px; /* 패딩 */
+  border-radius: 6px; /* 둥근 모서리 */
+  font-weight: 600; /* 글자 두께 */
+  transition: all 0.2s; /* 모든 변화 애니메이션 */
+}
+/* 리셋 버튼 스타일 */
+.footer-btn.reset {
+  background-color: transparent; /* 배경 투명 */
+  color: #555; /* 글자 색상 */
+}
+/* 리셋 버튼 호버 스타일 */
+.footer-btn.reset:hover {
+  background-color: #e9ecef; /* 호버 시 배경색 */
+}
+/* 적용 버튼 스타일 */
+.footer-btn.apply {
+  background-color: var(--c-accent); /* 강조 색상 */
+  color: white; /* 글자 색상 */
+}
+/* 적용 버튼 호버 스타일 */
+.footer-btn.apply:hover {
+  background-color: #3a75c4; /* 호버 시 배경색 */
+}
+/* 스크롤 시 헤더 변화 */
 .global-header.scrolled .top-bar {
-  height: 60px;
+  height: 60px; /* 스크롤 시 높이 변화 */
 }
-
 .global-header.scrolled .search-container {
-  height: 0;
-  padding: 0;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
+  height: 0; /* 스크롤 시 검색 컨테이너 높이 0 */
+  padding: 0; /* 패딩 없음 */
+  opacity: 0; /* 투명 */
+  visibility: hidden; /* 보이지 않음 */
+  pointer-events: none; /* 클릭 이벤트 없음 */
 }
