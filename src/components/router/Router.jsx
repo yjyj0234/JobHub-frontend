@@ -98,6 +98,7 @@ function AppRouter() {
         <Route path="/jobposting" element={<Jobposting/>}/>
         <Route path="/postlist" element={<PostList/>}/>
         <Route path="/postlist/addpost" element={<AddPost/>}/>
+        <Route path="/postlist/detail/:id" element={<PostDetail/>}/>
       </Route>
     </Routes>
      //</AuthProvider>

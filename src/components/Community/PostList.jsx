@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import '../css/PostList.css';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const formatDate = (isoString) => {
@@ -11,60 +12,53 @@ const formatDate = (isoString) => {
 }
 
 const PostList = () => {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [posts] = useState([
-     {
-    id: '1',
-    title: '첫 번째 글입니다',
-    content: '이건 예시 게시글의 내용 미리보기입니다.',
-    userName: '홍길동',
-    createdAt: '2025-08-08T12:00:00Z',
-    comments: 0,
-    viewCount: 350
-  }
-  ])
-  const [popularPosts] = useState([
-    {
-      id: 'p1',
-      title: '테스트',
-      content:
-        '',
-      comments: 0,
-      views: 0,
-    },
-    {
-      id: 'p2',
-      title: '',
-      content:
-        '',
-      comments: 2,
-      viewCount: 275,
-    },
-    {
-      id: 'p3',
-      title: '이직 하는게 맞겠죠?',
-      content:
-        '대기업 자회사 정규직으로 근무 중인데, 커리어 성장 측면에서 이직을 고민하고 있습니다...',
-      comments: 8,
-      viewCount: 207,
-    },
-  ])
-  //네이게이트
+  const [searchTerm, setSearchTerm] = useState('');
+  const [posts, setPosts] = useState([]);
+  
+
+    useEffect(() => {
+    axios.get("http://localhost:8080/community/list") // 백엔드 API 주소
+      .then(res => {
+        setPosts(res.data ?? []); // 전체 게시글
+      })
+      .catch(err => {
+        console.error("게시글 불러오기 실패:", err)
+        setPosts([])
+      });
+      }, []);
+
+      
+  const popularPosts = useMemo(() => {
+    if (!posts?.length) return []
+    return [...posts]
+      .map(p => ({ ...p, _score: (p.viewCount ?? 0) + (p.comments ?? 0) * 10 }))
+      .sort((a, b) => b._score - a._score)
+      .slice(0, 3)
+  }, [posts])
+
+  //네비게이트
   const navigate = useNavigate();
 
   const addPost = () =>{
     navigate('/postlist/addpost');
   }
 
-  const filteredPosts = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase()
-    if (!query) return posts
-    return posts.filter((p) =>
-      p.title.toLowerCase().includes(query) ||
-      p.content.toLowerCase().includes(query) ||
-      p.userName.toLowerCase().includes(query)
-    )
-  }, [posts, searchTerm])
+  const goDetail = (id) =>
+  {
+    navigate(`/postlist/detail/${id}`);
+  }
+
+const lower = (v) => (v ?? '').toString().toLowerCase();
+ const filteredPosts = useMemo(() => {
+  const q = lower(searchTerm.trim());
+  if (!q) return posts;
+  return posts.filter(p =>
+    lower(p.title).includes(q) ||
+    lower(p.content).includes(q) ||
+    lower(p.userName).includes(q)
+  );
+}, [posts, searchTerm]);
+
 
   return (
     <div className="pl-page">
@@ -77,7 +71,10 @@ const PostList = () => {
 
           <div className="pl-popular-grid">
             {popularPosts.map((item) => (
-              <a key={item.id} href="#" className="pl-popular-item">
+              <a key={item.id} onClick={(e) => {
+                e.preventDefault();
+                goDetail(item.id);
+              }} href="#" className="pl-popular-item">
                 <span className="pl-badge">인기글</span>
                 <h3 className="pl-popular-item-title">{item.title}</h3>
                 <p className="pl-popular-item-preview">{item.content}</p>
@@ -92,8 +89,8 @@ const PostList = () => {
         </section>
 
         <header className="pl-header">
-          <h1 className="pl-title">커리어피드 게시판</h1>
-          
+          <h1 className="pl-title">자유게시판</h1>
+          <p></p>
           <div className="pl-actions">
             <input
               type="text"
@@ -109,11 +106,14 @@ const PostList = () => {
         <ul className="pl-list" role="list">
           {filteredPosts.map((post) => (
             <li key={post.id} className="pl-card">
-              <a href="#" className="pl-card-title">{post.title}</a>
+              <a style={{textDecoration:'none'}} href='#' onClick={(e)=>{
+                e.preventDefault();
+                goDetail(post.id)
+              }} className="pl-card-title">{post.title}</a>
               <p className="pl-card-preview">{post.content}</p>
               <div className="pl-card-footer">
                 <div className="pl-card-meta">
-                  <span className="pl-meta-author">{post.userName}</span>
+                  <span className="pl-meta-author">{post.userId.name}</span>
                   <span className="pl-meta-sep" aria-hidden="true">·</span>
                   <time className="pl-meta-date" dateTime={post.createdAt}>{formatDate(post.createdAt)}</time>
                 </div>
