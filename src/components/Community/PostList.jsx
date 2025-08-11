@@ -113,7 +113,7 @@ const lower = (v) => (v ?? '').toString().toLowerCase();
               <p className="pl-card-preview">{post.content}</p>
               <div className="pl-card-footer">
                 <div className="pl-card-meta">
-                  <span className="pl-meta-author">{post.userId}</span>
+                  <span className="pl-meta-author">{post.userName}</span>
                   <span className="pl-meta-sep" aria-hidden="true">·</span>
                   <time className="pl-meta-date" dateTime={post.createdAt}>{formatDate(post.createdAt)}</time>
                 </div>
