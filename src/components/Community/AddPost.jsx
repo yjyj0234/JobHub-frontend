@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import '../css/AddPost.css'
 import axios from 'axios'
+axios.defaults.withCredentials = true; // 쿠키 허용 설정
 import { useNavigate } from 'react-router-dom'
 
 
@@ -52,7 +53,7 @@ const AddPost = () => {
    const handleSubmit = async (e) => {
     e.preventDefault()
 
-    const data = { userId: 12, title, content}
+    const data = {userId: 12, title, content}
 
     try {
      await axios.post('http://localhost:8080/community/addpost', data)
