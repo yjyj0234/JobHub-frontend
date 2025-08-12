@@ -305,11 +305,7 @@ function GlobalHeader({ onLoginClick }) {
             </button>
             <button type="button">취업툴</button>
             <button type="button">이력서 코칭 AI</button>
-            {isAuthed && (
-              <span className="user-id">
-                내 ID: {id} {email}
-              </span>
-            )}
+            {isAuthed && <span className="user-id">내 ID: {id}</span>}
             {/* 토큰에서 id 가져다쓰기 */}
           </nav>
           <div className="top-right-section">
