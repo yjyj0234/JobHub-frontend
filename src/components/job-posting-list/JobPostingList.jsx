@@ -1,182 +1,91 @@
-
+// src/components/JobPostingList.jsx
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Briefcase, Clock, Users, DollarSign, Calendar, BookOpen, ChevronRight, Filter, Star, Eye, Building2, Award, ChevronDown, User, Home } from 'lucide-react';
+import {
+  Search, MapPin, Briefcase, Eye, Building2, Award, BookOpen, Star, User, DollarSign
+} from 'lucide-react';
 import '../css/JobPostingList.css';
-
-// ==================== 더미 채용공고 데이터 ====================
-const dummyJobs = [
-  {
-    id: 1,
-    company: '네이버',
-    logo: 'N',
-    position: 'React 프론트엔드 개발자',
-    location: '경기 성남시',
-    experience: '경력 3~7년',
-    education: '학사 이상',
-    employment: '정규직',
-    salary: '6,000~8,000만원',
-    skills: ['React', 'TypeScript', 'Next.js', 'Redux', 'Jest'],
-    deadline: 'D-7',
-    views: 2453,
-    applications: 89,
-    isNew: true,
-    bookmarked: false
-  },
-  {
-    id: 2,
-    company: '카카오',
-    logo: 'K',
-    position: 'Java 백엔드 개발자 (커머스 플랫폼)',
-    location: '경기 성남시',
-    experience: '경력 5년 이상',
-    education: '학사 이상',
-    employment: '정규직',
-    salary: '7,000만원~1억',
-    skills: ['Java', 'Spring Boot', 'MySQL', 'AWS', 'Kafka'],
-    deadline: '상시채용',
-    views: 3892,
-    applications: 156,
-    isNew: false,
-    bookmarked: false
-  },
-  {
-    id: 3,
-    company: '토스',
-    logo: 'T',
-    position: '풀스택 개발자 (Node.js/React)',
-    location: '서울 강남구',
-    experience: '경력 2~5년',
-    education: '학사 이상',
-    employment: '정규직',
-    salary: '5,000~7,000만원',
-    skills: ['Node.js', 'React', 'TypeScript', 'PostgreSQL', 'GraphQL'],
-    deadline: 'D-14',
-    views: 1876,
-    applications: 67,
-    isNew: true,
-    bookmarked: false
-  },
-  {
-    id: 4,
-    company: '쿠팡',
-    logo: 'C',
-    position: 'DevOps 엔지니어',
-    location: '서울 송파구',
-    experience: '경력 3년 이상',
-    education: '무관',
-    employment: '정규직',
-    salary: '협의 후 결정',
-    skills: ['Kubernetes', 'Docker', 'AWS', 'Terraform', 'Jenkins'],
-    deadline: 'D-21',
-    views: 1234,
-    applications: 43,
-    isNew: false,
-    bookmarked: true
-  },
-  {
-    id: 5,
-    company: '배달의민족',
-    logo: 'B',
-    position: 'iOS 개발자',
-    location: '서울 송파구',
-    experience: '경력 3~5년',
-    education: '학사 이상',
-    employment: '정규직',
-    salary: '5,500~7,500만원',
-    skills: ['Swift', 'iOS', 'RxSwift', 'MVVM', 'UIKit'],
-    deadline: 'D-10',
-    views: 987,
-    applications: 34,
-    isNew: true,
-    bookmarked: false
-  },
-  {
-    id: 6,
-    company: '라인',
-    logo: 'L',
-    position: '데이터 엔지니어',
-    location: '경기 성남시',
-    experience: '경력 4년 이상',
-    education: '학사 이상',
-    employment: '정규직',
-    salary: '6,500~9,000만원',
-    skills: ['Python', 'Spark', 'Hadoop', 'Airflow', 'BigQuery'],
-    deadline: '상시채용',
-    views: 2100,
-    applications: 78,
-    isNew: false,
-    bookmarked: false
-  }
-];
 
 // ==================== 검색 컴포넌트 ====================
 const JobSearchBar = ({ onSearch }) => {
   const [activeTab, setActiveTab] = useState('region');
-  const [regions, setRegions] = useState([]);
-  const [jobCategories, setJobCategories] = useState([]);
+  const [regions, setRegions] = useState([]);             // [{ id, name, parentId, subRegions: [{id, name}] }]
+  const [jobCategories, setJobCategories] = useState([]); // [{ id, name, parentId, subCategories: [{id, name}] }]
+  const [loading, setLoading] = useState({ regions: false, categories: false });
+  const [error, setError] = useState({ regions: null, categories: null });
+
   const [searchData, setSearchData] = useState({
+    keyword: '',
     region1: '',
     region2: '',
     category1: '',
-    category2: '',
-    keyword: ''
+    category2: ''
   });
   const [quickFilters, setQuickFilters] = useState([]);
 
-  // DB에서 지역 데이터 가져오기
+  // helpers: API payload → UI 구조 매핑
+  const normalizeRegions = (raw) =>
+    (raw ?? []).map(r => ({
+      id: r.id,
+      name: r.name,
+      parentId: r.parentId ?? null,
+      subRegions: (r.children ?? []).map(c => ({
+        id: c.id,
+        name: c.name,
+        parentId: c.parentId ?? r.id
+      }))
+    }));
+
+  const normalizeCategories = (raw) =>
+    (raw ?? []).map(c => ({
+      id: c.id,
+      name: c.name,
+      parentId: c.parentId ?? null,
+      subCategories: (c.children ?? []).map(sc => ({
+        id: sc.id,
+        name: sc.name,
+        parentId: sc.parentId ?? c.id
+      }))
+    }));
+
+  // 지역 트리 로드
   useEffect(() => {
     const fetchRegions = async () => {
+      setLoading(prev => ({ ...prev, regions: true }));
+      setError(prev => ({ ...prev, regions: null }));
       try {
-        const response = await fetch('http://localhost:8080/search/regions');
-        const data = await response.json();
-        setRegions(data);
-      } catch (error) {
-        console.error('지역 데이터 로드 실패:', error);
-        // 백엔드 연결 실패시 기본 데이터 사용
-        setRegions([
-          { id: 1, name: '서울', parentId: null, subRegions: [
-            { id: 101, name: '강남구' }, { id: 102, name: '강동구' }, { id: 103, name: '강북구' },
-            { id: 104, name: '강서구' }, { id: 105, name: '관악구' }, { id: 106, name: '광진구' }
-          ]},
-          { id: 2, name: '경기', parentId: null, subRegions: [
-            { id: 201, name: '수원시' }, { id: 202, name: '성남시' }, { id: 203, name: '안양시' },
-            { id: 204, name: '부천시' }, { id: 205, name: '광명시' }, { id: 206, name: '용인시' }
-          ]},
-          { id: 3, name: '인천', parentId: null, subRegions: [
-            { id: 301, name: '중구' }, { id: 302, name: '동구' }, { id: 303, name: '연수구' },
-            { id: 304, name: '남동구' }, { id: 305, name: '부평구' }, { id: 306, name: '계양구' }
-          ]}
-        ]);
+        const res = await fetch('http://localhost:8080/api/search/regions/tree');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const payload = await res.json(); // { regions: [...] }
+        const raw = Array.isArray(payload) ? payload : payload.regions;
+        setRegions(normalizeRegions(raw));
+      } catch (e) {
+        console.error('지역 데이터 로드 실패:', e);
+        setRegions([]);
+        setError(prev => ({ ...prev, regions: '지역 데이터를 불러오지 못했습니다.' }));
+      } finally {
+        setLoading(prev => ({ ...prev, regions: false }));
       }
     };
     fetchRegions();
   }, []);
 
-  // DB에서 직무 카테고리 데이터 가져오기
+  // 직무 트리 로드
   useEffect(() => {
     const fetchJobCategories = async () => {
+      setLoading(prev => ({ ...prev, categories: true }));
+      setError(prev => ({ ...prev, categories: null }));
       try {
-        const response = await fetch('http://localhost:8080/search/job-categories');
-        const data = await response.json();
-        setJobCategories(data);
-      } catch (error) {
-        console.error('직무 카테고리 데이터 로드 실패:', error);
-        // 백엔드 연결 실패시 기본 데이터 사용
-        setJobCategories([
-          { id: 1, name: 'IT/개발', parentId: null, subCategories: [
-            { id: 101, name: '백엔드 개발' }, { id: 102, name: '프론트엔드 개발' },
-            { id: 103, name: '풀스택 개발' }, { id: 104, name: '모바일 개발' },
-            { id: 105, name: 'DevOps' }, { id: 106, name: '데이터 엔지니어' }
-          ]},
-          { id: 2, name: '디자인', parentId: null, subCategories: [
-            { id: 201, name: 'UI/UX 디자인' }, { id: 202, name: '그래픽 디자인' },
-            { id: 203, name: '웹 디자인' }, { id: 204, name: '모바일 디자인' }
-          ]},
-          { id: 3, name: '마케팅', parentId: null, subCategories: [
-            { id: 301, name: '디지털 마케팅' }, { id: 302, name: '콘텐츠 마케팅' },
-            { id: 303, name: '퍼포먼스 마케팅' }, { id: 304, name: '브랜드 마케팅' }
-          ]}
-        ]);
+        const res = await fetch('http://localhost:8080/api/search/job-categories/tree');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const payload = await res.json(); // { categories: [...] }
+        const raw = Array.isArray(payload) ? payload : payload.categories;
+        setJobCategories(normalizeCategories(raw));
+      } catch (e) {
+        console.error('직무 카테고리 데이터 로드 실패:', e);
+        setJobCategories([]);
+        setError(prev => ({ ...prev, categories: '직무 카테고리를 불러오지 못했습니다.' }));
+      } finally {
+        setLoading(prev => ({ ...prev, categories: false }));
       }
     };
     fetchJobCategories();
@@ -184,9 +93,7 @@ const JobSearchBar = ({ onSearch }) => {
 
   const toggleQuickFilter = (filter) => {
     setQuickFilters(prev =>
-      prev.includes(filter)
-        ? prev.filter(f => f !== filter)
-        : [...prev, filter]
+      prev.includes(filter) ? prev.filter(f => f !== filter) : [...prev, filter]
     );
   };
 
@@ -194,17 +101,23 @@ const JobSearchBar = ({ onSearch }) => {
     onSearch({ ...searchData, quickFilters, activeTab });
   };
 
+  const topRegions = (regions ?? []).filter(r => !r.parentId);
+  const selectedTopRegion = (regions ?? []).find(r => r.id === Number(searchData.region1));
+
+  const topCategories = (jobCategories ?? []).filter(c => !c.parentId);
+  const selectedTopCategory = (jobCategories ?? []).find(c => c.id === Number(searchData.category1));
+
   return (
     <div className="search-tab-container">
-      {/* 탭 버튼 */}
+      {/* 탭 */}
       <div className="search-tabs">
-        <button 
+        <button
           className={`search-tab ${activeTab === 'region' ? 'active' : ''}`}
           onClick={() => setActiveTab('region')}
         >
           지역별
         </button>
-        <button 
+        <button
           className={`search-tab ${activeTab === 'job' ? 'active' : ''}`}
           onClick={() => setActiveTab('job')}
         >
@@ -212,77 +125,224 @@ const JobSearchBar = ({ onSearch }) => {
         </button>
       </div>
 
-      {/* 검색 필드 */}
-      <div className="search-fields">
-        {activeTab === 'region' ? (
-          <>
-            <div className="search-field-group">
-              <label className="search-label">시/도</label>
-              <select 
-                className="search-select"
-                value={searchData.region1}
-                onChange={(e) => setSearchData({...searchData, region1: e.target.value, region2: ''})}
-              >
-                <option value="">전체</option>
-                {regions.filter(r => !r.parentId).map(region => (
-                  <option key={region.id} value={region.id}>{region.name}</option>
-                ))}
-              </select>
+      {/* 메인 헤더 느낌의 리본형 검색 UI */}
+      <div className="search-ribbon">
+        {/* 1행: 키워드 + (탭에 따라 지역 or 직무) */}
+        <div className="ribbon-row">
+          {/* 키워드 */}
+          <div className="ribbon-cell cell--keyword">
+            <div className="input-with-icon">
+              <Search size={18} className="prefix-icon" />
+              <input
+                type="text"
+                aria-label="키워드"
+                placeholder="기업, 공고, 포지션 검색"
+                value={searchData.keyword}
+                onChange={(e) => setSearchData({ ...searchData, keyword: e.target.value })}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              />
             </div>
-            <div className="search-field-group">
-              <label className="search-label">시/구/군</label>
-              <select 
-                className="search-select"
-                value={searchData.region2}
-                onChange={(e) => setSearchData({...searchData, region2: e.target.value})}
-                disabled={!searchData.region1}
-              >
-                <option value="">전체</option>
-                {searchData.region1 && 
-                  regions.find(r => r.id === parseInt(searchData.region1))?.subRegions?.map(subRegion => (
-                    <option key={subRegion.id} value={subRegion.id}>{subRegion.name}</option>
-                  ))
-                }
-              </select>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="search-field-group">
-              <label className="search-label">직무 대분류</label>
-              <select 
-                className="search-select"
-                value={searchData.category1}
-                onChange={(e) => setSearchData({...searchData, category1: e.target.value, category2: ''})}
-              >
-                <option value="">전체</option>
-                {jobCategories.filter(c => !c.parentId).map(category => (
-                  <option key={category.id} value={category.id}>{category.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="search-field-group">
-              <label className="search-label">직무 소분류</label>
-              <select 
-                className="search-select"
-                value={searchData.category2}
-                onChange={(e) => setSearchData({...searchData, category2: e.target.value})}
-                disabled={!searchData.category1}
-              >
-                <option value="">전체</option>
-                {searchData.category1 && 
-                  jobCategories.find(c => c.id === parseInt(searchData.category1))?.subCategories?.map(subCategory => (
-                    <option key={subCategory.id} value={subCategory.id}>{subCategory.name}</option>
-                  ))
-                }
-              </select>
-            </div>
-          </>
-        )}
-        <button className="search-button" onClick={handleSearch}>
-          <Search size={20} />
-          검색
-        </button>
+          </div>
+
+          {activeTab === 'region' ? (
+            <>
+              {/* 시/도 */}
+              <div className="ribbon-cell select cell--region1">
+                <MapPin size={18} className="prefix-icon" />
+                <select
+                  className="flat-select"
+                  aria-label="시/도"
+                  value={searchData.region1}
+                  onChange={(e) =>
+                    setSearchData({
+                      ...searchData,
+                      region1: e.target.value ? Number(e.target.value) : '',
+                      region2: ''
+                    })
+                  }
+                  disabled={loading.regions || !!error.regions}
+                >
+                  <option value="">시/도 전체</option>
+                  {topRegions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+              </div>
+
+              {/* 시/군/구 */}
+              <div className="ribbon-cell select cell--region2">
+                <MapPin size={18} className="prefix-icon" />
+                <select
+                  className="flat-select"
+                  aria-label="시/군/구"
+                  value={searchData.region2}
+                  onChange={(e) =>
+                    setSearchData({
+                      ...searchData,
+                      region2: e.target.value ? Number(e.target.value) : ''
+                    })
+                  }
+                  disabled={!searchData.region1 || loading.regions || !!error.regions}
+                >
+                  <option value="">시/군/구 전체</option>
+                  {(selectedTopRegion?.subRegions ?? []).map(sr => (
+                    <option key={sr.id} value={sr.id}>{sr.name}</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* 직무 대분류 */}
+              <div className="ribbon-cell select cell--cat1">
+                <Briefcase size={18} className="prefix-icon" />
+                <select
+                  className="flat-select"
+                  aria-label="직무 대분류"
+                  value={searchData.category1}
+                  onChange={(e) =>
+                    setSearchData({
+                      ...searchData,
+                      category1: e.target.value ? Number(e.target.value) : '',
+                      category2: ''
+                    })
+                  }
+                  disabled={loading.categories || !!error.categories}
+                >
+                  <option value="">직무 대분류</option>
+                  {topCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+
+              {/* 직무 소분류 */}
+              <div className="ribbon-cell select cell--cat2">
+                <Briefcase size={18} className="prefix-icon" />
+                <select
+                  className="flat-select"
+                  aria-label="직무 소분류"
+                  value={searchData.category2}
+                  onChange={(e) =>
+                    setSearchData({
+                      ...searchData,
+                      category2: e.target.value ? Number(e.target.value) : ''
+                    })
+                  }
+                  disabled={!searchData.category1 || loading.categories || !!error.categories}
+                >
+                  <option value="">직무 소분류</option>
+                  {(selectedTopCategory?.subCategories ?? []).map(sc => (
+                    <option key={sc.id} value={sc.id}>{sc.name}</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* 2행: (탭 반대로) + 검색 버튼 */}
+        <div className="ribbon-row">
+          {activeTab === 'region' ? (
+            <>
+              {/* 직무 대분류 */}
+              <div className="ribbon-cell select cell--cat1">
+                <Briefcase size={18} className="prefix-icon" />
+                <select
+                  className="flat-select"
+                  aria-label="직무 대분류"
+                  value={searchData.category1}
+                  onChange={(e) =>
+                    setSearchData({
+                      ...searchData,
+                      category1: e.target.value ? Number(e.target.value) : '',
+                      category2: ''
+                    })
+                  }
+                  disabled={loading.categories || !!error.categories}
+                >
+                  <option value="">직무 대분류</option>
+                  {topCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+
+              {/* 직무 소분류 */}
+              <div className="ribbon-cell select cell--cat2">
+                <Briefcase size={18} className="prefix-icon" />
+                <select
+                  className="flat-select"
+                  aria-label="직무 소분류"
+                  value={searchData.category2}
+                  onChange={(e) =>
+                    setSearchData({
+                      ...searchData,
+                      category2: e.target.value ? Number(e.target.value) : ''
+                    })
+                  }
+                  disabled={!searchData.category1 || loading.categories || !!error.categories}
+                >
+                  <option value="">직무 소분류</option>
+                  {(selectedTopCategory?.subCategories ?? []).map(sc => (
+                    <option key={sc.id} value={sc.id}>{sc.name}</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* 시/도 */}
+              <div className="ribbon-cell select cell--region1">
+                <MapPin size={18} className="prefix-icon" />
+                <select
+                  className="flat-select"
+                  aria-label="시/도"
+                  value={searchData.region1}
+                  onChange={(e) =>
+                    setSearchData({
+                      ...searchData,
+                      region1: e.target.value ? Number(e.target.value) : '',
+                      region2: ''
+                    })
+                  }
+                  disabled={loading.regions || !!error.regions}
+                >
+                  <option value="">시/도 전체</option>
+                  {topRegions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+              </div>
+
+              {/* 시/군/구 */}
+              <div className="ribbon-cell select cell--region2">
+                <MapPin size={18} className="prefix-icon" />
+                <select
+                  className="flat-select"
+                  aria-label="시/군/구"
+                  value={searchData.region2}
+                  onChange={(e) =>
+                    setSearchData({
+                      ...searchData,
+                      region2: e.target.value ? Number(e.target.value) : ''
+                    })
+                  }
+                  disabled={!searchData.region1 || loading.regions || !!error.regions}
+                >
+                  <option value="">시/군/구 전체</option>
+                  {(selectedTopRegion?.subRegions ?? []).map(sr => (
+                    <option key={sr.id} value={sr.id}>{sr.name}</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
+
+          {/* 검색 버튼 */}
+          <div className="ribbon-cell cell--submit">
+            <button
+              className="search-button"
+              onClick={handleSearch}
+              disabled={loading.regions || loading.categories}
+            >
+              <Search size={18} />
+              검색
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* 빠른 필터 */}
@@ -297,11 +357,15 @@ const JobSearchBar = ({ onSearch }) => {
           </button>
         ))}
       </div>
+
+      {(error.regions || error.categories) && (
+        <p className="error-text">{error.regions || error.categories}</p>
+      )}
     </div>
   );
 };
 
-// ==================== 사이드바 필터 컴포넌트 ====================
+// ==================== 사이드바 필터 ====================
 const JobFilters = ({ onFilterChange }) => {
   const [filters, setFilters] = useState({
     employment: [],
@@ -311,7 +375,7 @@ const JobFilters = ({ onFilterChange }) => {
   });
 
   const handleFilterChange = (category, value) => {
-    const newFilters = {...filters};
+    const newFilters = { ...filters };
     if (newFilters[category].includes(value)) {
       newFilters[category] = newFilters[category].filter(v => v !== value);
     } else {
@@ -324,17 +388,14 @@ const JobFilters = ({ onFilterChange }) => {
   return (
     <aside className="sidebar-filters">
       <div className="filter-group">
-        <h3 className="filter-group-title">
-          <Briefcase size={16} />
-          고용형태
-        </h3>
+        <h3 className="filter-group-title"><Briefcase size={16} />고용형태</h3>
         <div className="filter-options">
           {['정규직', '계약직', '인턴', '프리랜서', '파견직'].map(type => (
             <label key={type} className="filter-checkbox">
-              <input 
+              <input
                 type="checkbox"
-                checked={filters.employment.includes(type)}
                 onChange={() => handleFilterChange('employment', type)}
+                checked={filters.employment.includes(type)}
               />
               <span>{type}</span>
             </label>
@@ -343,17 +404,14 @@ const JobFilters = ({ onFilterChange }) => {
       </div>
 
       <div className="filter-group">
-        <h3 className="filter-group-title">
-          <Award size={16} />
-          경력
-        </h3>
+        <h3 className="filter-group-title"><Award size={16} />경력</h3>
         <div className="filter-options">
           {['신입', '경력 1~3년', '경력 3~5년', '경력 5~10년', '경력 10년↑'].map(exp => (
             <label key={exp} className="filter-checkbox">
-              <input 
+              <input
                 type="checkbox"
-                checked={filters.experience.includes(exp)}
                 onChange={() => handleFilterChange('experience', exp)}
+                checked={filters.experience.includes(exp)}
               />
               <span>{exp}</span>
             </label>
@@ -362,17 +420,14 @@ const JobFilters = ({ onFilterChange }) => {
       </div>
 
       <div className="filter-group">
-        <h3 className="filter-group-title">
-          <BookOpen size={16} />
-          학력
-        </h3>
+        <h3 className="filter-group-title"><BookOpen size={16} />학력</h3>
         <div className="filter-options">
           {['학력무관', '고졸', '전문대졸', '대졸(4년)', '석사', '박사'].map(edu => (
             <label key={edu} className="filter-checkbox">
-              <input 
+              <input
                 type="checkbox"
-                checked={filters.education.includes(edu)}
                 onChange={() => handleFilterChange('education', edu)}
+                checked={filters.education.includes(edu)}
               />
               <span>{edu}</span>
             </label>
@@ -381,17 +436,14 @@ const JobFilters = ({ onFilterChange }) => {
       </div>
 
       <div className="filter-group">
-        <h3 className="filter-group-title">
-          <DollarSign size={16} />
-          연봉
-        </h3>
+        <h3 className="filter-group-title"><DollarSign size={16} />연봉</h3>
         <div className="filter-options">
           {['~3000', '3000~4000', '4000~5000', '5000~6000', '6000~8000', '8000↑'].map(salary => (
             <label key={salary} className="filter-checkbox">
-              <input 
+              <input
                 type="checkbox"
-                checked={filters.salary.includes(salary)}
                 onChange={() => handleFilterChange('salary', salary)}
+                checked={filters.salary.includes(salary)}
               />
               <span>{salary}만원</span>
             </label>
@@ -402,144 +454,150 @@ const JobFilters = ({ onFilterChange }) => {
   );
 };
 
-// ==================== 채용공고 아이템 컴포넌트 ====================
-const JobItem = ({ job, onBookmark }) => {
-  return (
-    <div className="job-item">
-      <div className="job-item-header">
-        <div className="company-section">
-          <div className="company-logo-box">
-            {job.logo}
-          </div>
-          <div className="company-info">
-            <div className="company-name">{job.company}</div>
-            <div className="job-position">
-              {job.position}
-              {job.isNew && <span className="new-label">NEW</span>}
-            </div>
+// ==================== 채용공고 아이템 ====================
+const JobItem = ({ job, onBookmark }) => (
+  <div className="job-item">
+    <div className="job-item-header">
+      <div className="company-section">
+        <div className="company-logo-box">{job.logo ?? (job.companyName?.[0] ?? '')}</div>
+        <div className="company-info">
+          <div className="company-name">{job.company}</div>
+          <div className="job-position">
+            {job.position}
+            {job.isNew && <span className="new-label">NEW</span>}
           </div>
         </div>
-        <button 
-          className={`bookmark-button ${job.bookmarked ? 'active' : ''}`}
-          onClick={() => onBookmark(job.id)}
-        >
-          <Star size={24} fill={job.bookmarked ? 'currentColor' : 'none'} />
-        </button>
       </div>
-
-      <div className="job-details">
-        <span className="job-detail-item">
-          <MapPin size={14} />
-          {job.location}
-        </span>
-        <span className="job-detail-item">
-          <Briefcase size={14} />
-          {job.experience}
-        </span>
-        <span className="job-detail-item">
-          <BookOpen size={14} />
-          {job.education}
-        </span>
-        <span className="job-detail-item">
-          <Building2 size={14} />
-          {job.employment}
-        </span>
-      </div>
-
-      <div className="job-skills">
-        {job.skills.map(skill => (
-          <span key={skill} className="skill-tag">{skill}</span>
-        ))}
-      </div>
-
-      <div className="job-item-footer">
-        <div className="job-meta-info">
-          <span className="meta-info-item">
-            <Eye size={14} />
-            {job.views.toLocaleString()}
-          </span>
-          <span className="meta-info-item">
-            <User size={14} />
-            지원 {job.applications}
-          </span>
-          {job.deadline !== '상시채용' && (
-            <span className="deadline-warning">{job.deadline}</span>
-          )}
-        </div>
-        <div className="salary-badge">
-          {job.salary}
-        </div>
-      </div>
+      <button
+        className={`bookmark-button ${job.bookmarked ? 'active' : ''}`}
+        onClick={() => onBookmark(job.id)}
+      >
+        <Star size={24} fill={job.bookmarked ? 'currentColor' : 'none'} />
+      </button>
     </div>
-  );
-};
 
-// ==================== 메인 페이지 컴포넌트 ====================
+    <div className="job-details">
+      <span className="job-detail-item"><MapPin size={14} />{job.location}</span>
+      <span className="job-detail-item"><Briefcase size={14} />{job.experience ?? ''}</span>
+      <span className="job-detail-item"><BookOpen size={14} />{job.education ?? ''}</span>
+      <span className="job-detail-item"><Building2 size={14} />{job.employment ?? ''}</span>
+    </div>
+
+    <div className="job-skills">
+      {(job.skills ?? []).map(skill => <span key={skill} className="skill-tag">{skill}</span>)}
+    </div>
+
+    <div className="job-item-footer">
+      <div className="job-meta-info">
+        <span className="meta-info-item"><Eye size={14} />{(job.views ?? 0).toLocaleString()}</span>
+        <span className="meta-info-item"><User size={14} />지원 {job.applications ?? 0}</span>
+        {job.deadline && job.deadline !== '상시채용' && (
+          <span className="deadline-warning">{job.deadline}</span>
+        )}
+      </div>
+      <div className="salary-badge">{job.salary ?? ''}</div>
+    </div>
+  </div>
+);
+
+// ==================== 메인 페이지 ====================
 const JobPosting = () => {
-  const [jobs, setJobs] = useState(dummyJobs);
-  const [filteredJobs, setFilteredJobs] = useState(dummyJobs);
+  const [jobs, setJobs] = useState([]);
+  const [filteredJobs, setFilteredJobs] = useState([]);
   const [sortBy, setSortBy] = useState('latest');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // 검색 처리
+  // API → UI 매핑
+  const mapApiJobToUi = (j) => ({
+    id: j.id,
+    company: j.companyName,
+    logo: j.companyLogo,
+    position: j.title,
+    location: (j.regions ?? [])[0] ?? '',
+    experience: j.experienceLevel ?? '',
+    education: j.education ?? '',
+    employment: j.employmentType ?? '',
+    salary: j.salaryLabel ?? '',
+    skills: j.skills ?? [],
+    deadline: j.closeType === '상시' ? '상시채용' : (j.closeDate ? `~ ${j.closeDate.substring(0,10)}` : ''),
+    views: j.viewCount ?? 0,
+    applications: j.applicationCount ?? 0,
+    isNew: !!j.createdAt && (Date.now() - new Date(j.createdAt).getTime()) < 1000 * 60 * 60 * 24 * 7,
+    bookmarked: false,
+  });
+
+  // 검색 처리(백엔드 호출)
   const handleSearch = async (searchParams) => {
-    console.log('검색 파라미터:', searchParams);
-    
-    // 백엔드 API 호출
-    /*
-    try {
-      const response = await fetch('http://localhost:8080/search/job-postings/search?' + 
-        new URLSearchParams(searchParams));
-      const data = await response.json();
-      setFilteredJobs(data);
-    } catch (error) {
-      console.error('검색 실패:', error);
-    }
-    */
-    
-    // 현재는 더미데이터 그대로 사용
-    setFilteredJobs(jobs);
-  };
+    const regionIds = [];
+    if (searchParams.region2) regionIds.push(Number(searchParams.region2));
+    else if (searchParams.region1) regionIds.push(Number(searchParams.region1));
 
-  // 필터 변경 처리
-  const handleFilterChange = (filters) => {
-    console.log('필터 변경:', filters);
-    // 필터링 로직 구현
-    let filtered = [...jobs];
-    
-    // 필터 적용 로직 (예시)
-    if (filters.employment.length > 0) {
-      filtered = filtered.filter(job => 
-        filters.employment.includes(job.employment)
-      );
+    const categoryIds = [];
+    if (searchParams.category2) categoryIds.push(Number(searchParams.category2));
+    else if (searchParams.category1) categoryIds.push(Number(searchParams.category1));
+
+    const body = {
+      keyword: searchParams.keyword || '',
+      regionIds,
+      categoryIds,
+      employmentType: undefined,
+      experienceLevel: undefined,
+      minSalary: undefined,
+      maxSalary: undefined,
+      isRemote: searchParams.quickFilters?.includes('재택근무') || undefined,
+      sortBy: 'latest',
+      page: 0,
+      size: 20,
+    };
+
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('http://localhost:8080/api/search/jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const page = await res.json(); // Spring Page<JobSearchResponseDto>
+      const list = (page.content ?? []).map(mapApiJobToUi);
+      setJobs(list);
+      setFilteredJobs(list);
+    } catch (e) {
+      console.error('검색 실패:', e);
+      setJobs([]);
+      setFilteredJobs([]);
+      setError('채용공고를 불러오지 못했습니다.');
+    } finally {
+      setLoading(false);
     }
-    
-    setFilteredJobs(filtered);
   };
 
   // 북마크 토글
   const toggleBookmark = (jobId) => {
-    const updatedJobs = jobs.map(job => 
+    const updated = jobs.map(job =>
       job.id === jobId ? { ...job, bookmarked: !job.bookmarked } : job
     );
-    setJobs(updatedJobs);
-    setFilteredJobs(updatedJobs);
+    setJobs(updated);
+    setFilteredJobs(updated);
   };
 
   // 정렬 처리
   const handleSort = (e) => {
     const sortType = e.target.value;
     setSortBy(sortType);
-    
+
     let sorted = [...filteredJobs];
-    switch(sortType) {
+    switch (sortType) {
       case 'latest':
-        sorted.sort((a, b) => b.id - a.id);
+        sorted.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0) || b.id - a.id);
         break;
       case 'views':
-        sorted.sort((a, b) => b.views - a.views);
+        sorted.sort((a, b) => (b.views ?? 0) - (a.views ?? 0));
         break;
       case 'applications':
-        sorted.sort((a, b) => b.applications - a.applications);
+        sorted.sort((a, b) => (b.applications ?? 0) - (a.applications ?? 0));
         break;
       default:
         break;
@@ -549,7 +607,6 @@ const JobPosting = () => {
 
   return (
     <div className="job-posting-container">
-      {/* 헤더 영역 */}
       <div className="job-posting-header">
         <div className="job-posting-inner">
           <h1 className="header-title">채용정보</h1>
@@ -557,11 +614,9 @@ const JobPosting = () => {
         </div>
       </div>
 
-      {/* 컨텐츠 영역 */}
       <div className="job-content-area">
-        <JobFilters onFilterChange={handleFilterChange} />
-        
-        {/* 채용공고 리스트 */}
+        <JobFilters onFilterChange={() => {}} />
+
         <div className="job-list-container">
           <div className="job-list-header">
             <p className="job-count">
@@ -576,11 +631,16 @@ const JobPosting = () => {
             </select>
           </div>
 
-          {/* 채용공고 목록 */}
+          {loading && <p className="loading-text">불러오는 중...</p>}
+          {error && !loading && <p className="error-text">{error}</p>}
+          {!loading && !error && filteredJobs.length === 0 && (
+            <p className="empty-text">표시할 채용공고가 없습니다. 검색해 보세요.</p>
+          )}
+
           {filteredJobs.map(job => (
-            <JobItem 
-              key={job.id} 
-              job={job} 
+            <JobItem
+              key={job.id}
+              job={job}
               onBookmark={toggleBookmark}
             />
           ))}
