@@ -14,6 +14,7 @@ const formatDate = (isoString) => {
 const PostList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [posts, setPosts] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(6); // 보여줄 게시글 개수
   
 
     useEffect(() => {
@@ -27,12 +28,12 @@ const PostList = () => {
       });
       }, []);
 
-      
+   // 조회수,댓글 수에 따라 인기글 정렬   
   const popularPosts = useMemo(() => {
     if (!posts?.length) return []
     return [...posts]
       .map(p => ({ ...p, _score: (p.viewCount ?? 0) + (p.comments ?? 0) * 10 }))
-      .sort((a, b) => b._score - a._score)
+      .sort((a, b) => b._score - a._score) //상위 3개
       .slice(0, 3)
   }, [posts])
 
@@ -48,6 +49,11 @@ const PostList = () => {
     navigate(`/postlist/detail/${id}`);
   }
 
+  // 더보기 버튼 클릭 핸들러
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + 6);
+  }
+
 const lower = (v) => (v ?? '').toString().toLowerCase();
  const filteredPosts = useMemo(() => {
   const q = lower(searchTerm.trim());
@@ -58,6 +64,14 @@ const lower = (v) => (v ?? '').toString().toLowerCase();
     lower(p.userName).includes(q)
   );
 }, [posts, searchTerm]);
+
+// 보여줄 게시글들 (6개씩)
+const visiblePosts = useMemo(() => {
+  return filteredPosts.slice(0, visibleCount);
+}, [filteredPosts, visibleCount]);
+
+// 더보기 버튼 표시 여부
+const hasMorePosts = filteredPosts.length > visibleCount;
 
 
   return (
@@ -104,7 +118,7 @@ const lower = (v) => (v ?? '').toString().toLowerCase();
         </header>
 
         <ul className="pl-list" role="list">
-          {filteredPosts.map((post) => (
+          {visiblePosts.map((post) => (
             <li key={post.id} className="pl-card">
               <a style={{textDecoration:'none'}} href='#' onClick={(e)=>{
                 e.preventDefault();
@@ -126,9 +140,21 @@ const lower = (v) => (v ?? '').toString().toLowerCase();
           ))}
           {filteredPosts.length === 0 && (
             <li className="pl-empty">등록된 게시글이 없습니다</li> 
-            
           )}
         </ul>
+
+        {/* 더보기 버튼 */}
+        {hasMorePosts && (
+          <div className="pl-load-more">
+            <button 
+              type="button" 
+              className="pl-load-more-btn"
+              onClick={handleLoadMore}
+            >
+              더보기 
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

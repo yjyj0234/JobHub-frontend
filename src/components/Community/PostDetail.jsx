@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import '../css/PostDetail.css';
@@ -11,6 +11,7 @@ export default function PostDetail() {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState(null);
+  const viewed = useRef(false);
 
   useEffect(() => {
     if (!id) { navigate(-1); return; }
@@ -18,6 +19,11 @@ export default function PostDetail() {
       setLoading(true);
       setError(null);
       try {
+        //조회수 증가
+        if (!viewed.current) {
+        viewed.current = true;
+        await axios.post(`http://localhost:8080/community/${id}/view`).catch(() => {});
+      }
         const { data } = await axios.get(`http://localhost:8080/community/detail/${id}`);
         setPost(data);
       } catch (e) {
