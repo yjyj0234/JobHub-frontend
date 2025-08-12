@@ -57,7 +57,6 @@ function ResumeListPage() {
   };
   
     const handleCopyResume = (resumeId) => {
-    // ... localStorage 로직 구현 ...
     alert('이력서 복사 기능은 구현이 필요합니다.');
   };
 
