@@ -2,12 +2,11 @@ import React from 'react';
 import '../css/ResumePreviewModal.css';
 
 // 각 섹션 타입에 맞는 뷰 컴포넌트
-const SectionView = ({ section, sectionInfo }) => {
+const SectionView = ({ section }) => {
   const { data } = section;
-  const { title } = sectionInfo;
 
-  // 데이터가 비어있으면 표시하지 않음
-  if (!data || Object.values(data).every(val => !val)) {
+  // 데이터가 비어있거나, 데이터의 모든 값이 비어있으면 메시지를 표시합니다.
+  if (!data || Object.values(data).every(val => !val || (Array.isArray(val) && val.length === 0))) {
     return <div className="preview-data-item empty">작성된 내용이 없습니다.</div>;
   }
 
@@ -29,24 +28,74 @@ const SectionView = ({ section, sectionInfo }) => {
           {data.gpa && <p>학점: {data.gpa} / {data.maxGpa || '4.5'}</p>}
         </div>
       );
+    case 'skills':
+      if (!Array.isArray(data.skills) || data.skills.every(skill => !skill.name)) {
+        return <div className="preview-data-item empty">작성된 스킬이 없습니다.</div>;
+      }
+      return (
+        <div className="skills-preview-container">
+          {data.skills.map((skill, index) => (
+             skill.name && (
+              <span key={index} className="skill-preview-tag">
+                {skill.name}
+                {skill.category && ` (${skill.category})`}
+              </span>
+            )
+          ))}
+        </div>
+      );
     case 'projects':
       return (
         <div className="preview-data-item">
-          <p><strong>{data.projectName || '프로젝트명 미입력'}</strong> ({data.institution || '수행기관 미입력'})</p>
+          <p><strong>{data.projectName || '프로젝트명 미입력'}</strong> ({data.projectOrg || '수행기관 미입력'})</p>
           <p className="period">{data.startDate || '시작일'} ~ {data.endDate || '종료일'}</p>
-          {data.url && <p><a href={data.url} target="_blank" rel="noopener noreferrer">프로젝트 링크</a></p>}
-          <p className="description">{data.description || '설명 없음'}</p>
-           {data.techStack && <p><strong>사용 기술:</strong> {data.techStack}</p>}
+          {data.url && <p><strong>링크:</strong> <a href={data.url} target="_blank" rel="noopener noreferrer">{data.url}</a></p>}
+          {data.techStack && <p><strong>사용 기술:</strong> {data.techStack}</p>}
+          {data.description && <p className="description">{data.description}</p>}
         </div>
       );
-    // 다른 타입(수상, 자격증 등)에 대한 케이스 추가
+    case 'activities':
+        return (
+            <div className="preview-data-item">
+                <p><strong>{data.activityName || '활동명 미입력'}</strong> ({data.activityOrg || '기관/단체 미입력'})</p>
+                <p className="period">{data.startDate || '시작일'} ~ {data.endDate || '종료일'}</p>
+                {data.description && <p className="description">{data.description}</p>}
+            </div>
+        );
+    case 'awards':
+        return (
+            <div className="preview-data-item">
+                <p><strong>{data.awardTitle || '수상명 미입력'}</strong></p>
+                <p>{data.awardingInstitution || '수여기관 미입력'}</p>
+                <p className="period">{data.awardDate || '수상일 미입력'}</p>
+                {data.description && <p className="description">{data.description}</p>}
+            </div>
+        );
+    case 'certifications':
+        return (
+            <div className="preview-data-item">
+                <p><strong>{data.certName || '자격증명 미입력'}</strong></p>
+                <p>발급기관: {data.certIssuer || '미입력'}</p>
+                <p className="period">취득일: {data.certDate || '미입력'}</p>
+            </div>
+        );
+    case 'languages':
+        return (
+            <div className="preview-data-item">
+                <p><strong>{data.language || '언어명 미입력'}</strong></p>
+                <p>수준: {data.fluency || '미입력'}</p>
+                {data.testName && <p>시험: {data.testName} ({data.testScore || '점수 미입력'})</p>}
+            </div>
+        );
+    case 'portfolios':
+        return (
+            <div className="preview-data-item">
+                <p><strong>링크:</strong> <a href={data.url} target="_blank" rel="noopener noreferrer">{data.url || 'URL 미입력'}</a></p>
+                {data.description && <p className="description">{data.description}</p>}
+            </div>
+        );
     default:
-      // 기본적으로 모든 키-값 쌍을 보여주는 fallback
-      return (
-          <div className="preview-data-item default-view">
-              {Object.entries(data).map(([key, value]) => value && <p key={key}><strong>{key}:</strong> {value}</p>)}
-          </div>
-      )
+      return <div className="preview-data-item">표시할 내용이 없습니다.</div>
   }
 };
 
@@ -70,7 +119,7 @@ function ResumePreviewModal({ isOpen, onClose, title, sections, sectionComponent
               return (
                 <div key={section.id} className="preview-section">
                   <h2>{sectionInfo.title}</h2>
-                  <SectionView section={section} sectionInfo={sectionInfo} />
+                  <SectionView section={section} />
                 </div>
               );
             })
