@@ -302,4 +302,33 @@
   background: rgba(59, 130, 246, 0.06);
 }
 
+/* 더보기 버튼 */
+.pl-load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+  padding: 20px 0;
+}
 
+.pl-load-more-btn {
+  background: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.pl-load-more-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.pl-load-more-btn:active {
+  transform: translateY(1px);
+}
