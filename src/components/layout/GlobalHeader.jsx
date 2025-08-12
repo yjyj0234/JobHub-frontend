@@ -197,34 +197,6 @@ function GlobalHeader({ onLoginClick }) {
   }, []);
 
 
-
-    // 초기 데이터 로드 (트리 구조)
-    const loadInitialData = async () => {
-      setLoading(true);
-      try {
-        // 지역 트리 구조 로드
-        const regionsRes = await axios.get(`${API_BASE_URL}/search/regions/tree`);
-        console.log('지역 트리:', regionsRes.data);
-        setRegionTree(regionsRes.data.regions || []);
-        
-        // 직무 트리 구조 로드
-        const jobsRes = await axios.get(`${API_BASE_URL}/search/job-categories/tree`);
-        console.log('직무 트리:', jobsRes.data);
-        setJobCategoryTree(jobsRes.data.categories || []);
-        
-      } catch (error) {
-        console.error('데이터 로드 실패:', error);
-        // 에러 시 기본 데이터
-        setRegionTree([
-          { id: 1000, name: '서울', children: [] },
-          { id: 2000, name: '경기', children: [] },
-          { id: 3000, name: '인천', children: [] },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-  
     //지역 선택/해제
     const handleRegionSelect = (regionId) => {
       setSelectedRegions(prev => {
