@@ -46,7 +46,7 @@ function ResumeListPage() {
   }, [isLoggedIn, user]);
 
   const handleDeleteResume = (resumeId) => {
-     if (window.confirm("정말로 이 이력서를 삭제하시겠습니까?")) {
+      if (window.confirm("정말로 이 이력서를 삭제하시겠습니까?")) {
         const updatedResumes = resumes.filter(r => r.id !== resumeId);
         setResumes(updatedResumes);
         const allResumes = JSON.parse(localStorage.getItem('resumes') || '[]');
