@@ -178,25 +178,19 @@ function GlobalHeader({ onLoginClick }) {
   });
 
   useEffect(() => {
-  const handleScroll = () => {
-    const y = window.scrollY;
+    const handleScroll = () => {
+        // scrollY가 0을 넘었는지 여부를 상태로 관리
+        const shouldBeScrolled = window.scrollY > 0;
+        // 상태가 변경될 때만 리렌더링을 트리거하여 성능 향상
+        setIsScrolled(prev => prev === shouldBeScrolled ? prev : shouldBeScrolled);
+    };
 
-    // 내려갈 때는 90px 이상에서만 true
-    if (!isScrolled && y > 90) {
-      setIsScrolled(true);
-      setIsExpanded(false);
-      setRegionOpen(false);
-      setJobOpen(false);
-    }
-    // 올라올 때는 70px 이하에서만 false
-    else if (isScrolled && y < 70) {
-      setIsScrolled(false);
-    }
-  };
-
-  window.addEventListener('scroll', handleScroll);
-  return () => window.removeEventListener('scroll', handleScroll);
-}, [isScrolled]); // 최신 값 참조 위해 isScrolled 추가
+    // passive: true 옵션으로 스크롤 성능 향상
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // 컴포넌트 언마운트 시 이벤트 리스너 제거
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const loadInitialData = async () => {
     setLoading(true);
