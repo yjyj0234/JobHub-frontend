@@ -24,7 +24,7 @@ const useOnClickOutside = (ref, handler) => {
 };
 
 function GlobalHeader({ onLoginClick }) {
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, user, logout } = useAuth();
   const navigate = useNavigate();
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -44,6 +44,7 @@ function GlobalHeader({ onLoginClick }) {
 
   const expandedSearchRef = useRef(null);
   const scrolledSearchRef = useRef(null);
+
 
   // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
@@ -74,6 +75,7 @@ function GlobalHeader({ onLoginClick }) {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
 
     // 초기 데이터 로드 (트리 구조)
     const loadInitialData = async () => {
