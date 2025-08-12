@@ -13,8 +13,10 @@ import { ResumeListPage, ResumeEditorPage } from '../resume';
 // 4. Companies 관련 페이지 그룹
 import { Jobposting } from '../Companies';
 
-import { PostList } from '../Community';
+
 import { JobPostingList } from '../job-posting-list';
+import { PostList, AddPost, PostDetail, Chat } from '../Community';
+
 
 /**
  * 🏢 MainLayout 컴포넌트
@@ -100,6 +102,10 @@ function AppRouter() {
         <Route path="/jobposting" element={<Jobposting/>}/>
         <Route path="/postlist" element={<PostList/>}/>
         <Route path='/jobpostinglist' element = {<JobPostingList/>}/>
+        <Route path="/postlist/addpost" element={<AddPost/>}/>
+        <Route path="/postlist/detail/:id" element={<PostDetail/>}/>
+        <Route path="/chat" element={<Chat />} />
+
       </Route>
     </Routes>
      //</AuthProvider>

@@ -145,7 +145,7 @@ const DropdownPanel = ({
 };
 
 function GlobalHeader({ onLoginClick }) {
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, user, logout } = useAuth();
   const navigate = useNavigate();
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -164,6 +164,10 @@ function GlobalHeader({ onLoginClick }) {
   const expandedSearchRef = useRef(null);
   const scrolledSearchRef = useRef(null);
 
+
+
+  // 컴포넌트 마운트 시 데이터 로드
+
   useEffect(() => {
     loadInitialData();
   }, []);
@@ -178,26 +182,31 @@ function GlobalHeader({ onLoginClick }) {
   });
 
   useEffect(() => {
-  const handleScroll = () => {
-    const y = window.scrollY;
+    const handleScroll = () => {
+        // scrollY가 0을 넘었는지 여부를 상태로 관리
+        const shouldBeScrolled = window.scrollY > 0;
+        // 상태가 변경될 때만 리렌더링을 트리거하여 성능 향상
+        setIsScrolled(prev => prev === shouldBeScrolled ? prev : shouldBeScrolled);
+    };
 
-    // 내려갈 때는 90px 이상에서만 true
-    if (!isScrolled && y > 90) {
-      setIsScrolled(true);
-      setIsExpanded(false);
-      setRegionOpen(false);
-      setJobOpen(false);
-    }
-    // 올라올 때는 70px 이하에서만 false
-    else if (isScrolled && y < 70) {
-      setIsScrolled(false);
-    }
-  };
+    // passive: true 옵션으로 스크롤 성능 향상
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // 컴포넌트 언마운트 시 이벤트 리스너 제거
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  window.addEventListener('scroll', handleScroll);
-  return () => window.removeEventListener('scroll', handleScroll);
-}, [isScrolled]); // 최신 값 참조 위해 isScrolled 추가
 
+    //지역 선택/해제
+    const handleRegionSelect = (regionId) => {
+      setSelectedRegions(prev => {
+        if (prev.includes(regionId)) {
+          return prev.filter(id => id !== regionId);
+        } else {
+          return [...prev, regionId];
+        }
+      });
+    };
   const loadInitialData = async () => {
     setLoading(true);
     try {
@@ -237,6 +246,8 @@ function GlobalHeader({ onLoginClick }) {
     if (isLoggedIn) navigate('/resumes');
     else onLoginClick();
   };
+
+  const postList = () => navigate('/postlist');
   
   const jobPosting = () => navigate('/jobposting');
 
@@ -281,8 +292,10 @@ function GlobalHeader({ onLoginClick }) {
             <img src={logo} alt="JobHub 로고" />
           </Link>
           <nav className="nav">
+
             <button type="button" onClick={() => navigate('/jobpostinglist')}>채용정보</button>
             <button type="button">커뮤니티</button>
+
             <button type="button" onClick={handleResumeClick}>이력서</button>
             <button type="button" onClick={jobPosting}>공고 등록</button>
             <button type="button">취업툴</button>
