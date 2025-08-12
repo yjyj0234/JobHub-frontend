@@ -1,18 +1,22 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import '../css/AddPost.css'
 import axios from 'axios'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 
 
 
-const AddPost = () => {
+const UpdatePost = () => {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [isBold, setIsBold] = useState(false)
   const [isUnderline, setIsUnderline] = useState(false)
+  const { id } = useParams();
   const navigate = useNavigate();
-  
+  const editorRef = useRef(null);
+ const [loading, setLoading] = useState(false)     // ✅ 추가
+  const [error, setError] = useState(null)  
+
   //내용 bold 적용 버튼이벤트
   const handleBoldClick = () => {
   document.execCommand('bold');
@@ -34,7 +38,28 @@ const AddPost = () => {
     return () => {
       document.removeEventListener('selectionchange', handleSelectionChange)
     }
-  }, [])
+  }, []);
+
+  //초기 데이터 불러오기
+  useEffect(() => {
+    if (!id) { alert('잘못된 접근이야'); navigate(-1); return; }
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { data } = await axios.get(`http://localhost:8080/community/detail/${id}`);
+        setTitle(data.title ?? '');
+        setContent(data.content ?? '');
+        if (editorRef.current) {
+          editorRef.current.innerHTML = data.content ?? '';
+        }
+      } catch (e) {
+        setError(e.response?.data?.message ?? e.message);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id, navigate]);
 
   const handleTitleChange = (e) => {
     const value = e.target.value
@@ -43,40 +68,44 @@ const AddPost = () => {
     }
   }
 
-  const handleContentChange = (e) => {
-    const value = e.target.value
-    if (value.length <= 5000) {
-      setContent(value)
-    }
-  }
-   const handleSubmit = async (e) => {
+  
+   const handleUpdate = async (e) => {
     e.preventDefault()
-
-    const data = { userId: 12, title, content}
+    const html = editorRef.current?.innerHTML ?? content;
+    
+    const data = { userId: 12, title, content: html}
 
     try {
-     await axios.post('http://localhost:8080/community/addpost', data)
-      alert('등록 완료!')
+     await axios.put(`http://localhost:8080/community/edit/${id}`, data)
+      alert('수정 완료')
       setTitle('')
       setContent('')
-      navigate('/postlist'); // 등록 후 목록으로 이동
+      navigate(`/postlist/detail/${id}`) // 수정 후 상세 페이지로 이동
     } catch (err) {
       console.error(err)
-      alert('등록 실패')
+      alert('수정 실패')
     }
   }
 
-  
+  //html -> 텍스트로
+  const htmlToText = (html) => {
+  if (!html) return '';
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  return (div.textContent || '')
+    .replace(/\u00A0/g, ' ')  // NBSP 제거
+    .replace(/\u200B/g, '')   // zero-width 제거
+    .trim();
+};
+const textLen = useMemo(() => htmlToText(content).length, [content]);
 
   return (
     <div className="add-post-container">
       {/* 헤더 섹션 */}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleUpdate}>
       <div className="header-section">
-        <h1 className="main-title">커뮤니티 글등록</h1>
-        <p className="subtitle">
-          자유롭게 질문하고 답변을 받아보세요!
-           </p>
+        <h1 className="main-title">글 수정</h1>
+        <p className="subtitle"></p>
       </div>
       
       {/* 제목 입력 필드 */}
@@ -115,13 +144,14 @@ const AddPost = () => {
         <p className="content-tip">구체적으로 작성하면 현직자의 답변률이 높아져요</p>
         <div className="content-input-container">
           <div
+              ref={editorRef}
               contentEditable
               className="editor"
                  onInput={(e) => setContent(e.currentTarget.innerHTML)}
-                 aria-required
+                 
             ></div>
           <div className="character-counter">
-            {content.length}/5000자
+            {textLen}/5000자
           </div>
         </div>
       </div>
@@ -136,7 +166,7 @@ const AddPost = () => {
 
       <div className="submit-section">
         <button type='submit' className="submit-btn">
-           게시글 등록하기
+           게시글 수정하기
         </button>
       </div>
       </form>
@@ -146,4 +176,4 @@ const AddPost = () => {
   )
 }
 
-export default AddPost
+export default UpdatePost

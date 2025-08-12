@@ -15,7 +15,7 @@ import { Jobposting } from '../Companies';
 
 
 import { JobPostingList } from '../job-posting-list';
-import { PostList, AddPost, PostDetail, Chat } from '../Community';
+import { PostList, AddPost, PostDetail, Chat, UpdatePost } from '../Community';
 
 
 /**
@@ -104,6 +104,7 @@ function AppRouter() {
         <Route path='/jobpostinglist' element = {<JobPostingList/>}/>
         <Route path="/postlist/addpost" element={<AddPost/>}/>
         <Route path="/postlist/detail/:id" element={<PostDetail/>}/>
+        <Route path="/postlist/edit/:id" element={<UpdatePost/>}/>
         <Route path="/chat" element={<Chat />} />
 
       </Route>
