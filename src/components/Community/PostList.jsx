@@ -77,7 +77,7 @@ const lower = (v) => (v ?? '').toString().toLowerCase();
               }} href="#" className="pl-popular-item">
                 <span className="pl-badge">인기글</span>
                 <h3 className="pl-popular-item-title">{item.title}</h3>
-                <p className="pl-popular-item-preview">{item.content}</p>
+                <p className="pl-popular-item-preview">{item.content? item.content.replace(/<[^>]+>/g, '').replace(/\n/g, ' '): ''}</p>
                 <div className="pl-popular-meta">
                   <span>댓글 {item.comments}</span>
                   <span className="pl-meta-sep">|</span>
@@ -110,7 +110,7 @@ const lower = (v) => (v ?? '').toString().toLowerCase();
                 e.preventDefault();
                 goDetail(post.id)
               }} className="pl-card-title">{post.title}</a>
-              <p className="pl-card-preview">{post.content}</p>
+              <p className="pl-card-preview">{post.content? post.content.replace(/<[^>]+>/g, '').replace(/\n/g, ' '): ''}</p>
               <div className="pl-card-footer">
                 <div className="pl-card-meta">
                   <span className="pl-meta-author">{post.userName}</span>
