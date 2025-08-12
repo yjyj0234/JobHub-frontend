@@ -14,7 +14,7 @@ import { ResumeListPage, ResumeEditorPage } from '../resume';
 import { Jobposting } from '../Companies';
 
 import { PostList } from '../Community';
-
+import { JobPostingList } from '../job-posting-list';
 
 /**
  * 🏢 MainLayout 컴포넌트
@@ -99,6 +99,7 @@ function AppRouter() {
         <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
         <Route path="/jobposting" element={<Jobposting/>}/>
         <Route path="/postlist" element={<PostList/>}/>
+        <Route path='/jobpostinglist' element = {<JobPostingList/>}/>
       </Route>
     </Routes>
      //</AuthProvider>
