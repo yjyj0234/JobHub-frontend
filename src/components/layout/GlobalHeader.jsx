@@ -282,6 +282,13 @@ function GlobalHeader({ onLoginClick }) {
     </>
   );
 
+  //회사 계정일 시 공고등록버튼만 보이고 이력서 버튼은 안보이게
+  const isCompanyUser = (u) => {
+  const t = (u?.user_type ?? u?.userType ?? '').toString().toLowerCase();
+  return t === 'company' || t === 'company_hr' || t === 'employer' || t === 'hr';
+  };
+  const isCompany = isLoggedIn && isCompanyUser(user);
+  
   return (
     <header className={`global-header ${isScrolled ? 'scrolled' : ''}`}>
       <div className="header-content">

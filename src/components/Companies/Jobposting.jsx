@@ -1,54 +1,119 @@
 // src/pages/Jobposting.jsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 import "../css/Jobposting.css";
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import SelectedJobTags from '../Companies/SelectedJobTags.jsx';
-import AttachmentUploader from './AttachmentUploader.jsx';
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import SelectedJobTags from "../Companies/SelectedJobTags.jsx";
+import AttachmentUploader from "./AttachmentUploader.jsx";
+
+// CKEditor 5 (v42+ 올인원)
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+import {
+  ClassicEditor,
+  Plugin,                 // ✅ 커스텀 플러그인 베이스
+  Essentials,
+  Paragraph,
+  Heading,
+  Bold,
+  Italic,
+  Underline,
+  Link,
+  List,
+  BlockQuote,
+  FontSize,
+  Image,
+  ImageCaption,
+  ImageStyle,
+  ImageToolbar,
+  ImageUpload,
+  FileRepository        // ✅ 의존성 선언용
+} from "ckeditor5";
+
+// 전역 axios
+axios.defaults.baseURL = "http://localhost:8080";
 
 
-// ✅ 전역에서 한 번만 설정 (렌더마다 재설정 방지)
-axios.defaults.baseURL = 'http://localhost:8080';
+// datetime-local -> 'YYYY-MM-DDTHH:mm:ss' (타임존 없는 LocalDateTime 문자열)
+function toLocalDateTimeString(value) {
+  if (!value) return null;
+  // value 예: '2025-08-12T09:30'
+  return value.length === 16 ? `${value}:00` : value; // 초 없으면 :00 붙임
+}
+
+
+// ===== 커스텀 업로드 어댑터 =====
+class UploadAdapter {
+  constructor(loader, setAttachments) {
+    this.loader = loader;
+    this.setAttachments = setAttachments;
+  }
+  async upload() {
+    const file = await this.loader.file;
+    const fd = new FormData();
+    fd.append("files", file);
+    const res = await axios.post("/api/uploads", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+      withCredentials: true
+    });
+    const up = (res.data?.files || [])[0];
+    if (!up) throw new Error("Upload failed");
+    // 첨부 목록 저장(원하면 서버에 함께 전송)
+    this.setAttachments(prev => [up, ...prev]);
+    // CKEditor가 사용할 표시 URL(프리사인드)
+    return { default: up.url };
+  }
+  abort() {}
+}
+
+// ✅ 클래스 플러그인 + requires 로 순서 보장
+class CustomUploadAdapterPlugin extends Plugin {
+  static get requires() {
+    return [ FileRepository ];
+  }
+  static get pluginName() {
+    return "CustomUploadAdapterPlugin";
+  }
+  init() {
+    const editor = this.editor;
+    const setAttachments = editor.config.get("jobhubSetAttachments");
+    editor.plugins.get("FileRepository").createUploadAdapter = loader =>
+      new UploadAdapter(loader, setAttachments);
+  }
+}
 
 const Jobposting = () => {
   const navigate = useNavigate();
 
-  // 주 직무 체크 박스(새로 추가할 직무를 대표로 지정할지)
-  const [isPrimary, setIsPrimary] = useState(true);
-
-  // 지역
-  const [locations, setLocations] = useState([]);       // 시/도
-  const [selectedLocation, setSelectedLocation] = useState(''); // 시/도 id (string)
-  const [subLocations, setSubLocations] = useState([]); // 시/군/구
-  const [selectedSubLocation, setSelectedSubLocation] = useState(''); // 시/군/구 id (string)
-
   // 직무
-  const [jobCategories, setJobCategories] = useState([]); // 대분류 [{id,name}]
-  const [jobKeywords, setJobKeywords] = useState([]);     // 소분류 [{id,name}]
-  const [selectedJobMid, setSelectedJobMid] = useState('');   // 대분류 id (string)
-  const [selectedJobCode, setSelectedJobCode] = useState(''); // 소분류 id (string)
-
-  // 선택된 직무(여러 개) 저장
+  const [isPrimary, setIsPrimary] = useState(true);
+  const [jobCategories, setJobCategories] = useState([]);
+  const [jobKeywords, setJobKeywords] = useState([]);
+  const [selectedJobMid, setSelectedJobMid] = useState("");
+  const [selectedJobCode, setSelectedJobCode] = useState("");
   const [selectedJobs, setSelectedJobs] = useState([]);
 
-  // 상세 설명 에디터
-  const [description, setDescription] = useState('');
-  const textareaRef = useRef(null);
-  const uploaderRef = useRef(null);
-  const [attachments, setAttachments] = useState([]); // 업로드된 첨부 파일들 (payload에 포함하려면 필요)
+  // 지역
+  const [locations, setLocations] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [subLocations, setSubLocations] = useState([]);
+  const [selectedSubLocation, setSelectedSubLocation] = useState("");
 
-  // ====== 초기 로딩: 직무 대분류, 시/도 ======
+  // 본문/첨부
+  const [description, setDescription] = useState("");
+  const [attachments, setAttachments] = useState([]);
+  const editorRef = useRef(null);
+  const uploaderRef = useRef(null);
+
+  // 초기 로딩
   useEffect(() => {
-    // 직무 대분류
-    axios.get('/api/search/job-categories')
+    axios.get("/api/search/job-categories")
       .then(res => {
         const list = (res.data?.categories || []).map(c => ({ ...c, id: String(c.id) }));
         setJobCategories(list);
       })
       .catch(console.error);
 
-    // 시/도
-    axios.get('/api/search/regions')
+    axios.get("/api/search/regions")
       .then(res => {
         const list = (res.data?.regions || []).map(r => ({ ...r, id: String(r.id) }));
         setLocations(list);
@@ -56,75 +121,56 @@ const Jobposting = () => {
       .catch(console.error);
   }, []);
 
-  // ====== 대분류 선택 시: 소분류 로딩 ======
+  // 대분류 변경 -> 소분류 로딩
   const handleJobMidChange = (e) => {
-    const parentId = e.target.value; // 문자열
+    const parentId = e.target.value;
     setSelectedJobMid(parentId);
-    setSelectedJobCode('');
+    setSelectedJobCode("");
     setJobKeywords([]);
 
     if (!parentId) return;
-
-    axios.get('/api/search/job-categories', { params: { parentId } })
+    axios.get("/api/search/job-categories", { params: { parentId } })
       .then(res => {
         const list = (res.data?.categories || []).map(c => ({ ...c, id: String(c.id) }));
         setJobKeywords(list);
-        setSelectedJobCode(list[0]?.id || '');
+        setSelectedJobCode(list[0]?.id || "");
       })
       .catch(console.error);
   };
 
-  // ====== 직무 추가 (대표 유일성 보장) ======
+  // 직무 추가
   const addJob = () => {
     if (!selectedJobMid || !selectedJobCode) return;
-
     const mainCategory = jobCategories.find(c => c.id === selectedJobMid);
     const subCategory  = jobKeywords.find(k => k.id === selectedJobCode);
     if (!mainCategory || !subCategory) return;
 
     const newJob = {
-      id: `${selectedJobMid}-${selectedJobCode}`, // 프론트 전용 유니크 키
+      id: `${selectedJobMid}-${selectedJobCode}`,
       mainCategory: mainCategory.name,
       subCategory: subCategory.name,
-      mainCategoryId: selectedJobMid, // 문자열로 보관(전송 시 숫자 변환)
+      mainCategoryId: selectedJobMid,
       subCategoryId: selectedJobCode,
-      isPrimary: isPrimary, // 체크박스 상태 그대로
+      isPrimary
     };
 
     setSelectedJobs(prev => {
-      // 중복 방지
       if (prev.some(j => j.id === newJob.id)) return prev;
-
       let next = [...prev, newJob];
-
-      // 방금 추가한 걸 대표로 체크했다면 나머지는 false
-      if (newJob.isPrimary) {
-        next = next.map(j => ({ ...j, isPrimary: j.id === newJob.id }));
-      }
-
-      // 대표가 하나도 없다면 첫 항목을 대표로(안전장치)
-      if (!next.some(j => j.isPrimary)) {
-        next = next.map((j, idx) => ({ ...j, isPrimary: idx === 0 }));
-      }
-
+      if (newJob.isPrimary) next = next.map(j => ({ ...j, isPrimary: j.id === newJob.id }));
+      if (!next.some(j => j.isPrimary)) next = next.map((j, idx) => ({ ...j, isPrimary: idx === 0 }));
       return next;
     });
 
-    // 다음 추가엔 기본값을 '보조'로 바꿔줌 (대표는 하나만)
     if (isPrimary) setIsPrimary(false);
-
-    // 선택 초기화
-    setSelectedJobMid('');
-    setSelectedJobCode('');
+    setSelectedJobMid("");
+    setSelectedJobCode("");
     setJobKeywords([]);
   };
 
-  // ====== 대표(주 직무) 라디오로 변경 ======
-  const setPrimaryJob = (jobId) => {
+  const setPrimaryJob = (jobId) =>
     setSelectedJobs(prev => prev.map(j => ({ ...j, isPrimary: j.id === jobId })));
-  };
 
-  // ====== 직무 제거 (대표 제거 시 자동 재지정) ======
   const removeJob = (jobId) => {
     setSelectedJobs(prev => {
       const removed = prev.find(j => j.id === jobId);
@@ -136,150 +182,131 @@ const Jobposting = () => {
     });
   };
 
-  // ====== 지역 변경: 시/군/구 로딩 ======
+  // 지역 변경
   const handleLocationChange = (e) => {
     const parentId = e.target.value;
     setSelectedLocation(parentId);
-    setSelectedSubLocation('');
+    setSelectedSubLocation("");
     setSubLocations([]);
 
     if (!parentId) return;
-
-    axios.get('/api/search/regions', { params: { parentId } })
+    axios.get("/api/search/regions", { params: { parentId } })
       .then(res => {
         const list = (res.data?.regions || []).map(r => ({ ...r, id: String(r.id) }));
         setSubLocations(list);
-        setSelectedSubLocation(list[0]?.id || '');
+        setSelectedSubLocation(list[0]?.id || "");
       })
       .catch(console.error);
   };
 
-  // ====== 간단 텍스트 스타일 ======
-  const formatText = (command, value = null) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
+  // 제출
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = description.substring(start, end);
-    let formattedText = '';
+  // TODO: 실제 로그인/회사 컨텍스트로부터 주입
+  const companyId = user?.companyId;   // 예시
+  const createdBy = user?.id;   // 예시
+  if (!companyId || !createdBy) {
+  alert("로그인이 필요하거나 회사 정보가 없습니다.");
+  return;
+}
 
-    switch (command) {
-      case 'bold':
-        formattedText = `**${selectedText}**`;
-        break;
-      case 'underline':
-        formattedText = `__${selectedText}__`;
-        break;
-      case 'fontSize':
-        textarea.focus();
-        document.execCommand('fontSize', false, value);
-        return;
-      case 'hr':
-        formattedText = '\n------------------------\n';
-        break;
-      default:
-        return;
-    }
 
-    const newText = description.substring(0, start) + formattedText + description.substring(end);
-    setDescription(newText);
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + formattedText.length, start + formattedText.length);
-    }, 0);
-  };
-// ====== 마크다운을 커서 위치에 삽입 ======
-  const insertAtCursor = (text) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    const start = textarea.selectionStart ?? description.length;
-    const end   = textarea.selectionEnd ?? description.length;
-    const next  = description.slice(0, start) + text + description.slice(end);
-    setDescription(next);
-    requestAnimationFrame(() => {
-      textarea.focus();
-      const pos = start + text.length;
-      textarea.setSelectionRange(pos, pos);
-    });
+  // 대표 직무 보정
+  let jobs = selectedJobs;
+  if (!jobs.some(j => j.isPrimary) && jobs.length > 0) {
+    jobs = jobs.map((j, idx) => ({ ...j, isPrimary: idx === 0 }));
+  }
+
+  const categories = jobs.map(j => ({
+    categoryId: Number(j.subCategoryId),
+    isPrimary: j.isPrimary ? 1 : 0   // BIT(1) 매핑
+  }));
+
+  // 지역(대표 1건) — 현재 UI 기준
+  const regions = {
+    sidoId: selectedLocation ? Number(selectedLocation) : null,
+    sigunguId: selectedSubLocation ? Number(selectedSubLocation) : null
   };
 
-  // (선택) 드래그&드롭 / 붙여넣기로 업로더 호출
-  const handleDrop = (e) => {
-    e.preventDefault();
-    const files = Array.from(e.dataTransfer?.files || []);
-    if (files.length) {
-      uploaderRef.current?.uploadFromExternal(files, { autoInsert: files.length === 1 });
+  // 기본 정보 수집
+  const title = document.getElementById("title")?.value || "";
+  const status = document.getElementById("status")?.value || "DRAFT";            // PostingStatus
+  const closeType = document.getElementById("close_type")?.value || "DEADLINE";  // CloseType
+  const isRemote = document.getElementById("is_remote")?.checked || false;
+
+  const openDate = toLocalDateTimeString(
+    document.getElementById("open_date")?.value
+  );
+  const closeDate = toLocalDateTimeString(
+    document.getElementById("close_date")?.value
+  );
+
+  // 조건 수집
+  const minExperienceYears = Number(document.getElementById("min_experience_years")?.value || 0);
+  const maxExperienceYearsRaw = document.getElementById("max_experience_years")?.value;
+  const minSalaryRaw = document.getElementById("min_salary")?.value;
+  const maxSalaryRaw = document.getElementById("max_salary")?.value;
+
+  const salaryType = document.getElementById("salary_type")?.value || "ANNUAL";
+  const employmentType = document.getElementById("employment_type")?.value || "FULL_TIME";
+  const experienceLevel = document.getElementById("experience_level")?.value || "ENTRY";
+  const educationLevel = document.getElementById("education_level")?.value || "ANY";
+  const workSchedule = document.getElementById("work_schedule")?.value || "";
+  const etc = document.getElementById("etc")?.value || "";
+
+  const payload = {
+    companyId,
+    createdBy,
+    title,
+    status,        // enum 이름 문자열 -> DTO의 enum으로 매핑됨
+    closeType,     // enum 이름 문자열
+    isRemote,      // boolean
+    openDate,      // 'YYYY-MM-DDTHH:mm:ss' | null
+    closeDate,     // 'YYYY-MM-DDTHH:mm:ss' | null
+    searchText: title,    // 필요 시 커스텀
+    description,          // CKEditor HTML (백엔드에서 사용 안 해도 OK)
+    regions,              // {sidoId, sigunguId}
+    categories,           // [{categoryId, isPrimary}]
+    conditions: {
+      minExperienceYears,
+      maxExperienceYears: maxExperienceYearsRaw ? Number(maxExperienceYearsRaw) : null,
+      minSalary: minSalaryRaw ? Number(minSalaryRaw) : null,
+      maxSalary: maxSalaryRaw ? Number(maxSalaryRaw) : null,
+      salaryType,         // enum
+      employmentType,     // enum
+      experienceLevel,    // enum
+      educationLevel,     // enum
+      workSchedule,
+      etc
     }
   };
-  const handleDragOver = (e) => e.preventDefault();
-  const handlePaste = (e) => {
-    const items = Array.from(e.clipboardData?.items || []);
-    const files = items.filter(it => it.kind === 'file').map(it => it.getAsFile()).filter(Boolean);
-    if (files.length) {
-      e.preventDefault();
-      uploaderRef.current?.uploadFromExternal(files, { autoInsert: files.length === 1 });
-    }
-  };
-  // ====== 제출: isPrimary를 BIT(1) => 1/0으로 변환 ======
-  const handleSubmit = async (e) => {
-    e.preventDefault();
 
-    // 대표가 하나도 없다면 첫 항목을 대표로 지정(마지막 안전장치)
-    let jobs = selectedJobs;
-    if (!jobs.some(j => j.isPrimary) && jobs.length > 0) {
-      jobs = jobs.map((j, idx) => ({ ...j, isPrimary: idx === 0 }));
-    }
-
-    // 서버에서 기대하는 형태로 변환
-    const categoriesPayload = jobs.map(j => ({
-      categoryId: Number(j.subCategoryId), // 실제 저장은 소분류 id 기준이라면 이렇게
-      isPrimary: j.isPrimary ? 1 : 0       // ✅ BIT(1) 맞춤
-    }));
-
-    const payload = {
-      title: document.getElementById('title')?.value || '',
-      description,
-      regions: {
-        sidoId: selectedLocation ? Number(selectedLocation) : null,
-        sigunguId: selectedSubLocation ? Number(selectedSubLocation) : null,
-      },
-      categories: categoriesPayload
-    };
-
-    console.log('▶ 전송 payload', payload);
-
-    try {
-      // 실제 엔드포인트로 교체하세요.
-      // const res = await axios.post('/api/postings', payload);
-      // console.log('등록 성공:', res.data);
-      // navigate('/postings'); // 성공 페이지 등으로 이동
-
-      alert('콘솔의 payload를 확인하세요!\n(실제 등록 POST는 주석을 해제하고 엔드포인트를 맞추세요)');
-    } catch (err) {
-      console.error(err);
-      alert('등록 중 오류가 발생했습니다.');
-    }
-  };
+  try {
+    const res = await axios.post("/api/postings", payload, { withCredentials: true });
+    const newId = res.data?.id;
+    alert(`등록 완료! ID=${newId}`);
+    // 필요하면 상세로 이동
+    // navigate(`/postings/${newId}`);
+  } catch (err) {
+    console.error(err);
+    alert("등록 중 오류가 발생했습니다.");
+  }
+};
 
   return (
     <div className="jobposting-container large">
       <h2 className="jobposting-title">채용공고 등록</h2>
 
       <form className="jobposting-form" onSubmit={handleSubmit}>
-
         {/* 직무 분류 */}
         <fieldset className="form-section">
           <legend>직무 분류</legend>
 
-          <div className="form-group-inline" style={{ gap: '10px' }}>
+          <div className="form-group-inline" style={{ gap: "10px" }}>
             <div className="form-group" style={{ flex: 1 }}>
               <label htmlFor="job_mid_cd">직무 대분류</label>
-              <select
-                id="job_mid_cd"
-                value={selectedJobMid}
-                onChange={handleJobMidChange}
-              >
+              <select id="job_mid_cd" value={selectedJobMid} onChange={handleJobMidChange}>
                 <option value="">대분류 선택</option>
                 {jobCategories.map(cat => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -313,34 +340,31 @@ const Jobposting = () => {
               </label>
             </div>
           </div>
-        
-                  {/* 직무 추가 버튼 */}
-          <div className="form-group" style={{ marginTop: '10px' }}>
+
+          <div className="form-group" style={{ marginTop: "10px" }}>
             <button
               type="button"
               onClick={addJob}
               disabled={!selectedJobMid || !selectedJobCode}
               style={{
-                padding: '8px 16px',
-                backgroundColor: '#007bff',
-                color: '#fff',
-                border: 'none',
+                padding: "8px 16px",
+                backgroundColor: "#007bff",
+                color: "#fff",
+                border: "none",
                 borderRadius: 4,
-                cursor: 'pointer',
-                fontSize: 14,
+                cursor: "pointer",
+                fontSize: 14
               }}
             >
               직무 추가
             </button>
           </div>
 
-          {/* 선택된 직무 태그들 (분리 컴포넌트) */}
           <SelectedJobTags
             selectedJobs={selectedJobs}
             onSetPrimary={setPrimaryJob}
             onRemove={removeJob}
           />
-
         </fieldset>
 
         {/* 기본 정보 */}
@@ -354,63 +378,76 @@ const Jobposting = () => {
 
           <div className="form-group">
             <label htmlFor="description">상세 설명</label>
-            <div className='form-group-inline' style={{ gap: 20, alignItems: 'center', marginBottom: 10 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <input type="radio" name="descriptionType" value="template" />
-                JobHub 템플릿 사용
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <input type="radio" name="descriptionType" value="direct" />
-                직접 작성
-              </label>
-            </div>
 
-            {/* 간단 에디터 */}
-            <div className="text-editor-toolbar">
-              <button type="button" className="toolbar-btn" onClick={() => formatText('bold')} title="굵게">
-                <strong>B</strong>
-              </button>
-              <button type="button" className="toolbar-btn" onClick={() => formatText('underline')} title="밑줄">
-                <u>U</u>
-              </button>
-              <select className="toolbar-select" onChange={(e) => formatText('fontSize', e.target.value)} title="글자 크기">
-                <option value="">크기</option>
-                <option value="12">12px</option>
-                <option value="14">14px</option>
-                <option value="16">16px</option>
-                <option value="18">18px</option>
-                <option value="20">20px</option>
-              </select>
-              <button type="button" className="toolbar-btn" onClick={() => formatText('hr')} title="구분선">
-                ───
-              </button>
-               {/* (선택) 파일 업로더: 만들었으면 활성화 */}
+            <CKEditor
+              editor={ClassicEditor}
+              data={description}
+              config={{
+                licenseKey: "GPL",
+                // ✅ 필요한 플러그인들을 명시적으로 등록
+                plugins: [
+                  Essentials,
+                  Paragraph,
+                  Heading,
+                  Bold,
+                  Italic,
+                  Underline,
+                  Link,
+                  List,
+                  BlockQuote,
+                  FontSize,
+                  Image,
+                  ImageCaption,
+                  ImageStyle,
+                  ImageToolbar,
+                  ImageUpload,
+                  FileRepository
+                ],
+                // ✅ 커스텀 업로드 플러그인은 extraPlugins로
+                extraPlugins: [ CustomUploadAdapterPlugin ],
+                // 커스텀 플러그인에서 쓸 setter를 config로 전달
+                jobhubSetAttachments: setAttachments,
+                toolbar: [
+                  "undo","redo","|",
+                  "heading","|",
+                  "bold","italic","underline","|",
+                  "fontSize","|",
+                  "link","|",
+                  "bulletedList","numberedList","blockQuote","|",
+                  "uploadImage"
+                ],
+                fontSize: {
+                  options: [10, 12, 14, 16, 18, 24, 32, "default"]
+                },
+                image: {
+                  toolbar: [
+                    "imageTextAlternative","|",
+                    "imageStyle:inline","imageStyle:block","imageStyle:side"
+                  ]
+                }
+              }}
+              onReady={(editor) => { editorRef.current = editor; }}
+              onChange={(_, editor) => setDescription(editor.getData())}
+              onError={(e) => console.error("CKEditor error:", e)}
+            />
+
+            {/* (선택) 첨부 목록/추가 업로더 – 본문 삽입은 CKEditor에서 처리 */}
+            <div style={{ marginTop: 12 }}>
               <AttachmentUploader
                 ref={uploaderRef}
                 value={attachments}
                 onChange={setAttachments}
-                onInsertMarkdown={(md) => insertAtCursor(md)}
                 uploadUrl="/api/uploads"
                 maxSizeMB={20}
+                autoInsertSingle={false}
               />
             </div>
-
-            <textarea
-              ref={textareaRef}
-              id="description"
-              name="description"
-              rows="12"
-              placeholder="업무 내용, 자격 요건 등을 입력하세요. 위의 버튼들을 사용하여 텍스트를 꾸밀 수 있습니다."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="styled-textarea"
-            />
           </div>
 
           {/* 근무 지역 */}
           <div className="form-group">
             <label>근무 지역</label>
-            <div className='form-group-inline' style={{ gap: 10 }}>
+            <div className="form-group-inline" style={{ gap: 10 }}>
               <select
                 value={selectedLocation}
                 onChange={handleLocationChange}
@@ -474,7 +511,7 @@ const Jobposting = () => {
           </div>
         </fieldset>
 
-        {/* 조건 정보 (그대로 유지) */}
+        {/* 채용 조건 */}
         <fieldset className="form-section">
           <legend>채용 조건</legend>
 

@@ -64,12 +64,12 @@ const AttachmentUploader = forwardRef(function AttachmentUploader(
 
     const fd = new FormData();
     valid.forEach(f => fd.append('files', f));
-
+    
     setUploading(true);
     setProgress(0);
     try {
       const res = await axios.post(uploadUrl, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        withCredentials: true,
         onUploadProgress: (e) => {
           if (!e.total) return;
           setProgress(Math.round(e.loaded * 100 / e.total));
@@ -85,7 +85,7 @@ const AttachmentUploader = forwardRef(function AttachmentUploader(
       }
     } catch (e) {
       console.error(e);
-      alert('파일 업로드 중 오류가 발생했습니다.');
+      alert(`업로드 실패: ${e?.response?.data?.message || e.message}`);
     } finally {
       setUploading(false);
       setProgress(0);
