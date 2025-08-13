@@ -1,10 +1,6 @@
 import React, { useRef } from 'react';
-
-// --- 경로 수정 ---
 import { Hero, Grid, TopGrid } from '../UX';
 import { SideNav } from '../layout';
-
-// --- 경로 수정 끝 ---
 
 function HomePage() {
   const heroRef = useRef(null);
