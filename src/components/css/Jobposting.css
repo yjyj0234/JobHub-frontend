@@ -251,3 +251,38 @@
   cursor: text;
   pointer-events: none; /* placeholder 클릭 방지 */
 }
+/* === Jobposting: 에디터 사이즈 & 미리보기 강제 적용 (최하단에 추가) === */
+.jobposting-container .styled-textarea {
+  width: 100%;
+  min-height: 420px !important;   /* ← 크기 키움 */
+  padding: 16px 20px;
+  border: 1.5px solid #ddd;
+  border-radius: 14px;
+  background: #fff;               /* 미리보기와 톤 맞춤 */
+  font-size: 1.15rem;
+  line-height: 1.6;
+  box-sizing: border-box;
+  resize: vertical !important;     /* ← 수동 리사이즈 허용 (기존 규칙 덮기) */
+}
+
+.jobposting-container .md-preview {
+  min-height: 420px;               /* textarea와 높이 맞춤 */
+  padding: 16px 20px;
+  border: 1.5px solid #ddd;
+  border-radius: 14px;
+  background: #fff;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+/* 에디터 본문 최소 높이 */
+.jobposting-container .ck-editor__editable_inline {
+  min-height: 420px;
+}
+
+/* 본문 이미지가 넘치지 않도록 */
+.jobposting-container .ck-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
