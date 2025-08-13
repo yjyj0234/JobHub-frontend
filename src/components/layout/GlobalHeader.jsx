@@ -304,7 +304,7 @@ function GlobalHeader({ onLoginClick }) {
       t === "company" || t === "company_hr" || t === "employer" || t === "hr"
     );
   };
-  const isCompany = isLoggedIn && isCompanyUser(user);
+  const isCompany = isAuthed && isCompanyUser(user);
 
   return (
     <header className={`global-header ${isScrolled ? "scrolled" : ""}`}>

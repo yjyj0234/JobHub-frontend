@@ -14,9 +14,6 @@ import { ResumeListPage, ResumeEditorPage } from "../resume";
 import { Jobposting, ApplicantsList } from "../Companies";
 
 import { JobPostingList } from "../job-posting-list";
-import { PostList, AddPost, PostDetail, Chat } from "../Community";
-
-import { JobPostingList } from "../job-posting-list";
 import { PostList, AddPost, PostDetail } from "../Community";
 
 /**
