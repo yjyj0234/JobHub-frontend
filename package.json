@@ -19,7 +19,9 @@
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.1",
     "sass": "^1.90.0",
-    "tailwindcss": "^4.1.11"
+    "sockjs-client": "^1.6.1",
+    "tailwindcss": "^4.1.11",
+    "websocket": "^1.0.35"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.3",

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../css/ResumeEditorPage.css';
-import { Briefcase, GraduationCap, Award, Languages, Star, Link as LinkIcon, Trash2, Eye, Server, Save } from 'lucide-react';
-import { ExperienceForm, EducationForm, ActivityForm, AwardForm, CertificationForm, LanguageForm, PortfolioForm, ProjectForm, ResumePreviewModal } from './';
+import { Briefcase, GraduationCap, Award, Languages, Star, Link as LinkIcon, Trash2, Eye, Server, Save, Wrench } from 'lucide-react';
+import { ExperienceForm, EducationForm, ActivityForm, AwardForm, CertificationForm, LanguageForm, PortfolioForm,SkillForm, ProjectForm, ResumePreviewModal } from './';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const ResumeStatusPalette = ({ completeness, isRepresentative, onRepChange, isPublic, onPublicChange }) => {
@@ -48,6 +48,7 @@ const EditorPalette = ({ onAddItem, addedSections }) => {
   const allItems = [
     { id: 'experiences', name: '경력', icon: <Briefcase size={20} /> },
     { id: 'educations', name: '학력', icon: <GraduationCap size={20} /> },
+    { id: 'skills', name: '기술', icon: <Server size={20} /> },
     { id: 'projects', name: '프로젝트', icon: <Server size={20} /> },
     { id: 'activities', name: '활동', icon: <Star size={20} /> },
     { id: 'awards', name: '수상', icon: <Award size={20} /> },
@@ -87,6 +88,7 @@ function ResumeEditorPage() {
   const sectionComponents = {
     experiences: { title: '경력', component: ExperienceForm },
     educations: { title: '학력', component: EducationForm },
+    skills: { title: '기술', component: SkillForm },
     activities: { title: '대외활동', component: ActivityForm },
     awards: { title: '수상 경력', component: AwardForm },
     certifications: { title: '자격증', component: CertificationForm },
