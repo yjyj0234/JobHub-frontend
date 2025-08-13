@@ -49,9 +49,15 @@ const PostList = () => {
     navigate(`/postlist/detail/${id}`);
   }
 
-  // 더보기 버튼 클릭 핸들러
+  // 더보기 버튼 클릭 핸들러 (토글 방식)
   const handleLoadMore = () => {
-    setVisibleCount(prev => prev + 6);
+    if (visibleCount >= filteredPosts.length) {
+      // 모든 게시글이 보이는 상태면 6개로 접기
+      setVisibleCount(6);
+    } else {
+      // 6개씩 더 보이기
+      setVisibleCount(prev => Math.min(prev + 6, filteredPosts.length));
+    }
   }
 
 const lower = (v) => (v ?? '').toString().toLowerCase();
@@ -70,8 +76,8 @@ const visiblePosts = useMemo(() => {
   return filteredPosts.slice(0, visibleCount);
 }, [filteredPosts, visibleCount]);
 
-// 더보기 버튼 표시 여부
-const hasMorePosts = filteredPosts.length > visibleCount;
+// 더보기 버튼 표시 여부 (게시글이 6개 이상일 때만)
+const hasMorePosts = filteredPosts.length > 6;
 
 
   return (
@@ -151,7 +157,7 @@ const hasMorePosts = filteredPosts.length > visibleCount;
               className="pl-load-more-btn"
               onClick={handleLoadMore}
             >
-              더보기 
+              {visibleCount >= filteredPosts.length ? '접기' : `더보기`}
             </button>
           </div>
         )}
