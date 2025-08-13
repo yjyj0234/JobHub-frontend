@@ -11,7 +11,10 @@ import { AuthPage, Hero, Grid, TopGrid } from "../UX";
 import { ResumeListPage, ResumeEditorPage } from "../resume";
 
 // 4. Companies 관련 페이지 그룹
-import { Jobposting } from "../Companies";
+import { Jobposting, ApplicantsList } from "../Companies";
+
+import { JobPostingList } from "../job-posting-list";
+import { PostList, AddPost, PostDetail, Chat } from "../Community";
 
 import { JobPostingList } from "../job-posting-list";
 import { PostList, AddPost, PostDetail } from "../Community";
