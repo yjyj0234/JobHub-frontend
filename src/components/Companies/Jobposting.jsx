@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import SelectedJobTags from "../Companies/SelectedJobTags.jsx";
 import AttachmentUploader from "./AttachmentUploader.jsx";
-
+import { useAuth } from "../context/AuthContext.jsx";
 // CKEditor 5 (v42+ 올인원)
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import {
@@ -31,6 +31,9 @@ import {
 
 // 전역 axios
 axios.defaults.baseURL = "http://localhost:8080";
+
+//쿠키 포함시킨다
+axios.defaults.withCredentials = true;
 
 
 // datetime-local -> 'YYYY-MM-DDTHH:mm:ss' (타임존 없는 LocalDateTime 문자열)
@@ -84,6 +87,13 @@ class CustomUploadAdapterPlugin extends Plugin {
 const Jobposting = () => {
   const navigate = useNavigate();
 
+  // ✅ StrictMode(개발 모드) 이중 마운트 대비: 부작용 1회 가드
+  const ranAuthCheck = useRef(false);
+  const ranFetch = useRef(false);
+  const loggedRef = useRef(false);
+
+  //로그인 유저정보
+  const {isLoggedIn, user} = useAuth();
   // 직무
   const [isPrimary, setIsPrimary] = useState(true);
   const [jobCategories, setJobCategories] = useState([]);
@@ -104,38 +114,90 @@ const Jobposting = () => {
   const editorRef = useRef(null);
   const uploaderRef = useRef(null);
 
-  // 초기 로딩
-  useEffect(() => {
-    axios.get("/api/search/job-categories")
-      .then(res => {
-        const list = (res.data?.categories || []).map(c => ({ ...c, id: String(c.id) }));
-        setJobCategories(list);
-      })
-      .catch(console.error);
+  //마감 유형이 채용 시 마감(UNTIL_FILLED), 상시채용(CONTINUOUS) 이면 
+  // 시작/마감 일시 입력칸 비활성화
+  const [closeTypeState, setCloseTypeState] = useState("DEADLINE");
+  const isDateDisabled = closeTypeState === "UNTIL_FILLED" || closeTypeState === "CONTINUOUS";
+ //력 레벨이 신입(ENTRY) 이면 최소/최대 경력 입력 비활성화 +
+ //  제출 시 자동으로 min=0, max=null 처리
+  const [experienceLevelState, setExperienceLevelState] = useState("ENTRY");
+  const isExperienceDisabled = experienceLevelState === "ENTRY";
 
-    axios.get("/api/search/regions")
-      .then(res => {
-        const list = (res.data?.regions || []).map(r => ({ ...r, id: String(r.id) }));
-        setLocations(list);
-      })
-      .catch(console.error);
-  }, []);
+  // 급여 유형 상태 추가
+  const [salaryType, setSalaryType] = useState("ANNUAL");
+
+  //로그인 유무에 따른 navi
+useEffect(()=>{
+  // 로그인/권한 체크: 페이지 진입 시 1회만 실행 (StrictMode 중복 차단)
+  if (ranAuthCheck.current) return;
+  ranAuthCheck.current = true;
+  if(!isLoggedIn){
+    alert("로그인이 필요합니다.");
+    navigate("/", { replace: true });
+    return;
+  }
+  if (user?.role!=="COMPANY") {
+    alert("기업 회원만 접근할 수 있습니다.");
+    navigate("/", { replace: true });
+    
+  }
+   // ✅ 로깅 개선: useEffect에서 API 호출로 최신 정보를 가져와서 로그 출력
+    const logAuthInfo = async () => {
+      try {
+        const res = await axios.get("/api/auth/me", { withCredentials: true });
+        const serverUser = res.data;
+        const authId = serverUser?.id ?? serverUser?.userId ?? serverUser?.email;
+        console.log(`[auth] authenticated user (role: ${serverUser?.role}, id: ${authId}, companyId: ${serverUser?.companyId})`);
+      } catch (err) {
+        console.warn("[auth] Failed to fetch user info from API. Using AuthContext user instead.");
+        const authId = user?.id ?? user?.userId ?? user?.email;
+        console.log(`[auth] authenticated user (role: ${user?.role}, id: ${authId}, companyId: ${user?.companyId})`);
+      }
+    };
+    logAuthInfo();
+  }, [isLoggedIn, user, navigate]);
+//데이터 로딩
+useEffect(()=>{
+  if(!isLoggedIn||user?.role!=="COMPANY"){
+    return;
+  }
+  
+  let cancelled=false;
+  (async () =>{
+    try{
+      const [catsRes,regsRes]=await Promise.all([
+        axios.get("/api/search/job-categories"),
+        axios.get("/api/search/regions")
+      ]);
+      if(cancelled) return;
+      const cats= (catsRes.data?.categories || []).map(c => ({ ...c, id: String(c.id) }));
+      const regs= (regsRes.data?.regions || []).map(r => ({ ...r, id: String(r.id) }));
+      setJobCategories(cats);
+      setLocations(regs);
+    }catch(err){
+      console.error(err);
+    }
+  })();
+  return () => { cancelled=true; };
+},[isLoggedIn,user]);
+
 
   // 대분류 변경 -> 소분류 로딩
-  const handleJobMidChange = (e) => {
+    const handleJobMidChange = async (e) => {
     const parentId = e.target.value;
     setSelectedJobMid(parentId);
     setSelectedJobCode("");
     setJobKeywords([]);
-
     if (!parentId) return;
-    axios.get("/api/search/job-categories", { params: { parentId } })
-      .then(res => {
-        const list = (res.data?.categories || []).map(c => ({ ...c, id: String(c.id) }));
-        setJobKeywords(list);
-        setSelectedJobCode(list[0]?.id || "");
-      })
-      .catch(console.error);
+
+    try {
+      const res = await axios.get("/api/search/job-categories", { params: { parentId } });
+      const list = (res.data?.categories || []).map(c => ({ ...c, id: String(c.id) }));
+      setJobKeywords(list);
+      setSelectedJobCode(list[0]?.id || "");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // 직무 추가
@@ -200,30 +262,50 @@ const Jobposting = () => {
   };
 
   // 제출
- const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
 
-  // TODO: 실제 로그인/회사 컨텍스트로부터 주입
-  const companyId = user?.companyId;   // 예시
-  const createdBy = user?.id;   // 예시
-  if (!companyId || !createdBy) {
-  alert("로그인이 필요하거나 회사 정보가 없습니다.");
-  return;
+  
+  // 1) 권한 1차 체크(있으면)
+  if (!isLoggedIn || user?.role !== "COMPANY") {
+    alert("로그인이 필요합니다. 또는 기업 회원만 등록할 수 있습니다.");
+    return;
+  }
+
+  // 2) 숫자 id는 반드시 서버에서 가져온다 (user.id=이메일은 무시!)
+  // handleSubmit 함수에서
+let createdBy = user?.id; // AuthContext의 user.id 사용
+let companyId = user?.companyId; // AuthContext의 user.companyId 사용
+
+// 백엔드 API로 최신 정보 가져오는 시도 (실패해도 진행)
+try {
+    const meRes = await axios.get("/api/auth/me", { withCredentials: true });
+    createdBy = Number(meRes.data?.id);
+    companyId = Number(meRes.data?.companyId ?? meRes.data?.id);
+} catch (err) {
+    console.warn("[/api/auth/me] failed, using AuthContext data:", err);
 }
 
+if (!createdBy || !companyId) {
+    alert("로그인이 필요하거나 회사 정보가 없습니다.");
+    return;
+}
 
   // 대표 직무 보정
   let jobs = selectedJobs;
   if (!jobs.some(j => j.isPrimary) && jobs.length > 0) {
     jobs = jobs.map((j, idx) => ({ ...j, isPrimary: idx === 0 }));
   }
-
   const categories = jobs.map(j => ({
     categoryId: Number(j.subCategoryId),
-    isPrimary: j.isPrimary ? 1 : 0   // BIT(1) 매핑
+    isPrimary: !!j.isPrimary   // ← true/false로 보냄
   }));
-
-  // 지역(대표 1건) — 현재 UI 기준
+  // 혹시 대표가 여러 개면 첫 번째만 대표로
+  const firstPrimaryIdx = jobs.findIndex(j => j.isPrimary === true);
+  if (firstPrimaryIdx > -1) {
+    jobs = jobs.map((j, i) => ({ ...j, isPrimary: i === firstPrimaryIdx }));
+  }
+  // 지역
   const regions = {
     sidoId: selectedLocation ? Number(selectedLocation) : null,
     sigunguId: selectedSubLocation ? Number(selectedSubLocation) : null
@@ -231,63 +313,89 @@ const Jobposting = () => {
 
   // 기본 정보 수집
   const title = document.getElementById("title")?.value || "";
-  const status = document.getElementById("status")?.value || "DRAFT";            // PostingStatus
-  const closeType = document.getElementById("close_type")?.value || "DEADLINE";  // CloseType
-  const isRemote = document.getElementById("is_remote")?.checked || false;
+  const status = document.getElementById("status")?.value || "DRAFT";
 
-  const openDate = toLocalDateTimeString(
-    document.getElementById("open_date")?.value
-  );
-  const closeDate = toLocalDateTimeString(
-    document.getElementById("close_date")?.value
-  );
+  // 상태값 사용
+  const closeType = closeTypeState;
+  const experienceLevel = experienceLevelState;
+
+  // 날짜: 비활성화면 null
+  const openDate = isDateDisabled
+    ? null
+    : toLocalDateTimeString(document.getElementById("open_date")?.value);
+  const closeDate = isDateDisabled
+    ? null
+    : toLocalDateTimeString(document.getElementById("close_date")?.value);
 
   // 조건 수집
-  const minExperienceYears = Number(document.getElementById("min_experience_years")?.value || 0);
+  const minExperienceYearsInput = Number(document.getElementById("min_experience_years")?.value || 0);
   const maxExperienceYearsRaw = document.getElementById("max_experience_years")?.value;
-  const minSalaryRaw = document.getElementById("min_salary")?.value;
-  const maxSalaryRaw = document.getElementById("max_salary")?.value;
 
-  const salaryType = document.getElementById("salary_type")?.value || "ANNUAL";
+  // 급여 처리 - 월급/시급은 단일 값, 연봉은 최소/최대
+  let minSalary = null;
+  let maxSalary = null;
+  
+  if (salaryType === "MONTHLY" || salaryType === "HOURLY") {
+    const salaryAmount = document.getElementById("salary_amount")?.value;
+    if (salaryAmount) {
+      minSalary = Number(salaryAmount);
+      maxSalary = Number(salaryAmount);
+    }
+  } else {
+    const minSalaryRaw = document.getElementById("min_salary")?.value;
+    const maxSalaryRaw = document.getElementById("max_salary")?.value;
+    minSalary = minSalaryRaw ? Number(minSalaryRaw) : null;
+    maxSalary = maxSalaryRaw ? Number(maxSalaryRaw) : null;
+  }
   const employmentType = document.getElementById("employment_type")?.value || "FULL_TIME";
-  const experienceLevel = document.getElementById("experience_level")?.value || "ENTRY";
   const educationLevel = document.getElementById("education_level")?.value || "ANY";
-  const workSchedule = document.getElementById("work_schedule")?.value || "";
+  // 근무 스케줄 구성: 주 N일, 시작~종료, 탄력근무 여부
+  const workDaysPerWeekVal = document.getElementById("work_days_per_week")?.value;
+  const workStartTimeVal = document.getElementById("work_start_time")?.value;
+  const workEndTimeVal = document.getElementById("work_end_time")?.value;
+  const isFlexibleChecked = document.getElementById("is_flexible")?.checked || false;
+  const workSchedule = [
+    workDaysPerWeekVal ? `주 ${Number(workDaysPerWeekVal)}일` : null,
+    workStartTimeVal && workEndTimeVal ? `${workStartTimeVal}~${workEndTimeVal}` : null,
+    `탄력근무 ${isFlexibleChecked ? "가능" : "불가"}`
+  ].filter(Boolean).join(", ");
   const etc = document.getElementById("etc")?.value || "";
+
+  // 신입이면 경력 자동 보정
+  const minExperienceYears = isExperienceDisabled ? 0 : minExperienceYearsInput;
+  const maxExperienceYears = isExperienceDisabled ? null : (maxExperienceYearsRaw ? Number(maxExperienceYearsRaw) : null);
 
   const payload = {
     companyId,
     createdBy,
     title,
-    status,        // enum 이름 문자열 -> DTO의 enum으로 매핑됨
-    closeType,     // enum 이름 문자열
-    isRemote,      // boolean
-    openDate,      // 'YYYY-MM-DDTHH:mm:ss' | null
-    closeDate,     // 'YYYY-MM-DDTHH:mm:ss' | null
-    searchText: title,    // 필요 시 커스텀
-    description,          // CKEditor HTML (백엔드에서 사용 안 해도 OK)
-    regions,              // {sidoId, sigunguId}
-    categories,           // [{categoryId, isPrimary}]
-    conditions: {
-      minExperienceYears,
-      maxExperienceYears: maxExperienceYearsRaw ? Number(maxExperienceYearsRaw) : null,
-      minSalary: minSalaryRaw ? Number(minSalaryRaw) : null,
-      maxSalary: maxSalaryRaw ? Number(maxSalaryRaw) : null,
-      salaryType,         // enum
-      employmentType,     // enum
-      experienceLevel,    // enum
-      educationLevel,     // enum
-      workSchedule,
-      etc
-    }
+    status,
+    closeType,
+    isRemote: document.getElementById("is_remote")?.checked || false,
+    openDate,
+    closeDate,
+    searchText: title,
+    description,
+    regions,
+    categories,
+         conditions: {
+       minExperienceYears,
+       maxExperienceYears,
+       minSalary,
+       maxSalary,
+       salaryType,
+       employmentType,
+       experienceLevel,
+       educationLevel,
+       workSchedule,
+       etc
+     }
   };
 
   try {
     const res = await axios.post("/api/postings", payload, { withCredentials: true });
     const newId = res.data?.id;
     alert(`등록 완료! ID=${newId}`);
-    // 필요하면 상세로 이동
-    // navigate(`/postings/${newId}`);
   } catch (err) {
     console.error(err);
     alert("등록 중 오류가 발생했습니다.");
@@ -481,7 +589,7 @@ const Jobposting = () => {
 
           <div className="form-group">
             <label htmlFor="status">공고 상태</label>
-            <select id="status" name="status">
+            <select id="status" name="status" defaultValue="DRAFT">
               <option value="DRAFT">임시저장</option>
               <option value="OPEN">공개</option>
               <option value="CLOSED">마감</option>
@@ -491,7 +599,8 @@ const Jobposting = () => {
 
           <div className="form-group">
             <label htmlFor="close_type">마감 유형</label>
-            <select id="close_type" name="close_type">
+            <select id="close_type" name="close_type" value={closeTypeState}
+            onChange={(e)=>setCloseTypeState(e.target.value)}>
               <option value="DEADLINE">마감일</option>
               <option value="UNTIL_FILLED">채용 시 마감</option>
               <option value="CONTINUOUS">상시채용</option>
@@ -501,31 +610,101 @@ const Jobposting = () => {
 
           <div className="form-group-inline">
             <div className="form-group">
-              <label htmlFor="open_date">공고 시작일시</label>
-              <input type="datetime-local" id="open_date" name="open_date" />
+               <label htmlFor="open_date">공고 시작일시</label>
+              <input type="datetime-local" id="open_date" name="open_date"
+                disabled={isDateDisabled}/>
             </div>
             <div className="form-group">
               <label htmlFor="close_date">공고 마감일시</label>
-              <input type="datetime-local" id="close_date" name="close_date" />
+              <input type="datetime-local" id="close_date" name="close_date"
+                disabled={isDateDisabled}/>
             </div>
           </div>
         </fieldset>
 
         {/* 채용 조건 */}
-        <fieldset className="form-section">
+       <fieldset className="form-section">
           <legend>채용 조건</legend>
+          
+        <div className="form-group">
+          <label htmlFor="education_level">학력</label>
+          <select id="education_level" name="education_level" defaultValue="ANY">
+            <option value="ANY">무관</option>
+            <option value="HIGH_SCHOOL">고졸</option>
+            <option value="UNIVERSITY">대졸</option>
+            <option value="COLLEGE">전문대졸</option>
+            <option value="MASTER">석사</option>
+            <option value="PHD">박사</option>
+          </select>
+        </div>
 
-          <div className="form-group-inline">
-            <div className="form-group">
-              <label htmlFor="min_experience_years">최소 경력 (년)</label>
-              <input type="number" id="min_experience_years" name="min_experience_years" min="0" />
-            </div>
-            <div className="form-group">
-              <label htmlFor="max_experience_years">최대 경력 (년)</label>
-              <input type="number" id="max_experience_years" name="max_experience_years" min="0" />
-            </div>
+          {/* 경력 레벨 - 맨 위 */}
+          <div className="form-group">
+            <label htmlFor="experience_level">경력 레벨</label>
+            <select
+              id="experience_level"
+              name="experience_level"
+              value={experienceLevelState}
+              onChange={(e) => setExperienceLevelState(e.target.value)}
+            >
+              <option value="ENTRY">신입</option>
+              <option value="JUNIOR">주니어</option>
+              <option value="MID">미드</option>
+              <option value="SENIOR">시니어</option>
+              <option value="LEAD">리드</option>
+              <option value="EXECUTIVE">임원</option>
+            </select>
           </div>
 
+        {/* 신입이면 비활성화 */}
+        <div className="form-group-inline">
+          <div className="form-group">
+            <label htmlFor="min_experience_years">최소 경력 (년)</label>
+            <input
+              type="number"
+              id="min_experience_years"
+              name="min_experience_years"
+              min="0"
+              disabled={isExperienceDisabled}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="max_experience_years">최대 경력 (년)</label>
+            <input
+              type="number"
+              id="max_experience_years"
+              name="max_experience_years"
+              min="0"
+              disabled={isExperienceDisabled}
+            />
+          </div>
+        </div>
+
+        {/* 급여 유형 선택 */}
+         <div className="form-group">
+          <label htmlFor="salary_type">급여 유형</label>
+          <select 
+            id="salary_type" 
+            name="salary_type" 
+            value={salaryType}
+            onChange={(e) => setSalaryType(e.target.value)}
+          >
+            <option value="ANNUAL">연봉</option>
+            <option value="MONTHLY">월급</option>
+            <option value="HOURLY">시급</option>
+            <option value="NEGOTIABLE">협의</option>
+            <option value="UNDISCLOSED">비공개</option>
+          </select>
+        </div>
+
+        {salaryType === "MONTHLY" || salaryType === "HOURLY" ? (
+          <div className="form-group">
+            <label htmlFor="salary_amount">
+              {salaryType === "MONTHLY" ? "월급 (만원)" : "시급 (원)"}
+            </label>
+            <input type="number" id="salary_amount" name="salary_amount" min="0" />
+          </div>
+        ) : (
           <div className="form-group-inline">
             <div className="form-group">
               <label htmlFor="min_salary">최소 연봉 (만원)</label>
@@ -536,63 +715,54 @@ const Jobposting = () => {
               <input type="number" id="max_salary" name="max_salary" min="0" />
             </div>
           </div>
+        )}
 
-          <div className="form-group">
-            <label htmlFor="salary_type">급여 유형</label>
-            <select id="salary_type" name="salary_type">
-              <option value="ANNUAL">연봉</option>
-              <option value="MONTHLY">월급</option>
-              <option value="HOURLY">시급</option>
-              <option value="NEGOTIABLE">협의</option>
-              <option value="UNDISCLOSED">비공개</option>
-            </select>
-          </div>
+       
 
-          <div className="form-group">
-            <label htmlFor="employment_type">고용 형태</label>
-            <select id="employment_type" name="employment_type">
-              <option value="FULL_TIME">정규직</option>
-              <option value="PART_TIME">파트타임</option>
-              <option value="CONTRACT">계약직</option>
-              <option value="INTERN">인턴</option>
-              <option value="FREELANCE">프리랜서</option>
-            </select>
-          </div>
+        <div className="form-group">
+          <label htmlFor="employment_type">고용 형태</label>
+          <select id="employment_type" name="employment_type" defaultValue="FULL_TIME">
+            <option value="FULL_TIME">정규직</option>
+            <option value="PART_TIME">파트타임</option>
+            <option value="CONTRACT">계약직</option>
+            <option value="INTERN">인턴</option>
+            <option value="FREELANCE">프리랜서</option>
+          </select>
+        </div>
 
-          <div className="form-group">
-            <label htmlFor="experience_level">경력 레벨</label>
-            <select id="experience_level" name="experience_level">
-              <option value="ENTRY">신입</option>
-              <option value="JUNIOR">주니어</option>
-              <option value="MID">미드</option>
-              <option value="SENIOR">시니어</option>
-              <option value="LEAD">리드</option>
-              <option value="EXECUTIVE">임원</option>
-            </select>
+        <div className="form-group">
+          <label>근무 형태/스케줄</label>
+          <div className="form-group-inline">
+				<div className="form-group" style={{ minWidth: 120 }}>
+					<label htmlFor="work_days_per_week">근무일수</label>
+					<div style={{ display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
+						<span>주</span>
+						<input type="number" id="work_days_per_week" name="work_days_per_week" min="1" max="7" placeholder="예: 5" style={{ width: 64 }} />
+						<span>일</span>
+					</div>
+				</div>&nbsp;
+            <div className="form-group" style={{ minWidth: 160 }}>
+              <label htmlFor="work_start_time">시작 시간</label>
+              <input type="time" id="work_start_time" name="work_start_time" />
+            </div>
+            <div className="form-group" style={{ minWidth: 160 }}>
+              <label htmlFor="work_end_time">종료 시간</label>
+              <input type="time" id="work_end_time" name="work_end_time" />
+            </div>
+            
           </div>
+          <div className="form-group" >
+              <label htmlFor="is_flexible">
+                <input type="checkbox" id="is_flexible" name="is_flexible" /> 탄력근무 가능
+              </label>
+            </div>
+        </div>
 
-          <div className="form-group">
-            <label htmlFor="education_level">학력</label>
-            <select id="education_level" name="education_level">
-              <option value="ANY">무관</option>
-              <option value="HIGH_SCHOOL">고졸</option>
-              <option value="UNIVERSITY">대졸</option>
-              <option value="COLLEGE">전문대졸</option>
-              <option value="MASTER">석사</option>
-              <option value="PHD">박사</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="work_schedule">근무 형태/스케줄</label>
-            <input type="text" id="work_schedule" name="work_schedule" placeholder="예: 주 5일, 탄력근무제 등" />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="etc">우대사항</label>
-            <input type="text" id="etc" name="etc" placeholder="예: 관련 자격증, 외국어 능력 등" />
-          </div>
-        </fieldset>
+        <div className="form-group">
+          <label htmlFor="etc">우대사항</label>
+          <input type="text" id="etc" name="etc" placeholder="예: 관련 자격증, 외국어 능력 등" />
+        </div>
+      </fieldset>
 
         <button type="submit" className="cta-button large">등록하기</button>
       </form>
