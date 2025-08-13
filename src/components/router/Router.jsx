@@ -1,22 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from "react";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 // 1. layout 컴포넌트 그룹
-import { GlobalHeader, SideNav, GlobalFooter } from '../layout';
+import { GlobalHeader, SideNav, GlobalFooter } from "../layout";
 
 // 2. UI/UX 컴포넌트 그룹
-import { Modal } from '../UI';
-import { AuthPage, Hero, Grid, TopGrid } from '../UX';
+import { Modal } from "../UI";
+import { AuthPage, Hero, Grid, TopGrid } from "../UX";
 
 // 3. resume 관련 페이지 그룹
-import { ResumeListPage, ResumeEditorPage } from '../resume';
+import { ResumeListPage, ResumeEditorPage } from "../resume";
 
 // 4. Companies 관련 페이지 그룹
-import { Jobposting } from '../Companies';
+import { Jobposting } from "../Companies";
 
-
-import { JobPostingList } from '../job-posting-list';
-import { PostList, AddPost, PostDetail, Chat } from '../Community';
-
+import { JobPostingList } from "../job-posting-list";
+import { PostList, AddPost, PostDetail } from "../Community";
 
 /**
  * 🏢 MainLayout 컴포넌트
@@ -32,12 +30,12 @@ function MainLayout() {
   useEffect(() => {
     const body = document.body;
     if (isModalOpen) {
-      body.classList.add('body-no-scroll');
+      body.classList.add("body-no-scroll");
     } else {
-      body.classList.remove('body-no-scroll');
+      body.classList.remove("body-no-scroll");
     }
     return () => {
-      body.classList.remove('body-no-scroll');
+      body.classList.remove("body-no-scroll");
     };
   }, [isModalOpen]);
 
@@ -68,7 +66,7 @@ function HomePage() {
   const sections = [
     { name: "소개", ref: heroRef },
     { name: "추천 기업", ref: gridRef },
-    { name: "TOP10 기업", ref: topgridRef }
+    { name: "TOP10 기업", ref: topgridRef },
   ];
 
   return (
@@ -91,25 +89,21 @@ function AppRouter() {
   return (
     // BrowserRouter: HTML5 History API를 사용하여 URL과 UI를 동기화합니다.
 
-
-     //<AuthProvider>
+    //<AuthProvider>
     <Routes>
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/resumes" element={<ResumeListPage />} />
         <Route path="/resumes/new" element={<ResumeEditorPage />} />
         <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
-        <Route path="/jobposting" element={<Jobposting/>}/>
-        <Route path="/postlist" element={<PostList/>}/>
-        <Route path='/jobpostinglist' element = {<JobPostingList/>}/>
-        <Route path="/postlist/addpost" element={<AddPost/>}/>
-        <Route path="/postlist/detail/:id" element={<PostDetail/>}/>
-        <Route path="/chat" element={<Chat />} />
-
+        <Route path="/jobposting" element={<Jobposting />} />
+        <Route path="/postlist" element={<PostList />} />
+        <Route path="/jobpostinglist" element={<JobPostingList />} />
+        <Route path="/postlist/addpost" element={<AddPost />} />
+        <Route path="/postlist/detail/:id" element={<PostDetail />} />
       </Route>
     </Routes>
-     //</AuthProvider>
-
+    //</AuthProvider>
   );
 }
 
