@@ -11,7 +11,7 @@ import { AuthPage, Hero, Grid, TopGrid } from '../UX';
 import { ResumeListPage, ResumeEditorPage } from '../resume';
 
 // 4. Companies 관련 페이지 그룹
-import { Jobposting } from '../Companies';
+import { Jobposting, ApplicantsList } from '../Companies';
 
 
 import { JobPostingList } from '../job-posting-list';
@@ -100,6 +100,7 @@ function AppRouter() {
         <Route path="/resumes/new" element={<ResumeEditorPage />} />
         <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
         <Route path="/jobposting" element={<Jobposting/>}/>
+        <Route path="/companies/applicants" element={<ApplicantsList/>}/>
         <Route path="/postlist" element={<PostList/>}/>
         <Route path='/jobpostinglist' element = {<JobPostingList/>}/>
         <Route path="/postlist/addpost" element={<AddPost/>}/>

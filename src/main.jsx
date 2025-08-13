@@ -2,7 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./components/context/AuthContext.jsx"; // 1. 로그인/인증 상태를 관리하는 컴포넌트
-import AppRouter from "./components/router/Router.jsx"; // 2. 페이지 경로를 설정하는 라우터 컴포넌트
+import AppRouter from "./components/router/router.jsx";
+import 'ckeditor5/ckeditor5.css';
 
 // 전역(Global) CSS 파일
 import "./App.css"; // 3. 앱 전체의 기본 스타일 및 CSS 변수 정의

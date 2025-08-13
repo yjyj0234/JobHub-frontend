@@ -1,14 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../css/Form.css';
 
-function AwardForm() {
+function AwardForm({ data, onUpdate }) {
+  const [formData, setFormData] = useState(data || {});
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const updatedData = { ...formData, [name]: value };
+    setFormData(updatedData);
+    onUpdate(updatedData);
+  };
+
   return (
     <div className="item-form">
       <div className="grid-layout">
-        <div className="form-field full-width"><label htmlFor="awardTitle">수상명</label><input type="text" id="awardTitle" name="awardTitle" placeholder="예) 전국 대학생 코딩 경진대회 대상"/></div>
-        <div className="form-field"><label htmlFor="awardingInstitution">수여기관</label><input type="text" id="awardingInstitution" name="awardingInstitution" placeholder="예) 한국정보올림피아드"/></div>
-        <div className="form-field"><label htmlFor="awardDate">수상일</label><input type="date" id="awardDate" name="awardDate"/></div>
-        <div className="form-field full-width"><label htmlFor="awardDescription">수상 내용</label><textarea id="awardDescription" name="awardDescription" placeholder="수상을 통해 얻은 역량이나 경험에 대해 작성해주세요."/></div>
+        <div className="form-field full-width"><label htmlFor="awardTitle">수상명</label><input type="text" id="awardTitle" name="awardTitle" value={formData.awardTitle || ''} onChange={handleChange} placeholder="예) 전국 대학생 코딩 경진대회 대상"/></div>
+        <div className="form-field"><label htmlFor="awardingInstitution">수여기관</label><input type="text" id="awardingInstitution" name="awardingInstitution" value={formData.awardingInstitution || ''} onChange={handleChange} placeholder="예) 한국정보올림피아드"/></div>
+        <div className="form-field"><label htmlFor="awardDate">수상일</label><input type="date" id="awardDate" name="awardDate" value={formData.awardDate || ''} onChange={handleChange}/></div>
+        <div className="form-field full-width"><label htmlFor="awardDescription">수상 내용</label><textarea id="awardDescription" name="description" value={formData.description || ''} onChange={handleChange} placeholder="수상을 통해 얻은 역량이나 경험에 대해 작성해주세요."/></div>
       </div>
     </div>
   );
