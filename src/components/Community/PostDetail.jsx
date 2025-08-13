@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
-
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
+axios.defaults.withCredentials = true; // 쿠키 인증을 위해 설정
 import { useParams, useNavigate } from 'react-router-dom';
 import '../css/PostDetail.css';
 import humanIcon from '../../assets/img/human.png';
@@ -12,10 +12,13 @@ export default function PostDetail() {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState(null);
-
   const viewed = useRef(false);
+  
+
+  
 
 
+  
   useEffect(() => {
     if (!id) { navigate(-1); return; }
     (async () => {
@@ -40,6 +43,11 @@ export default function PostDetail() {
       }
     })();
   }, [id, navigate]);
+
+  
+
+ 
+ 
 
   const handleDelete = async () => {
   if (!window.confirm('정말 삭제하시겠습니까?')) return;
@@ -135,15 +143,20 @@ const handleList = () => {
       <div className="post-actions">
         <button className="btn list" onClick={handleList}>목록</button>
         <div className="spacer" />
-        <button className="btn edit" onClick={handleEdit}>수정</button>
-        <button className='btn delete' onClick={handleDelete}>삭제</button>
+          {/* 로그인한 사용자가 작성자일 때만 수정/삭제 버튼 보이게 */}
+       {post.owner && (
+  <>
+    <button type='button' className="btn edit" onClick={handleEdit}>수정</button>
+    <button type='button' className="btn delete" onClick={handleDelete}>삭제</button>
+  </>
+)}
       </div>
 
-      {/* 댓글 영역(추후 API 붙이면 사용) */}
-      <section className="comments">
-        <h2 className="comments-title">댓글</h2>
-        <div className="comment-empty">댓글 리스트</div>
-      </section>
+      
+
+      
+
+      
     </div>
   );
 }
