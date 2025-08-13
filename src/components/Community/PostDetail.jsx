@@ -41,7 +41,26 @@ export default function PostDetail() {
     })();
   }, [id, navigate]);
 
-  
+  const handleDelete = async () => {
+  if (!window.confirm('정말 삭제하시겠습니까?')) return;
+  try {
+    await axios.delete(`http://localhost:8080/community/${id}`);
+    alert('삭제 완료!');
+    // 목록 경로로 이동(프로젝트 라우팅에 맞춰 수정)
+    navigate('/postlist');
+  } catch (e) {
+    console.error(e);
+    alert(`삭제 실패: ${e.response?.data?.message ?? e.message}`);
+  }
+};
+
+const handleEdit = () => {
+  navigate(`/postlist/edit/${id}`);
+};
+
+const handleList = () => {
+  navigate('/postlist');
+};
 
   if (loading) {
     return (
@@ -57,7 +76,7 @@ export default function PostDetail() {
   if (error) {
     return (
       <div className="post-detail-container error">
-        <h2>불러오는 중 오류가 발생했어</h2>
+        <h2>불러오는 중 오류가 발생</h2>
         <code>status: {error.status} / {error.message}</code>
         {error.body && <pre className="error-pre">{JSON.stringify(error.body, null, 2)}</pre>}
         <div className="actions">
@@ -71,7 +90,7 @@ export default function PostDetail() {
   if (!post) {
     return (
       <div className="post-detail-container empty">
-        <p>게시글을 찾을 수 없어</p>
+        <p>게시글을 찾을 수 없습니다</p>
         <button className="btn" onClick={() => navigate(-1)}>뒤로</button>
       </div>
     );
@@ -110,19 +129,20 @@ export default function PostDetail() {
         __html: (post.content ?? '').replace(/\n/g, '<br/>')
         }}
         />
-
+      <br /><br />
 
       {/* 액션 바 */}
       <div className="post-actions">
-        <button className="btn list" onClick={() => navigate(-1)}>목록</button>
+        <button className="btn list" onClick={handleList}>목록</button>
         <div className="spacer" />
-        <button className="btn edit" onClick={() => navigate}>수정</button>
+        <button className="btn edit" onClick={handleEdit}>수정</button>
+        <button className='btn delete' onClick={handleDelete}>삭제</button>
       </div>
 
       {/* 댓글 영역(추후 API 붙이면 사용) */}
       <section className="comments">
         <h2 className="comments-title">댓글</h2>
-        <div className="comment-empty">댓글 기능 준비중이야</div>
+        <div className="comment-empty">댓글 리스트</div>
       </section>
     </div>
   );
