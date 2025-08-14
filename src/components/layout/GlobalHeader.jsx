@@ -299,13 +299,11 @@ function GlobalHeader({ onLoginClick }) {
     </>
   );
 
-  //회사 계정일 시 공고등록버튼만 보이고 이력서 버튼은 안보이게
-  const isCompanyUser = (u) => {
-  const t = (u?.user_type ?? u?.userType ?? '').toString().toLowerCase();
-  return t === 'company' || t === 'company_hr' || t === 'employer' || t === 'hr';
-  };
-  const isCompany = isLoggedIn && isCompanyUser(user);
-  
+//로그인 했을 때 role이 company 인지 확인하는 함수
+const isCompanyUser = (u) => (u?.role ?? "").toLowerCase() === "company";
+const isCompany = isLoggedIn && isCompanyUser(user);
+
+
   return (
     <header className={`global-header ${isScrolled ? "scrolled" : ""}`}>
       <div className="header-content">
@@ -318,12 +316,12 @@ function GlobalHeader({ onLoginClick }) {
             <button type="button" onClick={() => navigate('/jobpostinglist')}>채용정보</button>
             <button type="button" onClick={postList}>커뮤니티</button>
 
-            <button type="button" onClick={handleResumeClick}>
-              이력서
-            </button>
-            <button type="button" onClick={jobPosting}>
-              공고 등록
-            </button>
+           {isCompany ? (
+              <button type="button" onClick={jobPosting}>공고 등록</button>
+            ) : (
+              //role이 company가 아닌경우 이력서 버튼만 보이게
+              <button type="button" onClick={handleResumeClick}>이력서</button>
+            )}
             <button type="button">취업툴</button>
             <button type="button">이력서 코칭 AI</button>
           </nav>

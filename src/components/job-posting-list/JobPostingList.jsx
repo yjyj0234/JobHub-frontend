@@ -501,7 +501,7 @@ const JobItem = ({ job, onBookmark }) => (
 );
 
 // ==================== 메인 페이지 ====================
-const JobPosting = () => {
+const JobPostingList = () => {
   const [jobs, setJobs] = useState([]);
   const [filteredJobs, setFilteredJobs] = useState([]);
   const [sortBy, setSortBy] = useState('latest');
@@ -650,4 +650,4 @@ const JobPosting = () => {
   );
 };
 
-export default JobPosting;
+export default JobPostingList;
