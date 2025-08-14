@@ -1,7 +1,9 @@
+// src/components/router/Router.jsx
+
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 // 1. layout 컴포넌트 그룹
-import { GlobalHeader, SideNav, GlobalFooter } from '../layout';
+import { GlobalHeader, SideNav, GlobalFooter, Service } from '../layout'; 
 
 // 2. UI/UX 컴포넌트 그룹
 import { Modal } from '../UI';
@@ -13,17 +15,10 @@ import { ResumeListPage, ResumeEditorPage } from '../resume';
 // 4. Companies 관련 페이지 그룹
 import { Jobposting, ApplicantsList } from '../Companies';
 
-
 import { JobPostingList } from '../job-posting-list';
 import { PostList, AddPost, PostDetail, UpdatePost } from '../Community';
 
 
-/**
- * 🏢 MainLayout 컴포넌트
- * 이 컴포넌트는 모든 페이지를 감싸는 '공통 뼈대' 역할을 합니다.
- * 여기에 포함된 GlobalHeader나 Modal은 어떤 페이지로 이동하든 항상 화면에 존재하게 됩니다.
- * <Outlet /> 부분에 각 페이지의 실제 내용이 들어옵니다.
- */
 function MainLayout() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const openModal = () => setIsModalOpen(true);
@@ -57,10 +52,6 @@ function MainLayout() {
   );
 }
 
-/**
- * 🏠 HomePage 컴포넌트
- * 웹사이트의 메인 페이지('/')를 구성하는 여러 섹션 컴포넌트들을 조합하는 역할을 합니다.
- */
 function HomePage() {
   const heroRef = useRef(null);
   const gridRef = useRef(null);
@@ -68,7 +59,8 @@ function HomePage() {
   const sections = [
     { name: "소개", ref: heroRef },
     { name: "추천 기업", ref: gridRef },
-    { name: "TOP10 기업", ref: topgridRef }
+    { name: "TOP10 기업", ref: topgridRef },
+    { name: "고객센터", path: "/service" },
   ];
 
   return (
@@ -83,16 +75,9 @@ function HomePage() {
   );
 }
 
-/**
- * 🗺️ AppRouter 컴포넌트
- * react-router-dom 라이브러리를 사용하여 웹사이트의 전체적인 페이지 경로를 설정합니다.
- */
+
 function AppRouter() {
   return (
-    // BrowserRouter: HTML5 History API를 사용하여 URL과 UI를 동기화합니다.
-
-
-     //<AuthProvider>
     <Routes>
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
@@ -105,13 +90,13 @@ function AppRouter() {
         <Route path='/jobpostinglist' element = {<JobPostingList/>}/>
         <Route path="/postlist/addpost" element={<AddPost/>}/>
         <Route path="/postlist/detail/:id" element={<PostDetail/>}/>
-        <Route path="/postlist/edit/:id" element={<UpdatePost/>}/>
-        
+
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/service" element={<Service />} />
+
 
       </Route>
     </Routes>
-     //</AuthProvider>
-
   );
 }
 
