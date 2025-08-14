@@ -62,7 +62,7 @@ const SelectedJobTags = ({ selectedJobs, onSetPrimary, onRemove }) => {
                 onChange={() => onSetPrimary(job.id)}
                 style={{ transform: 'scale(1)' }} // ✅ 기본 크기
               />
-              <span style={{ lineHeight: 1,color:'black' }}>주직무</span>
+              <span style={{ lineHeight: 1,color:'black' }}>주 직무</span>
             </label>
 
             {/* 제거 버튼 (클릭 전파 방지) */}
