@@ -55,8 +55,8 @@ const JobSearchBar = ({ onSearch }) => {
       try {
         const res = await fetch('http://localhost:8080/api/search/regions/tree');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const payload = await res.json(); // { regions: [...] }
-        const raw = Array.isArray(payload) ? payload : payload.regions;
+        const payload = await res.json(); // { regions: [...] } or [...]
+        const raw = Array.isArray(payload) ? payload : payload?.regions;
         setRegions(normalizeRegions(raw));
       } catch (e) {
         console.error('지역 데이터 로드 실패:', e);
@@ -77,8 +77,8 @@ const JobSearchBar = ({ onSearch }) => {
       try {
         const res = await fetch('http://localhost:8080/api/search/job-categories/tree');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const payload = await res.json(); // { categories: [...] }
-        const raw = Array.isArray(payload) ? payload : payload.categories;
+        const payload = await res.json(); // { categories: [...] } or [...]
+        const raw = Array.isArray(payload) ? payload : payload?.categories;
         setJobCategories(normalizeCategories(raw));
       } catch (e) {
         console.error('직무 카테고리 데이터 로드 실패:', e);
@@ -97,7 +97,8 @@ const JobSearchBar = ({ onSearch }) => {
     );
   };
 
-  const handleSearch = () => {
+  // 🔸 여기서는 부모로 검색 조건만 전달함
+  const runSearch = () => {
     onSearch({ ...searchData, quickFilters, activeTab });
   };
 
@@ -139,7 +140,7 @@ const JobSearchBar = ({ onSearch }) => {
                 placeholder="기업, 공고, 포지션 검색"
                 value={searchData.keyword}
                 onChange={(e) => setSearchData({ ...searchData, keyword: e.target.value })}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                onKeyDown={(e) => e.key === 'Enter' && runSearch()}
               />
             </div>
           </div>
@@ -335,7 +336,7 @@ const JobSearchBar = ({ onSearch }) => {
           <div className="ribbon-cell cell--submit">
             <button
               className="search-button"
-              onClick={handleSearch}
+              onClick={runSearch}
               disabled={loading.regions || loading.categories}
             >
               <Search size={18} />
@@ -523,11 +524,12 @@ const JobPostingList = () => {
     deadline: j.closeType === '상시' ? '상시채용' : (j.closeDate ? `~ ${j.closeDate.substring(0,10)}` : ''),
     views: j.viewCount ?? 0,
     applications: j.applicationCount ?? 0,
+    createdAt: j.createdAt ?? null, // 정렬에 사용
     isNew: !!j.createdAt && (Date.now() - new Date(j.createdAt).getTime()) < 1000 * 60 * 60 * 24 * 7,
     bookmarked: false,
   });
 
-  // 검색 처리(백엔드 호출)
+  // 검색 처리(백엔드 호출) — 🔸 부모에서만 네트워크 호출
   const handleSearch = async (searchParams) => {
     const regionIds = [];
     if (searchParams.region2) regionIds.push(Number(searchParams.region2));
@@ -537,27 +539,21 @@ const JobPostingList = () => {
     if (searchParams.category2) categoryIds.push(Number(searchParams.category2));
     else if (searchParams.category1) categoryIds.push(Number(searchParams.category1));
 
-    const body = {
-      keyword: searchParams.keyword || '',
-      regionIds,
-      categoryIds,
-      employmentType: undefined,
-      experienceLevel: undefined,
-      minSalary: undefined,
-      maxSalary: undefined,
-      isRemote: searchParams.quickFilters?.includes('재택근무') || undefined,
-      sortBy: 'latest',
-      page: 0,
-      size: 20,
-    };
+    const params = new URLSearchParams();
+    if (searchParams.keyword) params.set("keyword", searchParams.keyword);
+    regionIds.forEach(id => params.append("regionIds", id));
+    categoryIds.forEach(id => params.append("categoryIds", id));
+    if (searchParams.quickFilters?.includes("재택근무")) params.set("isRemote", "true");
+    params.set("sortBy", "latest");
+    params.set("page", "0");
+    params.set("size", "20");
 
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('http://localhost:8080/api/search/jobs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+      const res = await fetch(`http://localhost:8080/api/search/jobs?${params.toString()}`, {
+        method: "GET",
+        credentials: "include", // 세션/쿠키 기반이면 필요(손현정 추가)
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const page = await res.json(); // Spring Page<JobSearchResponseDto>
@@ -591,7 +587,7 @@ const JobPostingList = () => {
     let sorted = [...filteredJobs];
     switch (sortType) {
       case 'latest':
-        sorted.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0) || b.id - a.id);
+        sorted.sort((a, b) => (new Date(b.createdAt || 0) - new Date(a.createdAt || 0)) || (b.id - a.id));
         break;
       case 'views':
         sorted.sort((a, b) => (b.views ?? 0) - (a.views ?? 0));
