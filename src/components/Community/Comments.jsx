@@ -15,12 +15,15 @@ export default function Comments({ postId }) {
 
   const API = 'http://localhost:8080';
 
+  // 댓글 목록 불러오기
   const load = async () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await axios.get(`${API}/community/${postId}/comments`);
-      setList(data ?? []);
+      const res = await axios.get(`${API}/community/${postId}/comments`, {
+        withCredentials: true,
+      });
+      setList(res.data ?? []); // ✅ 서버 응답 사용
     } catch (e) {
       setError(e.response?.data?.message || e.message);
     } finally {
@@ -30,6 +33,7 @@ export default function Comments({ postId }) {
 
   useEffect(() => { load(); }, [postId]);
 
+  // 댓글 작성
   const onSubmit = async (e) => {
     e.preventDefault();
     
@@ -98,20 +102,20 @@ export default function Comments({ postId }) {
         <div className="comment-empty">첫 댓글을 남겨줘!</div>
       ) : (
         <ul className="comment-list">
-          {list.map(c => (
-            <li key={c.id} className="comment-item">
+          {list.map(comment => (
+            <li key={comment.id ?? comment.tempId} className="comment-item">
               <img className="avatar" src={humanIcon} width={32} height={32} />
               <div className="body">
                 <div className="meta">
-                  <span className="name">{c.userName ?? '알 수 없음'}</span>
+                  <span className="name">{comment.userName ?? '알 수 없음'}</span>
                   
-                  <span className="time">{fmt(c.createdAt)}</span>
+                  <span className="time">{fmt(comment.createdAt)}</span>
                 </div>
-                <div className={`content ${!c.content ? 'deleted' : ''}`}>
-                  {c.content && c.content.trim().length > 0 ? c.content : '(삭제된 댓글)'}
+                <div className={`content ${!comment.content ? 'deleted' : ''}`}>
+                  {comment.content && comment.content.trim().length > 0 ? comment.content : '(삭제된 댓글)'}
                 </div>
                 {/* 서버에서 권한 체크하니까 버튼은 일단 노출 → 실패 시 403 안내 */}
-                {c.content && c.content.trim().length > 0 && (
+                {comment.content && comment.content.trim().length > 0 && (
                   <div className="actions">
                     <button type="button" className="link-btn" onClick={() => onDelete(c.id)}>
                       삭제
