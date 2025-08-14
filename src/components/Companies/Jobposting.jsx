@@ -31,7 +31,13 @@ import {
 
 // 전역 axios
 axios.defaults.baseURL = "http://localhost:8080";
+const API_AUTH_ME = "/auth/me";
 
+// ✅ "COMPANY" / "ROLE_COMPANY" 모두 허용
+const isCompanyRole = (role) => {
+  const r = (role ?? "").toString().toUpperCase();
+  return r === "COMPANY" || r === "ROLE_COMPANY";
+};
 //쿠키 포함시킨다
 axios.defaults.withCredentials = true;
 
@@ -136,7 +142,7 @@ useEffect(()=>{
     navigate("/", { replace: true });
     return;
   }
-  if (user?.role!=="COMPANY") {
+  if (!isCompanyRole(user?.role)) {
     alert("기업 회원만 접근할 수 있습니다.");
     navigate("/", { replace: true });
     
@@ -144,21 +150,24 @@ useEffect(()=>{
    // ✅ 로깅 개선: useEffect에서 API 호출로 최신 정보를 가져와서 로그 출력
     const logAuthInfo = async () => {
       try {
-        const res = await axios.get("/api/auth/me", { withCredentials: true });
+        const res = await axios.get(API_AUTH_ME, { withCredentials: true });
         const serverUser = res.data;
+        const role= serverUser?.role ?? user?.role;
+        const roleNorm = isCompanyRole(role) ? "COMPANY" : (role ?? "UNKNOWN");
+
         const authId = serverUser?.id ?? serverUser?.userId ?? serverUser?.email;
-        console.log(`[auth] authenticated user (role: ${serverUser?.role}, id: ${authId}, companyId: ${serverUser?.companyId})`);
+        console.log(`[auth] authenticated user (role: ${roleNorm}, id: ${authId}, companyId: ${serverUser?.companyId ?? '(server decides)'})`);
       } catch (err) {
         console.warn("[auth] Failed to fetch user info from API. Using AuthContext user instead.");
         const authId = user?.id ?? user?.userId ?? user?.email;
-        console.log(`[auth] authenticated user (role: ${user?.role}, id: ${authId}, companyId: ${user?.companyId})`);
-      }
+        const roleNorm = isCompanyRole(user?.role) ? "COMPANY" : (user?.role ?? "UNKNOWN");
+        console.log(`[auth] authenticated user (role: ${roleNorm}, id: ${authId}, companyId: ${user?.companyId ?? '(server decides)'})`);      }
     };
     logAuthInfo();
   }, [isLoggedIn, user, navigate]);
 //데이터 로딩
 useEffect(()=>{
-  if(!isLoggedIn||user?.role!=="COMPANY"){
+  if(!isLoggedIn || !isCompanyRole(user?.role)){
     return;
   }
   
@@ -262,79 +271,55 @@ useEffect(()=>{
   };
 
   // 제출
+// ✅ 교체용: handleSubmit (companyId/createdBy 전혀 사용 안 함)
 const handleSubmit = async (e) => {
   e.preventDefault();
 
-  
-  // 1) 권한 1차 체크(있으면)
-  if (!isLoggedIn || user?.role !== "COMPANY") {
+  // 1) 권한 체크
+  if (!isLoggedIn || !isCompanyRole(user?.role)) {
     alert("로그인이 필요합니다. 또는 기업 회원만 등록할 수 있습니다.");
     return;
   }
 
-  // 2) 숫자 id는 반드시 서버에서 가져온다 (user.id=이메일은 무시!)
-  // handleSubmit 함수에서
-let createdBy = user?.id; // AuthContext의 user.id 사용
-let companyId = user?.companyId; // AuthContext의 user.companyId 사용
-
-// 백엔드 API로 최신 정보 가져오는 시도 (실패해도 진행)
-try {
-    const meRes = await axios.get("/api/auth/me", { withCredentials: true });
-    createdBy = Number(meRes.data?.id);
-    companyId = Number(meRes.data?.companyId ?? meRes.data?.id);
-} catch (err) {
-    console.warn("[/api/auth/me] failed, using AuthContext data:", err);
-}
-
-if (!createdBy || !companyId) {
-    alert("로그인이 필요하거나 회사 정보가 없습니다.");
-    return;
-}
-
-  // 대표 직무 보정
+  // 2) 대표 직무 보정 및 변환
   let jobs = selectedJobs;
   if (!jobs.some(j => j.isPrimary) && jobs.length > 0) {
     jobs = jobs.map((j, idx) => ({ ...j, isPrimary: idx === 0 }));
   }
   const categories = jobs.map(j => ({
     categoryId: Number(j.subCategoryId),
-    isPrimary: !!j.isPrimary   // ← true/false로 보냄
+    isPrimary: !!j.isPrimary
   }));
-  // 혹시 대표가 여러 개면 첫 번째만 대표로
   const firstPrimaryIdx = jobs.findIndex(j => j.isPrimary === true);
   if (firstPrimaryIdx > -1) {
     jobs = jobs.map((j, i) => ({ ...j, isPrimary: i === firstPrimaryIdx }));
   }
-  // 지역
+
+  // 3) 지역
   const regions = {
     sidoId: selectedLocation ? Number(selectedLocation) : null,
     sigunguId: selectedSubLocation ? Number(selectedSubLocation) : null
   };
 
-  // 기본 정보 수집
+  // 4) 기본/상태/날짜
   const title = document.getElementById("title")?.value || "";
   const status = document.getElementById("status")?.value || "DRAFT";
-
-  // 상태값 사용
   const closeType = closeTypeState;
   const experienceLevel = experienceLevelState;
 
-  // 날짜: 비활성화면 null
-  const openDate = isDateDisabled
+  const openDate = (closeType === "UNTIL_FILLED" || closeType === "CONTINUOUS")
     ? null
     : toLocalDateTimeString(document.getElementById("open_date")?.value);
-  const closeDate = isDateDisabled
+
+  const closeDate = (closeType === "UNTIL_FILLED" || closeType === "CONTINUOUS")
     ? null
     : toLocalDateTimeString(document.getElementById("close_date")?.value);
 
-  // 조건 수집
+  // 5) 조건값
   const minExperienceYearsInput = Number(document.getElementById("min_experience_years")?.value || 0);
   const maxExperienceYearsRaw = document.getElementById("max_experience_years")?.value;
 
-  // 급여 처리 - 월급/시급은 단일 값, 연봉은 최소/최대
-  let minSalary = null;
-  let maxSalary = null;
-  
+  let minSalary = null, maxSalary = null;
   if (salaryType === "MONTHLY" || salaryType === "HOURLY") {
     const salaryAmount = document.getElementById("salary_amount")?.value;
     if (salaryAmount) {
@@ -347,57 +332,57 @@ if (!createdBy || !companyId) {
     minSalary = minSalaryRaw ? Number(minSalaryRaw) : null;
     maxSalary = maxSalaryRaw ? Number(maxSalaryRaw) : null;
   }
+
   const employmentType = document.getElementById("employment_type")?.value || "FULL_TIME";
   const educationLevel = document.getElementById("education_level")?.value || "ANY";
-  // 근무 스케줄 구성: 주 N일, 시작~종료, 탄력근무 여부
+
   const workDaysPerWeekVal = document.getElementById("work_days_per_week")?.value;
   const workStartTimeVal = document.getElementById("work_start_time")?.value;
   const workEndTimeVal = document.getElementById("work_end_time")?.value;
   const isFlexibleChecked = document.getElementById("is_flexible")?.checked || false;
+
   const workSchedule = [
     workDaysPerWeekVal ? `주 ${Number(workDaysPerWeekVal)}일` : null,
     workStartTimeVal && workEndTimeVal ? `${workStartTimeVal}~${workEndTimeVal}` : null,
     `탄력근무 ${isFlexibleChecked ? "가능" : "불가"}`
   ].filter(Boolean).join(", ");
+
   const etc = document.getElementById("etc")?.value || "";
 
-  // 신입이면 경력 자동 보정
-  const minExperienceYears = isExperienceDisabled ? 0 : minExperienceYearsInput;
-  const maxExperienceYears = isExperienceDisabled ? null : (maxExperienceYearsRaw ? Number(maxExperienceYearsRaw) : null);
+  const minExperienceYears = (experienceLevel === "ENTRY") ? 0 : minExperienceYearsInput;
+  const maxExperienceYears = (experienceLevel === "ENTRY") ? null : (maxExperienceYearsRaw ? Number(maxExperienceYearsRaw) : null);
 
+  // 6) 서버로 보낼 payload (companyId/createdBy 없음!)
   const payload = {
-    companyId,
-    createdBy,
-    title,
-    status,
-    closeType,
+    title, status, closeType,
     isRemote: document.getElementById("is_remote")?.checked || false,
-    openDate,
-    closeDate,
+    openDate, closeDate,
     searchText: title,
     description,
     regions,
     categories,
-         conditions: {
-       minExperienceYears,
-       maxExperienceYears,
-       minSalary,
-       maxSalary,
-       salaryType,
-       employmentType,
-       experienceLevel,
-       educationLevel,
-       workSchedule,
-       etc
-     }
+    conditions: {
+      minExperienceYears,
+      maxExperienceYears,
+      minSalary,
+      maxSalary,
+      salaryType,
+      employmentType,
+      experienceLevel,
+      educationLevel,
+      workSchedule,
+      etc
+    }
   };
 
   try {
     const res = await axios.post("/api/postings", payload, { withCredentials: true });
-    const newId = res.data?.id;
+    const newId = res.data?.id ?? res.data;
     alert(`등록 완료! ID=${newId}`);
+    // ✅ 홈으로 이동
+    navigate("/", { replace: true });
   } catch (err) {
-    console.error(err);
+    console.error("[/api/postings] create failed:", err);
     alert("등록 중 오류가 발생했습니다.");
   }
 };
@@ -548,6 +533,7 @@ if (!createdBy || !companyId) {
                 uploadUrl="/api/uploads"
                 maxSizeMB={20}
                 autoInsertSingle={false}
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip"
               />
             </div>
           </div>
