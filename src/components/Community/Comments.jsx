@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 axios.defaults.withCredentials = true; // 쿠키 인증을 위해 설정 
 import humanIcon from '../../assets/img/human.png';
+import { data } from 'react-router-dom';
 
 
 export default function Comments({ postId }) {
@@ -31,11 +32,13 @@ export default function Comments({ postId }) {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    const content = text.trim();
-    if (!content) return;
+    
+    const data = {
+      postId,
+      content: text.trim()};
     setSending(true);
     try {
-      const { data } = await axios.post(`${API}/community/${postId}/comments`, { content }, { withCredentials: true });
+      await axios.post(`${API}/community/${postId}/comments`, data, { withCredentials: true });
       // 낙관적 갱신
       setList((prev) => [...prev, data]);
       setText('');
@@ -81,7 +84,7 @@ export default function Comments({ postId }) {
         />
         <div className="comment-form-actions">
           <span className="len">{text.trim().length} / 1000</span>
-          <button className="btn" disabled={sending || !text.trim()}>
+          <button type='submit' className="btn" disabled={sending || !text.trim()}>
             {sending ? '등록 중…' : '등록'}
           </button>
         </div>
