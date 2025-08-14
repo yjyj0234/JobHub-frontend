@@ -4,7 +4,7 @@ axios.defaults.withCredentials = true; // 쿠키 인증을 위해 설정
 import { useParams, useNavigate } from 'react-router-dom';
 import '../css/PostDetail.css';
 import humanIcon from '../../assets/img/human.png';
-import Comments from './Comments';
+import Comments from './Comments'; // Comments 컴포넌트 임포트
 
 export default function PostDetail() {
   const { id } = useParams();

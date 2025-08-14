@@ -90,8 +90,8 @@ function AppRouter() {
         <Route path='/jobpostinglist' element = {<JobPostingList/>}/>
         <Route path="/postlist/addpost" element={<AddPost/>}/>
         <Route path="/postlist/detail/:id" element={<PostDetail/>}/>
-
-        <Route path="/chat" element={<Chat />} />
+        <Route path="/postlist/update/:id" element={<UpdatePost/>}/>
+        
         <Route path="/service" element={<Service />} />
 
 
