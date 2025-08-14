@@ -1,23 +1,22 @@
 // src/components/router/Router.jsx
 
-import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from "react";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 // 1. layout 컴포넌트 그룹
-import { GlobalHeader, SideNav, GlobalFooter, Service } from '../layout'; 
+import { GlobalHeader, SideNav, GlobalFooter, Service } from "../layout";
 
 // 2. UI/UX 컴포넌트 그룹
-import { Modal } from '../UI';
-import { AuthPage, Hero, Grid, TopGrid } from '../UX';
+import { Modal } from "../UI";
+import { AuthPage, Hero, Grid, TopGrid } from "../UX";
 
 // 3. resume 관련 페이지 그룹
-import { ResumeListPage, ResumeEditorPage } from '../resume';
+import { ResumeListPage, ResumeEditorPage } from "../resume";
 
 // 4. Companies 관련 페이지 그룹
-import { Jobposting, ApplicantsList } from '../Companies';
+import { Jobposting, ApplicantsList } from "../Companies";
 
-import { JobPostingList } from '../job-posting-list';
-import { PostList, AddPost, PostDetail, UpdatePost } from '../Community';
-
+import { JobPostingList } from "../job-posting-list";
+import { PostList, AddPost, PostDetail, UpdatePost } from "../Community";
 
 function MainLayout() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,12 +26,12 @@ function MainLayout() {
   useEffect(() => {
     const body = document.body;
     if (isModalOpen) {
-      body.classList.add('body-no-scroll');
+      body.classList.add("body-no-scroll");
     } else {
-      body.classList.remove('body-no-scroll');
+      body.classList.remove("body-no-scroll");
     }
     return () => {
-      body.classList.remove('body-no-scroll');
+      body.classList.remove("body-no-scroll");
     };
   }, [isModalOpen]);
 
@@ -75,7 +74,6 @@ function HomePage() {
   );
 }
 
-
 function AppRouter() {
   return (
     <Routes>
@@ -93,8 +91,6 @@ function AppRouter() {
         <Route path="/postlist/update/:id" element={<UpdatePost/>}/>
         
         <Route path="/service" element={<Service />} />
-
-
       </Route>
     </Routes>
   );

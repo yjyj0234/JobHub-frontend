@@ -113,7 +113,7 @@ const AttachmentUploader = forwardRef(function AttachmentUploader(
       <button
         type="button"
         onClick={() => fileInputRef.current?.click()}
-        title="파일 첨부(이미지/문서)"
+        title="파일 첨부(문서)"
         style={{ padding: '6px 10px', border: '1px solid #ddd', borderRadius: 4, background: '#fff', cursor: 'pointer' }}
       >
         {buttonLabel}
