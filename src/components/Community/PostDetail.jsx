@@ -4,6 +4,7 @@ axios.defaults.withCredentials = true; // 쿠키 인증을 위해 설정
 import { useParams, useNavigate } from 'react-router-dom';
 import '../css/PostDetail.css';
 import humanIcon from '../../assets/img/human.png';
+import Comments from './Comments';
 
 export default function PostDetail() {
   const { id } = useParams();
@@ -13,23 +14,22 @@ export default function PostDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState(null);
   const viewed = useRef(false);
-  
 
-  
+ 
 
+ 
 
-  
   useEffect(() => {
     if (!id) { navigate(-1); return; }
     (async () => {
       setLoading(true);
       setError(null);
       try {
-        //조회수 증가
+        // 조회수 증가
         if (!viewed.current) {
-        viewed.current = true;
-        await axios.post(`http://localhost:8080/community/${id}/view`).catch(() => {});
-      }
+          viewed.current = true;
+          await axios.post(`http://localhost:8080/community/${id}/view`).catch(() => {});
+        }
         const { data } = await axios.get(`http://localhost:8080/community/detail/${id}`);
         setPost(data);
       } catch (e) {
@@ -44,31 +44,43 @@ export default function PostDetail() {
     })();
   }, [id, navigate]);
 
-  
-
- 
- 
-
+  // 글 삭제 및 수정 핸들러
   const handleDelete = async () => {
-  if (!window.confirm('정말 삭제하시겠습니까?')) return;
-  try {
-    await axios.delete(`http://localhost:8080/community/${id}`);
-    alert('삭제 완료!');
-    // 목록 경로로 이동(프로젝트 라우팅에 맞춰 수정)
+    if (!window.confirm('정말 삭제하시겠습니까?')) return;
+
+    console.log('=== 삭제 요청 시작 ===');
+    console.log('삭제할 게시글 ID:', id);
+    console.log('요청 URL:', `http://localhost:8080/community/${id}`);
+
+    try {
+      // FIX: DELETE 메서드로, withCredentials는 옵션 객체에!
+      const response = await axios.delete(`http://localhost:8080/community/${id}`, {
+        withCredentials: true,
+      });
+      console.log('삭제 성공:', response?.status);
+      alert('삭제 완료!');
+      navigate('/postlist');
+    } catch (e) {
+      console.error('=== 삭제 요청 실패 ===');
+      console.error('HTTP 상태:', e.response?.status);
+      console.error('응답 데이터:', e.response?.data);
+      console.error('요청 URL:', e.config?.url);
+      console.error('요청 헤더:', e.config?.headers);
+      if (e.response?.status === 403) {
+        alert('권한이 없습니다. 본인이 작성한 글만 삭제할 수 있습니다.');
+      } else {
+        alert(`삭제 중 오류가 발생했습니다. ${e.response?.data?.message ?? e.message}`);
+      }
+    }
+  };
+
+  const handleEdit = () => {
+    navigate(`/postlist/edit/${id}`);
+  };
+
+  const handleList = () => {
     navigate('/postlist');
-  } catch (e) {
-    console.error(e);
-    alert(`삭제 실패: ${e.response?.data?.message ?? e.message}`);
-  }
-};
-
-const handleEdit = () => {
-  navigate(`/postlist/edit/${id}`);
-};
-
-const handleList = () => {
-  navigate('/postlist');
-};
+  };
 
   if (loading) {
     return (
@@ -104,6 +116,8 @@ const handleList = () => {
     );
   }
 
+  
+
   return (
     <div className="post-detail-container">
       {/* 헤더 영역 */}
@@ -130,33 +144,28 @@ const handleList = () => {
       </header>
 
       {/* 본문 */}
-      {/* 기존 map 방식 전체를 아래로 교체 */}
       <article
-         className="post-content"
-         dangerouslySetInnerHTML={{
-        __html: (post.content ?? '').replace(/\n/g, '<br/>')
+        className="post-content"
+        dangerouslySetInnerHTML={{
+          __html: (post.content ?? '').replace(/\n/g, '<br/>')
         }}
-        />
+      />
       <br /><br />
 
       {/* 액션 바 */}
       <div className="post-actions">
         <button className="btn list" onClick={handleList}>목록</button>
         <div className="spacer" />
-          {/* 로그인한 사용자가 작성자일 때만 수정/삭제 버튼 보이게 */}
-       {post.owner && (
-  <>
-    <button type='button' className="btn edit" onClick={handleEdit}>수정</button>
-    <button type='button' className="btn delete" onClick={handleDelete}>삭제</button>
-  </>
-)}
+        {/* 로그인한 사용자가 작성자일 때만 수정/삭제 버튼 보이게 */}
+        {post.owner && (
+          <>
+            <button type='button' className="btn edit" onClick={handleEdit}>수정</button>
+            <button type='button' className="btn delete" onClick={handleDelete}>삭제</button>
+          </>
+        )}
       </div>
 
-      
-
-      
-
-      
+      <Comments postId={id} />
     </div>
   );
 }
