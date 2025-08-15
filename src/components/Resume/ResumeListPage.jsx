@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import "../css/ResumeListPage.css";
 import { useAuth } from "../context/AuthContext.jsx";
-import { Modal } from "../UI";
+import { Modal } from "../UI/index.js";
 
 // 파일 업로드 모달 내용 (임시)
 const FileUploadForm = () => (

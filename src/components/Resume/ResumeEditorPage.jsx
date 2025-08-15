@@ -1,16 +1,40 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import '../css/ResumeEditorPage.css';
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import "../css/ResumeEditorPage.css";
 import {
-  Briefcase, GraduationCap, Award, Languages, Star, Link as LinkIcon,
-  Trash2, Eye, Server, Save, User, Phone, MapPin, Calendar, Heart, PlusCircle, X, Camera
-} from 'lucide-react';
+  Briefcase,
+  GraduationCap,
+  Award,
+  Languages,
+  Star,
+  Link as LinkIcon,
+  Trash2,
+  Eye,
+  Server,
+  Save,
+  User,
+  Phone,
+  MapPin,
+  Calendar,
+  Heart,
+  PlusCircle,
+  X,
+  Camera,
+} from "lucide-react";
 import {
-  ExperienceForm, EducationForm, ActivityForm, AwardForm, CertificationForm,
-  LanguageForm, PortfolioForm, SkillForm, ProjectForm, ResumePreviewModal
-} from './index.js';
-import { useAuth } from '../context/AuthContext.jsx';
-import axios from 'axios';
+  ExperienceForm,
+  EducationForm,
+  ActivityForm,
+  AwardForm,
+  CertificationForm,
+  LanguageForm,
+  PortfolioForm,
+  SkillForm,
+  ProjectForm,
+  ResumePreviewModal,
+} from "./index.js";
+import { useAuth } from "../context/AuthContext.jsx";
+import axios from "axios";
 
 // 1. 개인정보를 표시하고 수정할 헤더 컴포넌트
 const ProfileHeader = ({ profile, onUpdate }) => {
@@ -19,7 +43,7 @@ const ProfileHeader = ({ profile, onUpdate }) => {
   if (!profile) {
     return <div className="profile-header loading">프로필 정보 로딩 중...</div>;
   }
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     onUpdate({ ...profile, [name]: value });
@@ -45,9 +69,15 @@ const ProfileHeader = ({ profile, onUpdate }) => {
       <div className="profile-photo-edit-wrapper" onClick={handlePhotoClick}>
         <div className="profile-photo-wrapper">
           {profile.profileImageUrl ? (
-            <img src={profile.profileImageUrl} alt={profile.name} className="profile-photo" />
+            <img
+              src={profile.profileImageUrl}
+              alt={profile.name}
+              className="profile-photo"
+            />
           ) : (
-            <div className="profile-photo-placeholder"><User size={40} /></div>
+            <div className="profile-photo-placeholder">
+              <User size={40} />
+            </div>
           )}
           <div className="photo-edit-icon">
             <Camera size={16} />
@@ -56,17 +86,17 @@ const ProfileHeader = ({ profile, onUpdate }) => {
         <input
           type="file"
           ref={fileInputRef}
-          style={{ display: 'none' }}
+          style={{ display: "none" }}
           onChange={handlePhotoChange}
           accept="image/*"
         />
       </div>
       <div className="profile-details">
-        <input 
+        <input
           type="text"
           name="name"
           className="profile-name-input"
-          value={profile.name || ''}
+          value={profile.name || ""}
           onChange={handleChange}
           placeholder="이름"
         />
@@ -74,27 +104,52 @@ const ProfileHeader = ({ profile, onUpdate }) => {
           type="text"
           name="headline"
           className="profile-headline-input"
-          value={profile.headline || ''}
+          value={profile.headline || ""}
           onChange={handleChange}
           placeholder="한 줄 소개를 작성해주세요."
         />
         <div className="profile-info-grid">
-            <div className="profile-info-item">
-                <Phone size={14} />
-                <input type="text" name="phone" value={profile.phone || ''} onChange={handleChange} placeholder="연락처"/>
-            </div>
-            <div className="profile-info-item">
-                <MapPin size={14} />
-                <input type="text" name="address" value={profile.address || ''} onChange={handleChange} placeholder="주소"/>
-            </div>
-            <div className="profile-info-item">
-                <Heart size={14} />
-                <input type="text" name="gender" value={profile.gender || ''} onChange={handleChange} placeholder="성별"/>
-            </div>
-            <div className="profile-info-item">
-                <Calendar size={14} />
-                <input type="number" name="age" value={profile.age || ''} onChange={handleChange} placeholder="나이" className="age-input"/>
-            </div>
+          <div className="profile-info-item">
+            <Phone size={14} />
+            <input
+              type="text"
+              name="phone"
+              value={profile.phone || ""}
+              onChange={handleChange}
+              placeholder="연락처"
+            />
+          </div>
+          <div className="profile-info-item">
+            <MapPin size={14} />
+            <input
+              type="text"
+              name="address"
+              value={profile.address || ""}
+              onChange={handleChange}
+              placeholder="주소"
+            />
+          </div>
+          <div className="profile-info-item">
+            <Heart size={14} />
+            <input
+              type="text"
+              name="gender"
+              value={profile.gender || ""}
+              onChange={handleChange}
+              placeholder="성별"
+            />
+          </div>
+          <div className="profile-info-item">
+            <Calendar size={14} />
+            <input
+              type="number"
+              name="age"
+              value={profile.age || ""}
+              onChange={handleChange}
+              placeholder="나이"
+              className="age-input"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -102,36 +157,55 @@ const ProfileHeader = ({ profile, onUpdate }) => {
 };
 
 // 2. 이력서 상태를 보여주는 오른쪽 팔레트
-const ResumeStatusPalette = ({ completeness, isRepresentative, onRepChange, isPublic, onPublicChange }) => {
-    return (
-        <aside className="resume-status-palette">
-            <div className="completeness-meter">
-                <div className="meter-header">
-                    <span>완성도</span>
-                    <span>{completeness}%</span>
-                </div>
-                <div className="meter-bar-background">
-                    <div className="meter-bar-foreground" style={{ width: `${completeness}%` }}></div>
-                </div>
-            </div>
-            <div className="status-toggles">
-                <div className="toggle-item">
-                    <label>대표 이력서</label>
-                    <div className="toggle-switch">
-                        <input type="checkbox" id="rep-switch" checked={isRepresentative} onChange={onRepChange} />
-                        <label htmlFor="rep-switch"></label>
-                    </div>
-                </div>
-                <div className="toggle-item">
-                    <label>공개 여부</label>
-                     <div className="toggle-switch">
-                        <input type="checkbox" id="public-switch" checked={isPublic} onChange={onPublicChange} />
-                        <label htmlFor="public-switch"></label>
-                    </div>
-                </div>
-            </div>
-        </aside>
-    );
+const ResumeStatusPalette = ({
+  completeness,
+  isRepresentative,
+  onRepChange,
+  isPublic,
+  onPublicChange,
+}) => {
+  return (
+    <aside className="resume-status-palette">
+      <div className="completeness-meter">
+        <div className="meter-header">
+          <span>완성도</span>
+          <span>{completeness}%</span>
+        </div>
+        <div className="meter-bar-background">
+          <div
+            className="meter-bar-foreground"
+            style={{ width: `${completeness}%` }}
+          ></div>
+        </div>
+      </div>
+      <div className="status-toggles">
+        <div className="toggle-item">
+          <label>대표 이력서</label>
+          <div className="toggle-switch">
+            <input
+              type="checkbox"
+              id="rep-switch"
+              checked={isRepresentative}
+              onChange={onRepChange}
+            />
+            <label htmlFor="rep-switch"></label>
+          </div>
+        </div>
+        <div className="toggle-item">
+          <label>공개 여부</label>
+          <div className="toggle-switch">
+            <input
+              type="checkbox"
+              id="public-switch"
+              checked={isPublic}
+              onChange={onPublicChange}
+            />
+            <label htmlFor="public-switch"></label>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
 };
 
 // 3. 항목을 추가하는 오른쪽 팔레트
@@ -164,7 +238,8 @@ const EditorPalette = ({ onAddItem }) => {
               {item.icon}
               <span>{item.name}</span>
             </button>
-        ))}
+          ); // 여기에 세미콜론 추가!
+        })}
       </div>
     </aside>
   );
@@ -175,7 +250,7 @@ function ResumeEditorPage() {
   const { resumeId: resumeParam } = useParams(); // ✅ 라우트에서만 ID 읽기
   const resumeId = resumeParam ? Number(resumeParam) : null; // 숫자화
   const { user } = useAuth();
-  
+
   const [userProfile, setUserProfile] = useState(null);
   const [sections, setSections] = useState([]);
   const [resumeTitle, setResumeTitle] = useState("");
@@ -199,72 +274,93 @@ function ResumeEditorPage() {
   // (선택) 로컬 초안 복원: 새로운 작성에도 계속 이어서 쓸 수 있게
   useEffect(() => {
     if (user && user.userId) {
-        const fetchUserProfile = async () => {
-            try {
-                const response = await axios.get(`http://localhost:8080/api/profile/${user.userId}`);
-                setUserProfile(response.data);
-            } catch (error) {
-                console.error("사용자 프로필을 불러오는 데 실패했습니다.", error);
-                setUserProfile({ name: user.email, headline: '프로필 정보 없음' });
-            }
-        };
-        fetchUserProfile();
+      const fetchUserProfile = async () => {
+        try {
+          const response = await axios.get(
+            `http://localhost:8080/api/profile/${user.userId}`
+          );
+          setUserProfile(response.data);
+        } catch (error) {
+          console.error("사용자 프로필을 불러오는 데 실패했습니다.", error);
+          setUserProfile({ name: user.email, headline: "프로필 정보 없음" });
+        }
+      };
+      fetchUserProfile();
     }
   }, [user]);
 
   const completeness = useMemo(() => 50, []); // 임시 완성도
 
   const handleAddItem = (sectionType) => {
-    const existingSection = sections.find(s => s.type === sectionType);
+    const existingSection = sections.find((s) => s.type === sectionType);
     if (existingSection) {
       handleAddItemToSection(existingSection.id, sectionType);
     } else {
-      setSections(prev => [
+      setSections((prev) => [
         ...prev,
         {
           id: `${sectionType}-${Date.now()}`,
           type: sectionType,
-          data: [{ subId: `${sectionType}-item-${Date.now()}` }] 
-        }
+          data: [{ subId: `${sectionType}-item-${Date.now()}` }],
+        },
       ]);
     }
   };
 
   const handleRemoveSection = (sectionId) => {
-    setSections(prev => prev.filter(s => s.id !== sectionId));
+    setSections((prev) => prev.filter((s) => s.id !== sectionId));
   };
 
   const handleAddItemToSection = (sectionId, sectionType) => {
-    setSections(prev => prev.map(s => {
-      if (s.id === sectionId) {
-        return { ...s, data: [...s.data, { subId: `${sectionType}-item-${Date.now()}` }] };
-      }
-      return s;
-    }));
+    setSections((prev) =>
+      prev.map((s) => {
+        if (s.id === sectionId) {
+          return {
+            ...s,
+            data: [...s.data, { subId: `${sectionType}-item-${Date.now()}` }],
+          };
+        }
+        return s;
+      })
+    );
   };
 
   const handleRemoveItemFromSection = (sectionId, subId) => {
-    setSections(prev => prev.map(s => {
-      if (s.id === sectionId) {
-        if (s.data.length === 1) return null;
-        return { ...s, data: s.data.filter(item => item.subId !== subId) };
-      }
-      return s;
-    }).filter(Boolean));
+    setSections((prev) =>
+      prev
+        .map((s) => {
+          if (s.id === sectionId) {
+            if (s.data.length === 1) return null;
+            return {
+              ...s,
+              data: s.data.filter((item) => item.subId !== subId),
+            };
+          }
+          return s;
+        })
+        .filter(Boolean)
+    );
   };
 
   const handleItemChange = (sectionId, subId, updatedData) => {
-    setSections(prev => prev.map(s => {
-      if (s.id === sectionId) {
-        return { ...s, data: s.data.map(item => item.subId === subId ? { ...item, ...updatedData } : item) };
-      }
-      return s;
-    }));
+    setSections((prev) =>
+      prev.map((s) => {
+        if (s.id === sectionId) {
+          return {
+            ...s,
+            data: s.data.map((item) =>
+              item.subId === subId ? { ...item, ...updatedData } : item
+            ),
+          };
+        }
+        return s;
+      })
+    );
   };
-  
+
   const handleProfileChange = (updatedProfile) => {
-      setUserProfile(updatedProfile);
-  }
+    setUserProfile(updatedProfile);
+  };
 
   const handleFinalSave = async () => {
     if (!user) return alert("로그인이 필요합니다.");
@@ -358,9 +454,14 @@ function ResumeEditorPage() {
           </div>
 
           <div className="editor-content">
-            {sections.length === 0 && <div className="editor-placeholder">오른쪽 팔레트에서 추가할 항목을 클릭하여 이력서 작성을 시작하세요.</div>}
-            
-            {sections.map(section => {
+            {sections.length === 0 && (
+              <div className="editor-placeholder">
+                오른쪽 팔레트에서 추가할 항목을 클릭하여 이력서 작성을
+                시작하세요.
+              </div>
+            )}
+
+            {sections.map((section) => {
               const Comp = sectionComponents[section.type]?.component;
               const title = sectionComponents[section.type]?.title;
               if (!Comp) return null;
@@ -369,7 +470,10 @@ function ResumeEditorPage() {
                 <section key={section.id} className="editor-section">
                   <div className="section-header">
                     <h2>{title}</h2>
-                    <button className="delete-item-btn" onClick={() => handleRemoveSection(section.id)}>
+                    <button
+                      className="delete-item-btn"
+                      onClick={() => handleRemoveSection(section.id)}
+                    >
                       <Trash2 size={16} /> 항목 전체 삭제
                     </button>
                   </div>
@@ -378,14 +482,30 @@ function ResumeEditorPage() {
                       <div key={item.subId} className="item-form-wrapper">
                         <Comp
                           data={item}
-                          onUpdate={(updatedData) => handleItemChange(section.id, item.subId, updatedData)}
+                          onUpdate={(updatedData) =>
+                            handleItemChange(
+                              section.id,
+                              item.subId,
+                              updatedData
+                            )
+                          }
                         />
-                        <button className="remove-item-btn" onClick={() => handleRemoveItemFromSection(section.id, item.subId)}>
-                            <X size={16}/>
+                        <button
+                          className="remove-item-btn"
+                          onClick={() =>
+                            handleRemoveItemFromSection(section.id, item.subId)
+                          }
+                        >
+                          <X size={16} />
                         </button>
                       </div>
                     ))}
-                    <button className="add-item-btn" onClick={() => handleAddItemToSection(section.id, section.type)}>
+                    <button
+                      className="add-item-btn"
+                      onClick={() =>
+                        handleAddItemToSection(section.id, section.type)
+                      }
+                    >
                       <PlusCircle size={16} /> {title} 추가
                     </button>
                   </div>
@@ -396,14 +516,14 @@ function ResumeEditorPage() {
         </main>
 
         <div className="editor-sidebar">
-            <ResumeStatusPalette 
-                completeness={completeness}
-                isRepresentative={isRepresentative}
-                onRepChange={() => setIsRepresentative(prev => !prev)}
-                isPublic={isPublic}
-                onPublicChange={() => setIsPublic(prev => !prev)}
-            />
-            <EditorPalette onAddItem={handleAddItem} />
+          <ResumeStatusPalette
+            completeness={completeness}
+            isRepresentative={isRepresentative}
+            onRepChange={() => setIsRepresentative((prev) => !prev)}
+            isPublic={isPublic}
+            onPublicChange={() => setIsPublic((prev) => !prev)}
+          />
+          <EditorPalette onAddItem={handleAddItem} />
         </div>
       </div>
     </>
