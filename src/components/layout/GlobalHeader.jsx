@@ -321,12 +321,16 @@ function GlobalHeader({ onLoginClick }) {
               커뮤니티
             </button>
 
-            <button type="button" onClick={handleResumeClick}>
-              이력서
-            </button>
-            <button type="button" onClick={jobPosting}>
-              공고 등록
-            </button>
+            {isCompany ? (
+              <button type="button" onClick={jobPosting}>
+                공고 등록
+              </button>
+            ) : (
+              //role이 company가 아닌경우 이력서 버튼만 보이게
+              <button type="button" onClick={handleResumeClick}>
+                이력서
+              </button>
+            )}
             <button type="button">취업툴</button>
             <button type="button">이력서 코칭 AI</button>
           </nav>

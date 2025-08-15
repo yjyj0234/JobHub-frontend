@@ -9,6 +9,14 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  /* CSS 변수 정의 */
+  --c-bg: #ffffff;
+  --c-text: #333333;
+  --c-subtext: #666666;
+  --c-border: #e0e0e0;
+  --c-accent: #667eea;
+  --c-accent-light: #f0f4ff;
 }
 
 a {

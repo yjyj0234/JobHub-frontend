@@ -1,6 +1,6 @@
 import React from "react";
-import "../css/GlobalFooter.css"; // 푸터 전용 CSS
-import logo from "../../assets/img/logo4.png"; // 로고 이미지
+import "../css/GlobalFooter.css";
+import logo from "../../assets/img/logo4.png";
 
 
 function GlobalFooter() {
@@ -18,7 +18,7 @@ function GlobalFooter() {
             <a href="#">회사소개</a>
             <a href="#">이용약관</a>
             <a href="#">개인정보처리방침</a>
-            <a href="#">고객센터</a>
+            <a href="/service">고객센터</a>
           </div>
           <p className="footer-copyright">
             © 2025 JobHub. All rights reserved.
