@@ -37,19 +37,20 @@ export default function Comments({ postId }) {
   const onSubmit = async (e) => {
     e.preventDefault();
     
-    const data = {
-      postId,
-      content: text.trim()};
+    
     setSending(true);
     try {
-      await axios.post(`${API}/community/${postId}/comments`, data, { withCredentials: true });
+      const {data:dto} = await axios.post(`${API}/community/${postId}/comments`, {content:text}, { withCredentials: true });
       // 낙관적 갱신
-      setList((prev) => [...prev, data]);
+      setList((prev) => [{
+        ...dto
+        
+      },...prev]);
       setText('');
       inputRef.current?.focus();
     } catch (e) {
       const status = e.response?.status;
-      if (status === 401 || status === 403) alert('로그인이 필요하거나 권한이 없어.');
+      if (status === 401 || status === 403) alert('로그인이 필요하거나 권한이 없습니다.');
       else alert(e.response?.data?.message ?? e.message);
     } finally {
       setSending(false);
@@ -57,14 +58,14 @@ export default function Comments({ postId }) {
   };
 
   const onDelete = async (commentId) => {
-    if (!window.confirm('정말 삭제할래?')) return;
+    if (!window.confirm('정말 삭제하시겠습니까?')) return;
     try {
       await axios.delete(`${API}/community/comments/${commentId}`);
       // 서버는 soft delete(내용을 빈 문자열로 변경) → 프론트에서도 반영
       setList((prev) => prev.map(c => c.id === commentId ? { ...c, content: '' } : c));
     } catch (e) {
       const status = e.response?.status;
-      if (status === 403) alert('본인 또는 관리자만 삭제할 수 있어.');
+      if (status === 403) alert('본인 또는 관리자만 삭제할 수 있습니다.');
       else alert(e.response?.data?.message ?? e.message);
     }
   };
@@ -82,7 +83,7 @@ export default function Comments({ postId }) {
           ref={inputRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="댓글을 입력해줘"
+          placeholder="댓글을 입력해주세요"
           maxLength={1000}
           disabled={sending}
         />
@@ -97,25 +98,25 @@ export default function Comments({ postId }) {
       {loading ? (
         <div className="comment-skeleton">댓글 불러오는 중…</div>
       ) : error ? (
-        <div className="comment-error">댓글을 불러오지 못했어: {String(error)}</div>
+        <div className="comment-error">댓글을 불러오지 못했습니다: {String(error)}</div>
       ) : list.length === 0 ? (
-        <div className="comment-empty">첫 댓글을 남겨줘!</div>
+        <div className="comment-empty">첫 댓글을 남겨주세요!</div>
       ) : (
         <ul className="comment-list">
-          {list.map(comment => (
-            <li key={comment.id ?? comment.tempId} className="comment-item">
+          {list.map((c,idx) => (
+            <li key={c.id ?? c.tempId ?? idx} className="comment-item">
               <img className="avatar" src={humanIcon} width={32} height={32} />
               <div className="body">
                 <div className="meta">
-                  <span className="name">{comment.userName ?? '알 수 없음'}</span>
-                  
-                  <span className="time">{fmt(comment.createdAt)}</span>
+                  <span className="name">{c.userName ?? '알 수 없음'}</span>
+                    &nbsp;&nbsp;&nbsp;
+                  <span className="time">{fmt(c.createdAt)}</span>
                 </div>
-                <div className={`content ${!comment.content ? 'deleted' : ''}`}>
-                  {comment.content && comment.content.trim().length > 0 ? comment.content : '(삭제된 댓글)'}
+                <div className={`content ${!c.content ? 'deleted' : ''}`}>
+                  {c.content && c.content.trim().length > 0 ? c.content : '(삭제된 댓글)'}
                 </div>
                 {/* 서버에서 권한 체크하니까 버튼은 일단 노출 → 실패 시 403 안내 */}
-                {comment.content && comment.content.trim().length > 0 && (
+                {c.content && c.content.trim().length > 0 && (
                   <div className="actions">
                     <button type="button" className="link-btn" onClick={() => onDelete(c.id)}>
                       삭제

@@ -99,7 +99,7 @@ const hasMorePosts = filteredPosts.length > 6;
                 <h3 className="pl-popular-item-title">{item.title}</h3>
                 <p className="pl-popular-item-preview">{item.content? item.content.replace(/<[^>]+>/g, '').replace(/\n/g, ' '): ''}</p>
                 <div className="pl-popular-meta">
-                  <span>댓글 {item.comments}</span>
+                  <span>댓글 {item.commentCount}</span>
                   <span className="pl-meta-sep">|</span>
                   <span>조회 {item.viewCount}</span>
                 </div>
@@ -138,7 +138,7 @@ const hasMorePosts = filteredPosts.length > 6;
                   <time className="pl-meta-date" dateTime={post.createdAt}>{formatDate(post.createdAt)}</time>
                 </div>
                 <div className="pl-card-stats" aria-label="게시글 통계">
-                  <span className="pl-stat">댓글 {post.comments}</span>
+                  <span className="pl-stat">댓글 {post.commentCount}</span>
                   <span className="pl-stat">조회 {post.viewCount}</span>
                 </div>
               </div>
