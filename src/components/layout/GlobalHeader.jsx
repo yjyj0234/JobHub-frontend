@@ -7,7 +7,7 @@ import { Search, MapPin, Briefcase, ChevronDown, Info } from "lucide-react";
 import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8080/api";
-
+axios.defaults.withCredentials = true;
 const useOnClickOutside = (ref, handler) => {
   useEffect(() => {
     const listener = (event) => {
@@ -264,8 +264,6 @@ function GlobalHeader({ onLoginClick }) {
 
   const jobPosting = () => navigate("/jobposting");
 
-  
-
   const toggleRegion = () => {
     setRegionOpen((prev) => !prev);
     setJobOpen(false);
@@ -316,9 +314,12 @@ function GlobalHeader({ onLoginClick }) {
             <img src={logo} alt="JobHub 로고" />
           </Link>
           <nav className="nav">
-
-            <button type="button" onClick={() => navigate('/jobpostinglist')}>채용정보</button>
-            <button type="button" onClick={postList}>커뮤니티</button>
+            <button type="button" onClick={() => navigate("/jobpostinglist")}>
+              채용정보
+            </button>
+            <button type="button" onClick={postList}>
+              커뮤니티
+            </button>
 
             <button type="button" onClick={handleResumeClick}>
               이력서
