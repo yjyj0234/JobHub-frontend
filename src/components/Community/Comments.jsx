@@ -80,6 +80,7 @@ export default function Comments({ postId }) {
 
       <form className="comment-form" onSubmit={onSubmit}>
         <textarea
+        style={{"width": "100%", "height": "100px"}}
           ref={inputRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -89,12 +90,12 @@ export default function Comments({ postId }) {
         />
         <div className="comment-form-actions">
           <span className="len">{text.trim().length} / 1000</span>
-          <button type='submit' className="btn" disabled={sending || !text.trim()}>
+          <button type='submit' className="btn" disabled={sending || !text.trim()} style={{"float": "right"}}>
             {sending ? '등록 중…' : '등록'}
           </button>
         </div>
       </form>
-
+      <br />
       {loading ? (
         <div className="comment-skeleton">댓글 불러오는 중…</div>
       ) : error ? (
@@ -116,7 +117,7 @@ export default function Comments({ postId }) {
                   {c.content && c.content.trim().length > 0 ? c.content : '(삭제된 댓글)'}
                 </div>
                 {/* 서버에서 권한 체크하니까 버튼은 일단 노출 → 실패 시 403 안내 */}
-                {c.content && c.content.trim().length > 0 && (
+                {c.content && c.content.trim().length > 0 && c.isOwner &&(
                   <div className="actions">
                     <button type="button" className="link-btn" onClick={() => onDelete(c.id)}>
                       삭제
