@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import {
   MapPin,
@@ -21,13 +21,20 @@ const JobPostingDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
- useEffect(() => {
+  const didFetchRef=useRef({ lastId: null, done: false });
+// ...existing code...
+useEffect(() => {
   const fetchJobDetail = async () => {
+    if (didFetchRef.current.lastId !== id) {
+      didFetchRef.current = { lastId: id, done: false };
+    }
+    if (didFetchRef.current.done) return;
+    didFetchRef.current.done = true;
     setLoading(true);
     setError(null);
     try {
       const res = await fetch(`http://localhost:8080/api/jobs/${id}`, {
-        credentials: "include",               // ← 쿠키 포함(세션/JWT 쿠키 쓸 때 필요)
+        credentials: "include",
         headers: { Accept: "application/json" }
       });
       if (!res.ok) {
@@ -35,7 +42,12 @@ const JobPostingDetail = () => {
         throw new Error(`HTTP ${res.status} ${res.statusText} - ${text}`);
       }
       const data = await res.json();
-      setJob(mapApiJobToUi(data));
+      // 조회수 1씩 증가 (setJob에서만 증가)
+      setJob(prev => {
+        const newData = mapApiJobToUi(data);
+        newData.views = (newData.views ?? 0) + 1;
+        return newData;
+      });
     } catch (e) {
       console.error("[JobDetail] fetch error:", e);
       setError("상세 정보를 불러오지 못했습니다.");
@@ -45,7 +57,7 @@ const JobPostingDetail = () => {
   };
   if (id) fetchJobDetail();
 }, [id]);
-
+// ...existing code...
   // === ENUM/코드 → 라벨 매핑 ===
   const mapCloseType = (t) => {
     switch (t) {
@@ -164,57 +176,6 @@ const JobPostingDetail = () => {
     homepage: j.homepage ?? "",
   });
 
-  useEffect(() => {
-    const fetchJobDetail = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(`http://localhost:8080/api/jobs/${id}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        setJob(mapApiJobToUi(data));
-      } catch (e) {
-        // 네트워크/백엔드 준비 전 시연용 더미 데이터
-        const fallback = mapApiJobToUi({
-          id,
-          title: "프론트엔드 개발자",
-          company: "JobHub",
-          companyLogo: null,
-          regions: ["서울 · 강남"],
-          employmentType: "정규직",
-          experienceLevel: "경력 3~5년",
-          education: "학력무관",
-          salaryLabel: "5,000 ~ 6,500만원",
-          closeType: "마감일",
-          closeDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 10)
-            .toISOString()
-            .substring(0, 10),
-          skills: ["React", "TypeScript", "Vite", "React Query", "Jest"],
-          viewCount: 1234,
-          applicationCount: 37,
-          description:
-            "당사는 사용성 중심의 채용 플랫폼을 만드는 팀으로, 프론트엔드 전반 개발과 사용자 경험 개선을 함께 할 동료를 찾고 있습니다.",
-          responsibilities: [
-            "웹 프론트엔드 신규 기능 설계/개발",
-            "디자인 시스템과 컴포넌트 설계",
-            "성능 개선 및 접근성 향상",
-          ],
-          qualifications: [
-            "React 실무 경험 2년 이상",
-            "상태관리, 라우팅 등 SPA 아키텍처에 대한 이해",
-            "협업과 커뮤니케이션 능력",
-          ],
-          preferences: ["TypeScript 경험", "테스트 코드 작성 경험", "SSR 경험"],
-          benefits: ["자율근무제", "연 100만원 교육비", "최신 장비 지원"],
-          homepage: "https://jobhub.example.com",
-        });
-        setJob(fallback);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchJobDetail();
-  }, [id]);
 
   const closeLabel = useMemo(() => {
     if (!job) return "";
