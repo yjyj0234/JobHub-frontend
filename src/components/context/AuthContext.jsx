@@ -5,6 +5,8 @@ axios.defaults.baseURL = "http://localhost:8080";
 axios.defaults.withCredentials = true; // JWT 쿠키 자동 첨부
 
 const AuthContext = createContext(null);
+const hasCookie = (name) =>
+  document.cookie.split("; ").some((c) => c.startsWith(`${name}=`));
 
 export const AuthProvider = ({ children }) => {
   const [isAuthed, setIsAuthed] = useState(false);
@@ -145,29 +147,42 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  // ✅ 새로고침 시 무조건 /auth/me 호출해서 복원 (JWT_MARK 가드 제거)
+  // ✅ 초기 복원: JWT_MARK 없으면 /auth/me 스킵
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
+        // 1) 세션 신호 없으면 바로 비로그인 처리
+        if (!hasCookie("JWT_MARK")) {
+          if (!alive) return;
+          setIsAuthed(false);
+          setId(null);
+          setUser(null);
+          return;
+        }
+
+        // 2) 있을 때만 /auth/me 호출
         const res = await axios.get("/auth/me", {
-          validateStatus: (s) => s === 200 || s === 401,
+          // 401/403도 throw 안 되게
+          validateStatus: (s) => s === 200 || s === 401 || s === 403,
         });
+
         if (!alive) return;
 
         if (res.status === 200) {
           const me = normalizeUser(res.data);
-          setId(me.id ?? null);
+          setId(me?.id ?? null);
           setUser(me ?? null);
           setIsAuthed(!!me?.id);
         } else {
+          // 401/403 → 비로그인 처리
           setIsAuthed(false);
           setId(null);
           setUser(null);
         }
-      } catch (e) {
+      } catch {
         if (!alive) return;
-        // 네트워크/기타 에러 → 비로그인 취급
         setIsAuthed(false);
         setId(null);
         setUser(null);
