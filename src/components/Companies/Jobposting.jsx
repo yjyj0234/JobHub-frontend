@@ -99,27 +99,41 @@ function stampS3KeysInHtml(rawHtml, attachments) {
   }
 }
 // ===== 커스텀 업로드 어댑터 =====
+// ===== 커스텀 업로드 어댑터 =====
 class UploadAdapter {
   constructor(loader, setAttachments) {
     this.loader = loader;
     this.setAttachments = setAttachments;
+    this.controller = new AbortController();
   }
+
   async upload() {
     const file = await this.loader.file;
     const fd = new FormData();
-    fd.append("files", file);
-    const res = await axios.post("/api/uploads", fd, {
+    fd.append("file", file);                 // ← 단일 업로드는 "file"
+    fd.append("module", "articles");
+    fd.append("public", "false");
+
+    const res = await axios.post("/api/upload", fd, {
       headers: { "Content-Type": "multipart/form-data" },
-      withCredentials: true
+      withCredentials: true,
+      signal: this.controller.signal
     });
-    const up = (res.data?.files || [])[0];
-    if (!up) throw new Error("Upload failed");
-    // 첨부 목록 저장(원하면 서버에 함께 전송)
+
+    const up = res.data;
+    if (!up?.key) throw new Error("Upload failed");
+
+    // 첨부 목록엔 그대로 적재(원하면 추후 서버와 동기화에 사용)
     this.setAttachments(prev => [up, ...prev]);
-    // CKEditor가 사용할 표시 URL(프리사인드)
-    return { default: up.url };
+
+    const viewerUrl =
+      up.viewerUrl ?? `${axios.defaults.baseURL}/api/files/view?key=${encodeURIComponent(up.key)}`;
+
+    // ✔ CKEditor는 { default: <img src> }를 기대 → description에 즉시 삽입됨
+    return { default: viewerUrl };
   }
-  abort() {}
+
+  abort() { this.controller.abort(); }
 }
 
 // ✅ 클래스 플러그인 + requires 로 순서 보장

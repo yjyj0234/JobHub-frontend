@@ -19,7 +19,50 @@ import DOMPurify from "dompurify";
 const BACKEND_ORIGIN = "http://localhost:8080";
 const S3_HOST = "https://myproject-buckets.s3.ap-northeast-2.amazonaws.com";
 
+// ── 유틸: 어떤 형태의 src든 viewer URL 절대경로로
+function toViewerUrlFromAny(src) {
+  if (!src) return src;
+
+  // 이미 viewer 경로인 경우 → 절대경로 보정
+  if (/^\/?api\/files\/view\?/.test(src)) {
+    return `${BACKEND_ORIGIN}${src.startsWith("/") ? src : `/${src}`}`;
+  }
+
+  // 프리사인드 S3 URL(virtual-hosted or path-style) → key 뽑아서 viewer로
+  try {
+    const u = new URL(src);
+    if (/s3[.-].*amazonaws\.com$/i.test(u.host)) {
+      const key = u.pathname.replace(/^\/+/, ""); // "/private/..." → "private/..."
+      return `${BACKEND_ORIGIN}/api/files/view?key=${encodeURIComponent(key)}`;
+    }
+  } catch {
+    // URL() 실패 → 상대/키일 가능성
+  }
+
+  // 순수 S3 키 (public/..., private/...) → viewer로
+  if (/^(?:public|private)\//i.test(src)) {
+    return `${BACKEND_ORIGIN}/api/files/view?key=${encodeURIComponent(src)}`;
+  }
+
+  // s3://bucket/key → key만 뽑아 viewer로
+  if (src.startsWith("s3://")) {
+    const parts = src.split("/"); // ["s3:", "", "bucket", "key", ...]
+    const key = parts.slice(3).join("/");
+    return `${BACKEND_ORIGIN}/api/files/view?key=${encodeURIComponent(key)}`;
+  }
+
+  // 앱 상대경로(/...) → 백엔드 절대경로
+  if (src.startsWith("/")) {
+    return `${BACKEND_ORIGIN}${src}`;
+  }
+
+  // http(s) 외부 URL은 그대로
+  return src;
+}
+
+
 // ✅ (추가) 상세설명 HTML 안의 <img src>를 절대경로/https로 보정하는 유틸
+// ── 본문 HTML에서 <img>만 뽑아 src 보정
 function rewriteDescriptionHtml(rawHtml) {
   if (!rawHtml) return "";
   try {
@@ -27,25 +70,11 @@ function rewriteDescriptionHtml(rawHtml) {
     const doc = parser.parseFromString(String(rawHtml), "text/html");
 
     doc.querySelectorAll("img").forEach((img) => {
-      const src = img.getAttribute("src") || "";
-      if (!src) return;
+      const original = img.getAttribute("src") || "";
+      const fixed = toViewerUrlFromAny(original);
+      if (fixed) img.setAttribute("src", fixed);
 
-      // 이미 http/https면 그대로 둠
-      if (/^https?:\/\//i.test(src)) {
-        // nothing
-      }
-      // /files/... 같은 앱 상대 경로는 백엔드 호스트 붙임
-      else if (src.startsWith("/")) {
-        img.setAttribute("src", `${BACKEND_ORIGIN}${src}`);
-      }
-      // s3://bucket/key → https://bucket.s3.region.amazonaws.com/key 로 변환
-      else if (src.startsWith("s3://")) {
-        const [, , ...rest] = src.split("/"); // ['s3:', '', 'bucket', 'key', ...]
-        const key = rest.slice(1).join("/");  // bucket 뒤부터 key
-        img.setAttribute("src", `${S3_HOST}/${key}`);
-      }
-
-      // 보안/성능 기본 속성
+      // 기본 속성
       img.setAttribute("loading", "lazy");
       img.setAttribute("referrerpolicy", "no-referrer");
       img.removeAttribute("onerror");
