@@ -244,7 +244,14 @@ function GlobalHeader({ onLoginClick }) {
       page: 0,
       size: 20,
     };
+
     console.log("검색 요청:", searchData);
+
+    // 검색 결과를 JobPostingList 페이지로 전달하며 이동
+    navigate("/jobpostinglist", {
+      state: { searchData },
+    });
+
     setIsExpanded(false);
     setRegionOpen(false);
     setJobOpen(false);
@@ -297,6 +304,11 @@ function GlobalHeader({ onLoginClick }) {
     </>
   );
 
+
+  //로그인 했을 때 role이 company 인지 확인하는 함수
+  const isCompanyUser = (u) => (u?.role ?? "").toLowerCase() === "company";
+  const isCompany = isLoggedIn && isCompanyUser(user);
+
   //회사 계정일 시 공고등록버튼만 보이고 이력서 버튼은 안보이게
   const isCompanyUser = (u) => {
     const t = (u?.user_type ?? u?.userType ?? "").toString().toLowerCase();
@@ -305,6 +317,7 @@ function GlobalHeader({ onLoginClick }) {
     );
   };
   const isCompany = isAuthed && isCompanyUser(user);
+
 
   return (
     <header className={`global-header ${isScrolled ? "scrolled" : ""}`}>

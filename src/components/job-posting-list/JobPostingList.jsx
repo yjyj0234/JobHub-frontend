@@ -1,5 +1,9 @@
 // src/components/JobPostingList.jsx
 import React, { useState, useEffect } from "react";
+
+import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+
 import {
   Search,
   MapPin,
@@ -15,10 +19,10 @@ import {
 import "../css/JobPostingList.css";
 
 // ==================== 검색 컴포넌트 ====================
-const JobSearchBar = ({ onSearch }) => {
+const JobSearchBar = ({ onSearch, initialSearchData }) => {
   const [activeTab, setActiveTab] = useState("region");
-  const [regions, setRegions] = useState([]); // [{ id, name, parentId, subRegions: [{id, name}] }]
-  const [jobCategories, setJobCategories] = useState([]); // [{ id, name, parentId, subCategories: [{id, name}] }]
+  const [regions, setRegions] = useState([]);
+  const [jobCategories, setJobCategories] = useState([]);
   const [loading, setLoading] = useState({ regions: false, categories: false });
   const [error, setError] = useState({ regions: null, categories: null });
 
@@ -28,8 +32,19 @@ const JobSearchBar = ({ onSearch }) => {
     region2: "",
     category1: "",
     category2: "",
+    ...initialSearchData, // GlobalHeader에서 전달받은 초기값 적용
   });
   const [quickFilters, setQuickFilters] = useState([]);
+
+  // GlobalHeader에서 전달받은 초기 검색 데이터 적용
+  useEffect(() => {
+    if (initialSearchData) {
+      setSearchData((prev) => ({
+        ...prev,
+        ...initialSearchData,
+      }));
+    }
+  }, [initialSearchData]);
 
   // helpers: API payload → UI 구조 매핑
   const normalizeRegions = (raw) =>
@@ -66,7 +81,7 @@ const JobSearchBar = ({ onSearch }) => {
           "http://localhost:8080/api/search/regions/tree"
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const payload = await res.json(); // { regions: [...] }
+        const payload = await res.json();
         const raw = Array.isArray(payload) ? payload : payload.regions;
         setRegions(normalizeRegions(raw));
       } catch (e) {
@@ -93,7 +108,7 @@ const JobSearchBar = ({ onSearch }) => {
           "http://localhost:8080/api/search/job-categories/tree"
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const payload = await res.json(); // { categories: [...] }
+        const payload = await res.json();
         const raw = Array.isArray(payload) ? payload : payload.categories;
         setJobCategories(normalizeCategories(raw));
       } catch (e) {
@@ -549,8 +564,8 @@ const JobFilters = ({ onFilterChange }) => {
 };
 
 // ==================== 채용공고 아이템 ====================
-const JobItem = ({ job, onBookmark }) => (
-  <div className="job-item">
+const JobItem = ({ job, onBookmark, onOpen }) => (
+  <div className="job-item" onClick={onOpen}>
     <div className="job-item-header">
       <div className="company-section">
         <div className="company-logo-box">
@@ -566,7 +581,10 @@ const JobItem = ({ job, onBookmark }) => (
       </div>
       <button
         className={`bookmark-button ${job.bookmarked ? "active" : ""}`}
-        onClick={() => onBookmark(job.id)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onBookmark(job.id);
+        }}
       >
         <Star size={24} fill={job.bookmarked ? "currentColor" : "none"} />
       </button>
@@ -620,11 +638,26 @@ const JobItem = ({ job, onBookmark }) => (
 
 // ==================== 메인 페이지 ====================
 const JobPosting = () => {
+  const location = useLocation();
   const [jobs, setJobs] = useState([]);
   const [filteredJobs, setFilteredJobs] = useState([]);
   const [sortBy, setSortBy] = useState("latest");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // GlobalHeader에서 전달받은 검색 조건 처리
+  const globalHeaderSearchData = location.state?.searchData;
+  const initialSearchData = globalHeaderSearchData
+    ? {
+        keyword: globalHeaderSearchData.keyword || "",
+        // GlobalHeader의 selectedRegions 배열을 UI 형태로 변환
+        region1: globalHeaderSearchData.regionIds?.[0] || "",
+        region2: globalHeaderSearchData.regionIds?.[1] || "",
+        // GlobalHeader의 selectedJobs 배열을 UI 형태로 변환
+        category1: globalHeaderSearchData.categoryIds?.[0] || "",
+        category2: globalHeaderSearchData.categoryIds?.[1] || "",
+      }
+    : null;
 
   // API → UI 매핑
   const mapApiJobToUi = (j) => ({
@@ -652,27 +685,17 @@ const JobPosting = () => {
     bookmarked: false,
   });
 
-  // 검색 처리(백엔드 호출)
-  const handleSearch = async (searchParams) => {
-    const regionIds = [];
-    if (searchParams.region2) regionIds.push(Number(searchParams.region2));
-    else if (searchParams.region1) regionIds.push(Number(searchParams.region1));
-
-    const categoryIds = [];
-    if (searchParams.category2)
-      categoryIds.push(Number(searchParams.category2));
-    else if (searchParams.category1)
-      categoryIds.push(Number(searchParams.category1));
-
+  // 초기 로드 함수
+  const handleInitialLoad = async () => {
     const body = {
-      keyword: searchParams.keyword || "",
-      regionIds,
-      categoryIds,
+      keyword: null,
+      regionIds: [],
+      categoryIds: [],
       employmentType: undefined,
       experienceLevel: undefined,
       minSalary: undefined,
       maxSalary: undefined,
-      isRemote: searchParams.quickFilters?.includes("재택근무") || undefined,
+      isRemote: undefined,
       sortBy: "latest",
       page: 0,
       size: 20,
@@ -687,7 +710,115 @@ const JobPosting = () => {
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const page = await res.json(); // Spring Page<JobSearchResponseDto>
+      const page = await res.json();
+      const list = (page.content ?? []).map(mapApiJobToUi);
+      setJobs(list);
+      setFilteredJobs(list);
+    } catch (e) {
+      console.error("초기 데이터 로드 실패:", e);
+      setJobs([]);
+      setFilteredJobs([]);
+      setError("채용공고를 불러오지 못했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // GlobalHeader에서 전달받은 검색 조건으로 검색
+  const handleGlobalHeaderSearch = async (searchData) => {
+    console.log("GlobalHeader 검색 데이터:", searchData);
+
+    const body = {
+      keyword: searchData.keyword || null,
+      regionIds: searchData.regionIds || [],
+      categoryIds: searchData.categoryIds || [],
+      employmentType: undefined,
+      experienceLevel: undefined,
+      minSalary: undefined,
+      maxSalary: undefined,
+      isRemote: undefined,
+      sortBy: "latest",
+      page: 0,
+      size: 20,
+    };
+
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("http://localhost:8080/api/search/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const page = await res.json();
+      const list = (page.content ?? []).map(mapApiJobToUi);
+      setJobs(list);
+      setFilteredJobs(list);
+    } catch (e) {
+      console.error("검색 실패:", e);
+      setJobs([]);
+      setFilteredJobs([]);
+      setError("채용공고를 불러오지 못했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 컴포넌트 마운트 시 처리
+  useEffect(() => {
+    if (globalHeaderSearchData) {
+      // GlobalHeader에서 온 경우 해당 조건으로 검색
+      handleGlobalHeaderSearch(globalHeaderSearchData);
+    } else {
+      // 직접 접근한 경우 초기 데이터 로드
+      handleInitialLoad();
+    }
+  }, [location.state]);
+
+  // 검색 처리(백엔드 호출)
+  const handleSearch = async (searchParams) => {
+    console.log("검색 파라미터:", searchParams);
+
+    const regionIds = [];
+    if (searchParams.region2) regionIds.push(Number(searchParams.region2));
+    else if (searchParams.region1) regionIds.push(Number(searchParams.region1));
+
+    const categoryIds = [];
+    if (searchParams.category2)
+      categoryIds.push(Number(searchParams.category2));
+    else if (searchParams.category1)
+      categoryIds.push(Number(searchParams.category1));
+
+    const body = {
+      keyword:
+        searchParams.keyword && searchParams.keyword.trim()
+          ? searchParams.keyword.trim()
+          : null,
+      regionIds: regionIds.length > 0 ? regionIds : null,
+      categoryIds: categoryIds.length > 0 ? categoryIds : null,
+      employmentType: undefined,
+      experienceLevel: undefined,
+      minSalary: undefined,
+      maxSalary: undefined,
+      isRemote: searchParams.quickFilters?.includes("재택근무") ? true : null,
+      sortBy: "latest",
+      page: 0,
+      size: 20,
+    };
+
+    console.log("API 요청 Body:", body);
+
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("http://localhost:8080/api/search/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const page = await res.json();
       const list = (page.content ?? []).map(mapApiJobToUi);
       setJobs(list);
       setFilteredJobs(list);
@@ -719,14 +850,30 @@ const JobPosting = () => {
     switch (sortType) {
       case "latest":
         sorted.sort(
-          (a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0) || b.id - a.id
+          (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
         );
         break;
       case "views":
-        sorted.sort((a, b) => (b.views ?? 0) - (a.views ?? 0));
+        sorted.sort((a, b) => (b.views || 0) - (a.views || 0));
         break;
       case "applications":
-        sorted.sort((a, b) => (b.applications ?? 0) - (a.applications ?? 0));
+        sorted.sort((a, b) => (b.applications || 0) - (a.applications || 0));
+        break;
+      case "deadline":
+        sorted.sort((a, b) => {
+          const dateA =
+            a.deadline === "상시채용"
+              ? new Date("9999-12-31")
+              : new Date(a.deadline || "9999-12-31");
+          const dateB =
+            b.deadline === "상시채용"
+              ? new Date("9999-12-31")
+              : new Date(b.deadline || "9999-12-31");
+          return dateA - dateB;
+        });
+        break;
+      case "salary":
+        sorted.sort((a, b) => (b.salary || "").localeCompare(a.salary || ""));
         break;
       default:
         break;
@@ -734,12 +881,24 @@ const JobPosting = () => {
     setFilteredJobs(sorted);
   };
 
+  const navigate = useNavigate();
+
+  //디테일페이지 이동
+  const openDetail = React.useCallback((jobId) => {
+    if (!jobId) return;
+    navigate(`/jobpostinglist/${jobId}`);
+  }, [navigate]);
+
+
   return (
     <div className="job-posting-container">
       <div className="job-posting-header">
         <div className="job-posting-inner">
           <h1 className="header-title">채용정보</h1>
-          <JobSearchBar onSearch={handleSearch} />
+          <JobSearchBar
+            onSearch={handleSearch}
+            initialSearchData={initialSearchData}
+          />
         </div>
       </div>
 
@@ -773,7 +932,12 @@ const JobPosting = () => {
           )}
 
           {filteredJobs.map((job) => (
-            <JobItem key={job.id} job={job} onBookmark={toggleBookmark} />
+            <JobItem
+              key={job.id}
+              job={job}
+              onBookmark={toggleBookmark}
+              onOpen={() => openDetail(job.id)}
+            />
           ))}
         </div>
       </div>

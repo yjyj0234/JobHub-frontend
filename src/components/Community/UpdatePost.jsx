@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import '../css/AddPost.css'
 import axios from 'axios'
+axios.defaults.withCredentials = true // 쿠키 인증을 위해 설정
 import { useNavigate, useParams } from 'react-router-dom'
 
 
@@ -9,6 +10,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 const UpdatePost = () => {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [updatedAt, setUpdatedAt] = useState('')
   const [isBold, setIsBold] = useState(false)
   const [isUnderline, setIsUnderline] = useState(false)
   const { id } = useParams();
@@ -73,7 +75,7 @@ const UpdatePost = () => {
     e.preventDefault()
     const html = editorRef.current?.innerHTML ?? content;
     
-    const data = { userId: 12, title, content: html}
+    const data = { title, content: html}
 
     try {
      await axios.put(`http://localhost:8080/community/edit/${id}`, data)
