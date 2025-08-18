@@ -16,7 +16,7 @@ import { ResumeListPage, ResumeEditorPage } from "../resume";
 import { Jobposting, ApplicantsList } from "../Companies";
 
 
-import { JobPostingList } from "../job-posting-list";
+import { JobPostingList, JobPostingDetail } from "../job-posting-list";
 import { PostList, AddPost, PostDetail, UpdatePost, GroupChat, GroupChatRoom } from "../Community";
 
 function MainLayout() {
@@ -95,6 +95,8 @@ function AppRouter() {
         <Route path="/group-chat" element={<GroupChat />} />
         <Route path="/group-chat/rooms/:roomId" element={<GroupChatRoom />} />
         <Route path="/service" element={<Service />} />
+        {/* 공고 디테일 */}
+        <Route path="/jobpostinglist/:id" element={<JobPostingDetail />} />
       </Route>
     </Routes>
   );

@@ -31,13 +31,9 @@ import {
 
 // 전역 axios
 axios.defaults.baseURL = "http://localhost:8080";
-const API_AUTH_ME = "/auth/me";
 
 // ✅ "COMPANY" / "ROLE_COMPANY" 모두 허용
-const isCompanyRole = (role) => {
-  const r = (role ?? "").toString().toUpperCase();
-  return r === "COMPANY" || r === "ROLE_COMPANY";
-};
+
 //쿠키 포함시킨다
 axios.defaults.withCredentials = true;
 
@@ -49,7 +45,59 @@ function toLocalDateTimeString(value) {
   return value.length === 16 ? `${value}:00` : value; // 초 없으면 :00 붙임
 }
 
+/** 쿼리스트링 제거용 (presigned URL과 매칭 시 안정성 ↑) */
+function stripQuery(u) {
+  try {
+    const url = new URL(u, window.location.origin);
+    url.search = "";
+    url.hash = "";
+    return url.toString();
+  } catch {
+    // 절대 URL이 아니면 그대로 반환
+    return String(u).split("?")[0].split("#")[0];
+  }
+}
 
+/**
+ * 제출 직전 HTML 내 <img>의 src를 attachments와 매칭해
+ * data-s3-key 속성을 심어준다.
+ * - attachments: [{ id(or key), url, ... }] 형태(현재 /api/uploads 응답)
+ */
+function stampS3KeysInHtml(rawHtml, attachments) {
+  if (!rawHtml) return "";
+  try {
+    const doc = new DOMParser().parseFromString(String(rawHtml), "text/html");
+    const imgs = doc.querySelectorAll("img");
+
+    // url(쿼리 제거) -> attachment 매핑을 만들어두면 O(1)로 매칭 가능
+    const mapByUrl = new Map();
+    (attachments || []).forEach((a) => {
+      if (!a?.url) return;
+      mapByUrl.set(stripQuery(a.url), a);
+    });
+
+    imgs.forEach((img) => {
+      if (img.hasAttribute("data-s3-key")) return; // 이미 있으면 패스
+      const src = img.getAttribute("src") || "";
+      if (!src) return;
+
+      const match = mapByUrl.get(stripQuery(src));
+      if (match) {
+        const key = match.id || match.key; // 컨트롤러에서 id=r.key() 로 내려주므로 둘 다 대응
+        if (key) {
+          img.setAttribute("data-s3-key", key);
+          // 보안/성능 기본 속성(옵션)
+          img.setAttribute("loading", "lazy");
+          img.setAttribute("referrerpolicy", "no-referrer");
+        }
+      }
+    });
+
+    return doc.body.innerHTML;
+  } catch {
+    return String(rawHtml);
+  }
+}
 // ===== 커스텀 업로드 어댑터 =====
 class UploadAdapter {
   constructor(loader, setAttachments) {
@@ -95,8 +143,6 @@ const Jobposting = () => {
 
   // ✅ StrictMode(개발 모드) 이중 마운트 대비: 부작용 1회 가드
   const ranAuthCheck = useRef(false);
-  const ranFetch = useRef(false);
-  const loggedRef = useRef(false);
 
   //로그인 유저정보
   const {isLoggedIn, user} = useAuth();
@@ -132,64 +178,46 @@ const Jobposting = () => {
   // 급여 유형 상태 추가
   const [salaryType, setSalaryType] = useState("ANNUAL");
 
-  //로그인 유무에 따른 navi
-useEffect(()=>{
-  // 로그인/권한 체크: 페이지 진입 시 1회만 실행 (StrictMode 중복 차단)
+const API_PROFILE_ME = "/api/profile/me";
+
+useEffect(() => {
   if (ranAuthCheck.current) return;
   ranAuthCheck.current = true;
-  if(!isLoggedIn){
-    alert("로그인이 필요합니다.");
-    navigate("/", { replace: true });
-    return;
-  }
-  if (!isCompanyRole(user?.role)) {
-    alert("기업 회원만 접근할 수 있습니다.");
-    navigate("/", { replace: true });
-    
-  }
-   // ✅ 로깅 개선: useEffect에서 API 호출로 최신 정보를 가져와서 로그 출력
-    const logAuthInfo = async () => {
-      try {
-        const res = await axios.get(API_AUTH_ME, { withCredentials: true });
-        const serverUser = res.data;
-        const role= serverUser?.role ?? user?.role;
-        const roleNorm = isCompanyRole(role) ? "COMPANY" : (role ?? "UNKNOWN");
 
-        const authId = serverUser?.id ?? serverUser?.userId ?? serverUser?.email;
-        console.log(`[auth] authenticated user (role: ${roleNorm}, id: ${authId}, companyId: ${serverUser?.companyId ?? '(server decides)'})`);
-      } catch (err) {
-        console.warn("[auth] Failed to fetch user info from API. Using AuthContext user instead.");
-        const authId = user?.id ?? user?.userId ?? user?.email;
-        const roleNorm = isCompanyRole(user?.role) ? "COMPANY" : (user?.role ?? "UNKNOWN");
-        console.log(`[auth] authenticated user (role: ${roleNorm}, id: ${authId}, companyId: ${user?.companyId ?? '(server decides)'})`);      }
-    };
-    logAuthInfo();
-  }, [isLoggedIn, user, navigate]);
+  (async () => {
+    try {
+      await axios.get(API_PROFILE_ME, { withCredentials: true });
+      // 로그인만 확인하고 통과 (기업여부는 서버에 맡김)
+    } catch {
+      alert("로그인이 필요합니다.");
+      navigate("/", { replace: true });
+    }
+  })();
+}, [navigate]);
+
 //데이터 로딩
-useEffect(()=>{
-  if(!isLoggedIn || !isCompanyRole(user?.role)){
-    return;
-  }
-  
-  let cancelled=false;
-  (async () =>{
-    try{
-      const [catsRes,regsRes]=await Promise.all([
-        axios.get("/api/search/job-categories"),
-        axios.get("/api/search/regions")
+useEffect(() => {
+  let cancelled = false;
+
+  (async () => {
+    try {
+      const [catsRes, regsRes] = await Promise.all([
+        axios.get("/api/search/job-categories", { withCredentials: true }),
+        axios.get("/api/search/regions", { withCredentials: true })
       ]);
-      if(cancelled) return;
-      const cats= (catsRes.data?.categories || []).map(c => ({ ...c, id: String(c.id) }));
-      const regs= (regsRes.data?.regions || []).map(r => ({ ...r, id: String(r.id) }));
+      if (cancelled) return;
+
+      const cats = (catsRes.data?.categories || []).map(c => ({ ...c, id: String(c.id) }));
+      const regs = (regsRes.data?.regions || []).map(r => ({ ...r, id: String(r.id) }));
       setJobCategories(cats);
       setLocations(regs);
-    }catch(err){
+    } catch (err) {
       console.error(err);
     }
   })();
-  return () => { cancelled=true; };
-},[isLoggedIn,user]);
 
+  return () => { cancelled = true; };
+}, []);
 
   // 대분류 변경 -> 소분류 로딩
     const handleJobMidChange = async (e) => {
@@ -274,13 +302,15 @@ useEffect(()=>{
 // ✅ 교체용: handleSubmit (companyId/createdBy 전혀 사용 안 함)
 const handleSubmit = async (e) => {
   e.preventDefault();
-
-  // 1) 권한 체크
-  if (!isLoggedIn || !isCompanyRole(user?.role)) {
-    alert("로그인이 필요합니다. 또는 기업 회원만 등록할 수 있습니다.");
+ 
+ try {
+    await axios.get(API_PROFILE_ME, { withCredentials: true });
+    
+  } catch {
+    alert("로그인이 필요합니다.");
     return;
   }
-
+ 
   // 2) 대표 직무 보정 및 변환
   let jobs = selectedJobs;
   if (!jobs.some(j => j.isPrimary) && jobs.length > 0) {
@@ -352,13 +382,15 @@ const handleSubmit = async (e) => {
   const minExperienceYears = (experienceLevel === "ENTRY") ? 0 : minExperienceYearsInput;
   const maxExperienceYears = (experienceLevel === "ENTRY") ? null : (maxExperienceYearsRaw ? Number(maxExperienceYearsRaw) : null);
 
+  const descriptionForSave = stampS3KeysInHtml(description, attachments);
+
   // 6) 서버로 보낼 payload (companyId/createdBy 없음!)
   const payload = {
     title, status, closeType,
     isRemote: document.getElementById("is_remote")?.checked || false,
     openDate, closeDate,
     searchText: title,
-    description,
+    description: descriptionForSave,
     regions,
     categories,
     conditions: {

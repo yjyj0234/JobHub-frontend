@@ -176,3 +176,11 @@
   .cta-area { width: 100%; justify-content: space-between; }
   .title-area .job-title { font-size: 22px; }
 }
+
+.desc-text img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 8px 0;
+  border-radius: 8px;
+}
