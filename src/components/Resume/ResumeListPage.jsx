@@ -14,6 +14,10 @@ import "../css/ResumeListPage.css";
 import { useAuth } from "../context/AuthContext.jsx";
 import { Modal } from "../UI/index.js";
 
+/* ---------------------- 공통 설정 ---------------------- */
+const API_BASE_URL = "http://localhost:8080/api"; // 백엔드 표준 프리픽스
+axios.defaults.withCredentials = true;
+
 /* ---------------------- 유틸 ---------------------- */
 const getUid = (u) => u?.id ?? u?.userId ?? null;
 
@@ -54,54 +58,30 @@ function ResumeListPage() {
         setResumes([]);
         return;
       }
-      const uid = getUid(user);
-      if (!uid) return;
-
       setLoading(true);
       setError("");
+
       try {
-        // 백엔드 구현 형태가 다를 수 있으므로 1) /resumes?mine=true → 2) /users/{id}/resumes → 3) /resumes?userId={id} 순으로 시도
-        let data = null;
+        // 백엔드 표준화: GET /api/resumes → 인증 사용자의 목록 반환
+        const res = await axios.get(`${API_BASE_URL}/resumes`, {
+          validateStatus: (s) => s >= 200 && s < 500,
+        });
 
-        // 1) /resumes?mine=true
-        try {
-          const res1 = await axios.get("/resumes", {
-            params: { mine: true },
-            withCredentials: true,
-            validateStatus: (s) => s >= 200 && s < 500,
-          });
-          if (res1.status === 200 && Array.isArray(res1.data)) data = res1.data;
-        } catch (_) {}
-
-        // 2) /users/{id}/resumes
-        if (!data) {
-          try {
-            const res2 = await axios.get(`/users/${uid}/resumes`, {
-              withCredentials: true,
-              validateStatus: (s) => s >= 200 && s < 500,
-            });
-            if (res2.status === 200 && Array.isArray(res2.data))
-              data = res2.data;
-          } catch (_) {}
+        if (res.status === 200 && Array.isArray(res.data)) {
+          const data = res.data.slice();
+          const toTime = (r) =>
+            new Date(
+              r.updatedAt || r.lastModified || r.createdAt || "1970-01-01"
+            ).getTime();
+          data.sort((a, b) => toTime(b) - toTime(a));
+          setResumes(data);
+        } else if (res.status === 401) {
+          setError("로그인이 필요해요.");
+          setResumes([]);
+        } else {
+          setError("이력서 목록을 불러오지 못했어요.");
+          setResumes([]);
         }
-
-        // 3) /resumes?userId={id}
-        if (!data) {
-          const res3 = await axios.get("/resumes", {
-            params: { userId: uid },
-            withCredentials: true,
-          });
-          data = Array.isArray(res3.data) ? res3.data : [];
-        }
-
-        // 정렬(최근 수정순) — updatedAt/lastModified/createdAt 중 있는 값 사용
-        const toTime = (r) =>
-          new Date(
-            r.updatedAt || r.lastModified || r.createdAt || "1970-01-01"
-          ).getTime();
-
-        data.sort((a, b) => toTime(b) - toTime(a));
-        setResumes(data);
       } catch (e) {
         console.error("[ResumeList] fetch error:", e);
         setError("이력서 목록을 불러오지 못했어요.");
@@ -112,13 +92,13 @@ function ResumeListPage() {
     };
 
     fetchMyResumes();
-  }, [isAuthed, user]);
+  }, [isAuthed]);
 
   /* ---------------------- 액션 핸들러 ---------------------- */
   const handleDeleteResume = async (resumeId) => {
     if (!window.confirm("정말로 이 이력서를 삭제하시겠습니까?")) return;
     try {
-      await axios.delete(`/resumes/${resumeId}`, { withCredentials: true });
+      await axios.delete(`${API_BASE_URL}/resumes/${resumeId}`);
       setResumes((prev) => prev.filter((r) => r.id !== resumeId));
       alert("이력서가 삭제되었습니다.");
     } catch (e) {
@@ -136,24 +116,28 @@ function ResumeListPage() {
   };
 
   const handleCopyResume = async (resumeId) => {
-    // 서버에 복사 API가 있으면 사용: POST /resumes/{id}/copy
+    // 1순위: 서버에 복사 API가 있을 때 (POST /api/resumes/{id}/copy)
     try {
-      const res = await axios.post(`/resumes/${resumeId}/copy`, null, {
-        withCredentials: true,
-        validateStatus: (s) => s >= 200 && s < 500,
-      });
+      const res = await axios.post(
+        `${API_BASE_URL}/resumes/${resumeId}/copy`,
+        null,
+        { validateStatus: (s) => s >= 200 && s < 500 }
+      );
       if (res.status === 200 || res.status === 201) {
         const createdId = res.data?.id ?? res.data;
         if (createdId) {
           alert("복사되었습니다. 편집 화면으로 이동합니다.");
-          navigate(`/resumes/${createdId}/edit`);
+          navigate(`/resumes/${createdId}`);
           return;
         }
       }
-      // 없으면 fallback: 원본 조회 → 새로 생성
-      const orig = await axios.get(`/resumes/${resumeId}`, {
-        withCredentials: true,
-      });
+    } catch (_) {
+      /* no-op, fallback 진행 */
+    }
+
+    // 2순위: 복사 API가 없으면 → 원본 조회 후 기본 필드로 새로 생성
+    try {
+      const orig = await axios.get(`${API_BASE_URL}/resumes/${resumeId}`);
       const o = orig.data || {};
       const payload = {
         title: (o.title || "이력서") + " - 복사본",
@@ -161,12 +145,10 @@ function ResumeListPage() {
         isPublic: !!o.isPublic,
         status: o.status || "작성 중",
       };
-      const resCreate = await axios.post("/resumes", payload, {
-        withCredentials: true,
-      });
+      const resCreate = await axios.post(`${API_BASE_URL}/resumes`, payload);
       const newId = resCreate.data?.id ?? resCreate.data;
       alert("복사되었습니다. 편집 화면으로 이동합니다.");
-      navigate(`/resumes/${newId}/edit`);
+      navigate(`/resumes/${newId}`);
     } catch (e) {
       console.error("[ResumeList] copy error:", e);
       alert("복사 중 오류가 발생했어요.");
@@ -204,9 +186,8 @@ function ResumeListPage() {
     }, []);
 
     const openForEditOrView = () => {
-      if (isMine) navigate(`/resumes/${resume.id}/edit`);
+      if (isMine) navigate(`/resumes/${resume.id}`);
       else {
-        // 읽기 전용 페이지가 있다면 그쪽으로, 없으면 안내
         if (resume.isPublic) navigate(`/resumes/${resume.id}`);
         else alert("다른 사용자의 이력서는 열람할 수 없어요.");
       }
