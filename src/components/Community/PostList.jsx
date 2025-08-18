@@ -1,90 +1,132 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import '../css/PostList.css';
 import axios from 'axios';
-axios.defaults.withCredentials = true; // 쿠키 전송 허용
 import { useNavigate } from 'react-router-dom';
 
-const formatDate = (isoString) => {
-  const date = new Date(isoString)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}.${month}.${day}`
-}
+/** 서버 포맷("yyyy-MM-dd HH:mm:ss")/ISO 모두 대응해서 yyyy.MM.dd 출력 */
+const formatDate = (v) => {
+  if (!v) return '';
+  if (typeof v === 'string') {
+    // "yyyy-MM-dd HH:mm:ss"
+    if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(v)) {
+      const [d] = v.split(' ');
+      const [y, m, d2] = d.split('-');
+      return `${y}.${m}.${d2}`;
+    }
+    // ISO 시도
+    const dt = new Date(v);
+    if (!Number.isNaN(dt.getTime())) {
+      const y = dt.getFullYear();
+      const m = String(dt.getMonth() + 1).padStart(2, '0');
+      const d2 = String(dt.getDate()).padStart(2, '0');
+      return `${y}.${m}.${d2}`;
+    }
+    return v; // 최후의 폴백
+  }
+  if (v instanceof Date) {
+    const y = v.getFullYear();
+    const m = String(v.getMonth() + 1).padStart(2, '0');
+    const d2 = String(v.getDate()).padStart(2, '0');
+    return `${y}.${m}.${d2}`;
+  }
+  return '';
+};
+
+/** <time dateTime="...">에 넣기 위한 값 (서버 포맷 -> ISO 유사) */
+const toDateTimeAttr = (v) => {
+  if (!v || typeof v !== 'string') return '';
+  // "yyyy-MM-dd HH:mm:ss" -> "yyyy-MM-ddTHH:mm:ss"
+  if (v.includes(' ') && !v.includes('T')) return v.replace(' ', 'T');
+  return v;
+};
+
+/** HTML 제거 + 공백 정리 */
+const stripHtml = (html) => {
+  if (!html) return '';
+  return html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+};
 
 const PostList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [posts, setPosts] = useState([]);
-  const [visibleCount, setVisibleCount] = useState(6); // 보여줄 게시글 개수
-  
+  const [loading, setLoading] = useState(true);
+  const [errMsg, setErrMsg] = useState('');
+  const [visibleCount, setVisibleCount] = useState(6);
 
-    useEffect(() => {
-      const data = 
-    axios.get("http://localhost:8080/community/list", ) // 백엔드 API 주소
-      .then(res => {
-        setPosts(res.data ?? []); // 전체 게시글
-      })
-      .catch(err => {
-        console.error("게시글 불러오기 실패:", err)
-        setPosts([])
-      });
-      }, []);
-
-   // 조회수,댓글 수에 따라 인기글 정렬   
-  const popularPosts = useMemo(() => {
-    if (!posts?.length) return []
-    return [...posts]
-      .map(p => ({ ...p, _score: (p.viewCount ?? 0) + (p.commentCount ?? 0) * 10 }))
-      .sort((a, b) => b._score - a._score) //상위 3개
-      .slice(0, 3)
-  }, [posts])
-
-  //네비게이트
   const navigate = useNavigate();
 
-  const addPost = () =>{
-    navigate('/postlist/addpost');
-  }
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    setErrMsg('');
 
-  const goDetail = (id) =>
-  {
-    navigate(`/postlist/detail/${id}`);
-  }
+    axios.get('http://localhost:8080/community/list', {
+      withCredentials: false,                        // 쿠키 미전송
+      headers: { Authorization: undefined },         // 인터셉터 무력화
+      signal: controller.signal                      // 언마운트 시 취소
+    })
+      .then(res => {
+        const arr = Array.isArray(res.data) ? res.data : [];
+        setPosts(arr);
+      })
+      .catch(err => {
+        if (axios.isCancel(err)) return;
+        console.error('게시글 불러오기 실패:', err);
+        setErrMsg('게시글을 불러오지 못했어.');
+        setPosts([]);
+      })
+      .finally(() => setLoading(false));
 
-  const goGroupChat = () => {
-    navigate('/group-chat');
-  }  
+    return () => controller.abort();
+  }, []);
 
-  // 더보기 버튼 클릭 핸들러 (토글 방식)
+  // 검색어 바뀌면 목록을 다시 6개부터 보여주자
+  useEffect(() => {
+    setVisibleCount(6);
+  }, [searchTerm]);
+
+  const lower = (v) => (v ?? '').toString().toLowerCase();
+
+  const filteredPosts = useMemo(() => {
+    const q = lower(searchTerm.trim());
+    if (!q) return posts;
+    return posts.filter(p =>
+      lower(p.title).includes(q) ||
+      lower(p.content).includes(q) ||
+      lower(p.userName).includes(q)
+    );
+  }, [posts, searchTerm]);
+
+  // 목록 축소(검색 등)로 길이가 줄면 visibleCount도 보정
+ useEffect(() => {
+  if (posts.length > 0) setVisibleCount(5);
+}, [posts.length]);
+
+  // 인기글 (조회수 + 댓글*10) Top3
+  const popularPosts = useMemo(() => {
+    if (!posts?.length) return [];
+    return [...posts]
+      .map(p => ({ ...p, _score: (p.viewCount ?? 0) + (p.commentCount ?? 0) * 10 }))
+      .sort((a, b) => b._score - a._score)
+      .slice(0, 3);
+  }, [posts]);
+
+  // 6개씩 잘라서 보여줄 목록
+  const visiblePosts = useMemo(() => filteredPosts.slice(0, visibleCount), [filteredPosts, visibleCount]);
+
+  const hasMorePosts = filteredPosts.length > 5; // 더보기 버튼 노출 조건(기존 로직 유지)
+
   const handleLoadMore = () => {
     if (visibleCount >= filteredPosts.length) {
-      // 모든 게시글이 보이는 상태면 6개로 접기
-      setVisibleCount(6);
+      setVisibleCount(5); // 접기
     } else {
-      // 6개씩 더 보이기
-      setVisibleCount(prev => Math.min(prev + 6, filteredPosts.length));
+      setVisibleCount(prev => Math.min(prev + 5, filteredPosts.length));
     }
-  }
+  };
 
-const lower = (v) => (v ?? '').toString().toLowerCase();
- const filteredPosts = useMemo(() => {
-  const q = lower(searchTerm.trim());
-  if (!q) return posts;
-  return posts.filter(p =>
-    lower(p.title).includes(q) ||
-    lower(p.content).includes(q) ||
-    lower(p.userName).includes(q)
-  );
-}, [posts, searchTerm]);
-
-// 보여줄 게시글들 (6개씩)
-const visiblePosts = useMemo(() => {
-  return filteredPosts.slice(0, visibleCount);
-}, [filteredPosts, visibleCount]);
-
-// 더보기 버튼 표시 여부 (게시글이 6개 이상일 때만)
-const hasMorePosts = filteredPosts.length > 6;
-
+  const addPost = () => navigate('/postlist/addpost');
+  const goDetail = (id) => navigate(`/postlist/detail/${id}`);
+  const goGroupChat = () => navigate('/group-chat');
 
   return (
     <div className="pl-page">
@@ -92,32 +134,33 @@ const hasMorePosts = filteredPosts.length > 6;
         <section className="pl-popular" aria-label="인기글 추천">
           <div className="pl-popular-head">
             <h2 className="pl-popular-title">조회수가 많은 글이에요</h2>
-            <p><button type='button' onClick={addPost}>글 등록하기</button> </p>
-            <p><button type='button' onClick={goGroupChat}>그룹 채팅방</button></p>          
+            <p><button type="button" onClick={addPost}>글 등록하기</button></p>
+            <p><button type="button" onClick={goGroupChat}>그룹 채팅방</button></p>
           </div>
 
           <div className="pl-popular-grid">
-            {popularPosts.map((item) => (
-              <a key={item.id} onClick={(e) => {
-                e.preventDefault();
-                goDetail(item.id);
-              }} href="#" className="pl-popular-item">
+            {popularPosts.map(item => (
+              <button
+                type="button"
+                key={item.id}
+                onClick={() => goDetail(item.id)}
+                className="pl-popular-item"
+              >
                 <span className="pl-badge">인기글</span>
                 <h3 className="pl-popular-item-title">{item.title}</h3>
-                <p className="pl-popular-item-preview">{item.content? item.content.replace(/<[^>]+>/g, '').replace(/\n/g, ' '): ''}</p>
+                <p className="pl-popular-item-preview">{stripHtml(item.content)}</p>
                 <div className="pl-popular-meta">
-                  <span>댓글 {item.commentCount}</span>
+                  <span>댓글 {item.commentCount ?? 0}</span>
                   <span className="pl-meta-sep">|</span>
-                  <span>조회 {item.viewCount}</span>
+                  <span>조회 {item.viewCount ?? 0}</span>
                 </div>
-              </a>
+              </button>
             ))}
           </div>
         </section>
 
         <header className="pl-header">
           <h1 className="pl-title">자유게시판</h1>
-          <p></p>
           <div className="pl-actions">
             <input
               type="text"
@@ -130,47 +173,60 @@ const hasMorePosts = filteredPosts.length > 6;
           </div>
         </header>
 
-        <ul className="pl-list" role="list">
-          {visiblePosts.map((post) => (
-            <li key={post.id} className="pl-card">
-              <a style={{textDecoration:'none'}} href='#' onClick={(e)=>{
-                e.preventDefault();
-                goDetail(post.id)
-              }} className="pl-card-title">{post.title}</a>
-              <p className="pl-card-preview">{post.content? post.content.replace(/<[^>]+>/g, '').replace(/\n/g, ' '): ''}</p>
-              <div className="pl-card-footer">
-                <div className="pl-card-meta">
-                  <span className="pl-meta-author">{post.userName}</span>
-                  <span className="pl-meta-sep" aria-hidden="true">·</span>
-                  <time className="pl-meta-date" dateTime={post.createdAt}>{formatDate(post.createdAt)}</time>
-                </div>
-                <div className="pl-card-stats" aria-label="게시글 통계">
-                  <span className="pl-stat">댓글 {post.commentCount}</span>
-                  <span className="pl-stat">조회 {post.viewCount}</span>
-                </div>
-              </div>
-            </li>
-          ))}
-          {filteredPosts.length === 0 && (
-            <li className="pl-empty">등록된 게시글이 없습니다</li> 
-          )}
-        </ul>
+        {loading && <div className="pl-loading" aria-live="polite">불러오는 중…</div>}
+        {!loading && errMsg && <div className="pl-error" role="alert">{errMsg}</div>}
 
-        {/* 더보기 버튼 */}
-        {hasMorePosts && (
-          <div className="pl-load-more">
-            <button 
-              type="button" 
-              className="pl-load-more-btn"
-              onClick={handleLoadMore}
-            >
-              {visibleCount >= filteredPosts.length ? '접기' : `더보기`}
-            </button>
-          </div>
+        {!loading && !errMsg && (
+          <>
+            <ul className="pl-list" role="list">
+              {visiblePosts.map(post => (
+                <li key={post.id} className="pl-card">
+                  <button
+                    type="button"
+                    onClick={() => goDetail(post.id)}
+                    className="pl-card-title pl-as-link"
+                    title={post.title}
+                  >
+                    {post.title}
+                  </button>
+                  <p className="pl-card-preview">{stripHtml(post.content)}</p>
+                  <div className="pl-card-footer">
+                    <div className="pl-card-meta">
+                      <span className="pl-meta-author">{post.userName ?? '탈퇴회원'}</span>
+                      <span className="pl-meta-sep" aria-hidden="true">·</span>
+                      <time className="pl-meta-date" dateTime={toDateTimeAttr(post.createdAt)}>
+                        {formatDate(post.createdAt)}
+                      </time>
+                    </div>
+                    <div className="pl-card-stats" aria-label="게시글 통계">
+                      <span className="pl-stat">댓글 {post.commentCount ?? 0}</span>
+                      <span className="pl-stat">조회 {post.viewCount ?? 0}</span>
+                    </div>
+                  </div>
+                </li>
+              ))}
+
+              {filteredPosts.length === 0 && (
+                <li className="pl-empty">등록된 게시글이 없습니다</li>
+              )}
+            </ul>
+
+            {hasMorePosts && (
+              <div className="pl-load-more">
+                <button
+                  type="button"
+                  className="pl-load-more-btn"
+                  onClick={handleLoadMore}
+                >
+                  {visibleCount >= filteredPosts.length ? '접기' : '더보기'}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PostList
+export default PostList;

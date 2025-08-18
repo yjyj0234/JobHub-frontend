@@ -10,7 +10,7 @@ export default function GroupChat() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await axios.get("http://localhost:8080/group-chat/rooms");
+      const { data } = await axios.get("http://localhost:8080/group-chat/rooms/explore");
       setRooms(data ?? []);
     })();
   }, []);
@@ -23,9 +23,11 @@ export default function GroupChat() {
     setName("");
   };
 
-  const handleEnter = (id) => {
-    navigate(`/group-chat/rooms/${id}`); // 여기서 바로 이동
-  };
+  const handleEnter = async (id) => {
+  // 미리 join해서 내 목록에도 바로 반영되게 할 수 있음 (옵션)
+  try { await axios.post(`http://localhost:8080/group-chat/rooms/${id}/join`); } catch (_) {}
+  navigate(`/group-chat/rooms/${id}`);
+};
 
   return (
     <div>
