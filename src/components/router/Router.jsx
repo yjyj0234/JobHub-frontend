@@ -78,6 +78,7 @@ function AppRouter() {
   return (
     <Routes>
       <Route element={<MainLayout />}>
+        {/* 홈/리스트 */}
         <Route path="/" element={<HomePage />} />
         <Route path="/resumes" element={<ResumeListPage />} />
         <Route path="/resumes/new" element={<ResumeEditorPage />} />

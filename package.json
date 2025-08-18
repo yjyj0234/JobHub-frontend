@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "clean-build": "rimraf dist node_modules/.vite && vite build"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-react": "^11.0.0",
@@ -31,6 +32,7 @@
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
     "globals": "^16.3.0",
+    "rimraf": "^6.0.1",
     "vite": "^7.0.4"
   }
 }

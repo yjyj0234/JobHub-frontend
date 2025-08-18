@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import '../css/Form.css';
+import React, { useState } from "react";
+import "../css/Form.css";
 
 function PortfolioForm({ data, onUpdate }) {
   const [formData, setFormData] = useState(data || {});
@@ -20,7 +20,7 @@ function PortfolioForm({ data, onUpdate }) {
             type="url"
             id="portfolioUrl"
             name="url"
-            value={formData.url || ''}
+            value={formData.url || ""}
             onChange={handleChange}
             placeholder="https://example.com"
           />
@@ -30,7 +30,7 @@ function PortfolioForm({ data, onUpdate }) {
           <textarea
             id="portfolioDesc"
             name="description"
-            value={formData.description || ''}
+            value={formData.description || ""}
             onChange={handleChange}
             placeholder="포트폴리오에 대한 간단한 설명을 입력하세요."
           />

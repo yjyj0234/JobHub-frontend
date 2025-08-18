@@ -4,9 +4,9 @@ import { ChevronLeft, FileUp } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 
 function AuthPage({ onSuccess }) {
-  const { login, signup } = useAuth();
+  const { login, signup, userId, isAuthed } = useAuth();
   const [mode, setMode] = useState("login");
-  const [accountType, setAccountType] = useState("user");
+  const [accountType, setAccountType] = useState("USER");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -41,21 +41,28 @@ function AuthPage({ onSuccess }) {
         if (password !== confirmPassword)
           throw new Error("비밀번호가 일치하지 않습니다.");
 
-        const userData = { email, password, accountType };
-        if (accountType === "company") {
+        if (accountType === "COMPANY") {
           if (!companyName) throw new Error("회사명을 입력해주세요.");
           if (!businessRegistrationNumber)
             throw new Error("사업자등록번호를 입력해주세요.");
           if (!businessCertificationFile)
             throw new Error("기업 인증 파일을 첨부해주세요.");
 
-          userData.companyName = companyName;
-          userData.businessRegistrationNumber = businessRegistrationNumber;
-          userData.businessCertificationFile = businessCertificationFile;
+          const fd = new FormData();
+          fd.append("email", email);
+          fd.append("password", password);
+          fd.append("userType", accountType);
+          fd.append("companyName", companyName);
+          fd.append("businessRegistrationNumber", businessRegistrationNumber);
+          fd.append("businessCertificationFile", businessCertificationFile);
+          await signup(fd);
+        } else {
+          const userData = { email, password, accountType };
+          await signup(userData);
         }
-        await signup(userData);
       }
       onSuccess();
+      resetFormState();
     } catch (err) {
       setError(err.message || "오류가 발생했습니다. 다시 시도해주세요.");
     } finally {
@@ -72,7 +79,10 @@ function AuthPage({ onSuccess }) {
           <div className="type-selection">
             <button
               type="button"
-              onClick={() => setAccountType("USER") || setMode("register")}
+              onClick={() => {
+                setAccountType("USER");
+                setMode("register");
+              }}
               className="type-button"
               disabled={isLoading}
             >
@@ -80,7 +90,10 @@ function AuthPage({ onSuccess }) {
             </button>
             <button
               type="button"
-              onClick={() => setAccountType("COMPANY") || setMode("register")}
+              onClick={() => {
+                setAccountType("COMPANY");
+                setMode("register");
+              }}
               className="type-button"
               disabled={isLoading}
             >
@@ -116,7 +129,7 @@ function AuthPage({ onSuccess }) {
               <ChevronLeft size={24} />
             </button>
             <h2 className="auth-title">
-              {accountType === "user" ? "개인 회원가입" : "기업 회원가입"}
+              {accountType === "USER" ? "개인 회원가입" : "기업 회원가입"}{" "}
             </h2>
           </div>
           <form className="auth-form" onSubmit={handleSubmit}>
@@ -157,7 +170,7 @@ function AuthPage({ onSuccess }) {
                     id="businessCertificationFile"
                     accept=".pdf,.jpg,.jpeg,.png"
                     onChange={(e) =>
-                      setBusinessCertificationFile(e.target.files?.[0])
+                      setBusinessCertificationFile(e.target.files?.[0] || null)
                     }
                     disabled={isLoading}
                     required
@@ -264,6 +277,13 @@ function AuthPage({ onSuccess }) {
 
   return (
     <div className="auth-content">
+      {/* ADDED: 로그인되어 있고 userId가 있으면 화면에 표시 */}
+      {isAuthed && userId && (
+        <p className="auth-subtitle" style={{ marginBottom: 8 }}>
+          내 ID: <strong>{userId}</strong>
+        </p>
+      )}
+
       {error && <p className="auth-error">{error}</p>}
       {renderContent()}
     </div>
