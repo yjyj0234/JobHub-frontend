@@ -7,7 +7,7 @@ import { Search, MapPin, Briefcase, ChevronDown, Info } from "lucide-react";
 import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8080/api";
-
+axios.defaults.withCredentials = true;
 const useOnClickOutside = (ref, handler) => {
   useEffect(() => {
     const listener = (event) => {
@@ -159,7 +159,7 @@ const DropdownPanel = ({
 };
 
 function GlobalHeader({ onLoginClick }) {
-  const { isLoggedIn, user, logout } = useAuth();
+  const { isAuthed, user, logout } = useAuth();
   const navigate = useNavigate();
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -263,7 +263,7 @@ function GlobalHeader({ onLoginClick }) {
   };
 
   const handleResumeClick = () => {
-    if (isLoggedIn) navigate("/resumes");
+    if (isAuthed) navigate("/resumes");
     else onLoginClick();
   };
 
@@ -304,9 +304,20 @@ function GlobalHeader({ onLoginClick }) {
     </>
   );
 
+
   //로그인 했을 때 role이 company 인지 확인하는 함수
   const isCompanyUser = (u) => (u?.role ?? "").toLowerCase() === "company";
   const isCompany = isLoggedIn && isCompanyUser(user);
+
+  //회사 계정일 시 공고등록버튼만 보이고 이력서 버튼은 안보이게
+  const isCompanyUser = (u) => {
+    const t = (u?.user_type ?? u?.userType ?? "").toString().toLowerCase();
+    return (
+      t === "company" || t === "company_hr" || t === "employer" || t === "hr"
+    );
+  };
+  const isCompany = isAuthed && isCompanyUser(user);
+
 
   return (
     <header className={`global-header ${isScrolled ? "scrolled" : ""}`}>
@@ -371,7 +382,7 @@ function GlobalHeader({ onLoginClick }) {
               </div>
             )}
             <div className="auth-buttons">
-              {isLoggedIn ? (
+              {isAuthed ? (
                 <button
                   type="button"
                   onClick={handleLogout}

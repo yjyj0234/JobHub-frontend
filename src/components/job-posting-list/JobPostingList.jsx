@@ -1,6 +1,9 @@
 // src/components/JobPostingList.jsx
 import React, { useState, useEffect } from "react";
+
 import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+
 import {
   Search,
   MapPin,
@@ -561,8 +564,8 @@ const JobFilters = ({ onFilterChange }) => {
 };
 
 // ==================== 채용공고 아이템 ====================
-const JobItem = ({ job, onBookmark }) => (
-  <div className="job-item">
+const JobItem = ({ job, onBookmark, onOpen }) => (
+  <div className="job-item" onClick={onOpen}>
     <div className="job-item-header">
       <div className="company-section">
         <div className="company-logo-box">
@@ -578,7 +581,10 @@ const JobItem = ({ job, onBookmark }) => (
       </div>
       <button
         className={`bookmark-button ${job.bookmarked ? "active" : ""}`}
-        onClick={() => onBookmark(job.id)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onBookmark(job.id);
+        }}
       >
         <Star size={24} fill={job.bookmarked ? "currentColor" : "none"} />
       </button>
@@ -875,6 +881,15 @@ const JobPosting = () => {
     setFilteredJobs(sorted);
   };
 
+  const navigate = useNavigate();
+
+  //디테일페이지 이동
+  const openDetail = React.useCallback((jobId) => {
+    if (!jobId) return;
+    navigate(`/jobpostinglist/${jobId}`);
+  }, [navigate]);
+
+
   return (
     <div className="job-posting-container">
       <div className="job-posting-header">
@@ -917,7 +932,12 @@ const JobPosting = () => {
           )}
 
           {filteredJobs.map((job) => (
-            <JobItem key={job.id} job={job} onBookmark={toggleBookmark} />
+            <JobItem
+              key={job.id}
+              job={job}
+              onBookmark={toggleBookmark}
+              onOpen={() => openDetail(job.id)}
+            />
           ))}
         </div>
       </div>

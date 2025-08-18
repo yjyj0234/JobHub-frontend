@@ -49,6 +49,10 @@ const PostList = () => {
     navigate(`/postlist/detail/${id}`);
   }
 
+  const goGroupChat = () => {
+    navigate('/group-chat');
+  }  
+
   // 더보기 버튼 클릭 핸들러 (토글 방식)
   const handleLoadMore = () => {
     if (visibleCount >= filteredPosts.length) {
@@ -86,7 +90,8 @@ const hasMorePosts = filteredPosts.length > 6;
         <section className="pl-popular" aria-label="인기글 추천">
           <div className="pl-popular-head">
             <h2 className="pl-popular-title">조회수가 많은 글이에요</h2>
-            <p><button type='button' onClick={addPost}>글 등록하기</button> </p>          
+            <p><button type='button' onClick={addPost}>글 등록하기</button> </p>
+            <p><button type='button' onClick={goGroupChat}>그룹 채팅방</button></p>          
           </div>
 
           <div className="pl-popular-grid">
@@ -99,7 +104,7 @@ const hasMorePosts = filteredPosts.length > 6;
                 <h3 className="pl-popular-item-title">{item.title}</h3>
                 <p className="pl-popular-item-preview">{item.content? item.content.replace(/<[^>]+>/g, '').replace(/\n/g, ' '): ''}</p>
                 <div className="pl-popular-meta">
-                  <span>댓글 {item.comments}</span>
+                  <span>댓글 {item.commentCount}</span>
                   <span className="pl-meta-sep">|</span>
                   <span>조회 {item.viewCount}</span>
                 </div>
@@ -138,7 +143,7 @@ const hasMorePosts = filteredPosts.length > 6;
                   <time className="pl-meta-date" dateTime={post.createdAt}>{formatDate(post.createdAt)}</time>
                 </div>
                 <div className="pl-card-stats" aria-label="게시글 통계">
-                  <span className="pl-stat">댓글 {post.comments}</span>
+                  <span className="pl-stat">댓글 {post.commentCount}</span>
                   <span className="pl-stat">조회 {post.viewCount}</span>
                 </div>
               </div>

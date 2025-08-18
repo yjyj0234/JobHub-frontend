@@ -53,7 +53,7 @@ const AddPost = () => {
    const handleSubmit = async (e) => {
     e.preventDefault()
 
-    const data = {userId: 12, title, content}
+    const data = { title, content}
 
     try {
      await axios.post('http://localhost:8080/community/addpost', data)
