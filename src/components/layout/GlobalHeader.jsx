@@ -7,7 +7,7 @@ import { Search, MapPin, Briefcase, ChevronDown, Info } from "lucide-react";
 import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8080/api";
-
+axios.defaults.withCredentials = true;
 const useOnClickOutside = (ref, handler) => {
   useEffect(() => {
     const listener = (event) => {
@@ -159,7 +159,7 @@ const DropdownPanel = ({
 };
 
 function GlobalHeader({ onLoginClick }) {
-  const { isLoggedIn, user, logout } = useAuth();
+  const { isAuthed, user, logout } = useAuth();
   const navigate = useNavigate();
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -256,15 +256,13 @@ function GlobalHeader({ onLoginClick }) {
   };
 
   const handleResumeClick = () => {
-    if (isLoggedIn) navigate("/resumes");
+    if (isAuthed) navigate("/resumes");
     else onLoginClick();
   };
 
   const postList = () => navigate("/postlist");
 
   const jobPosting = () => navigate("/jobposting");
-
-  
 
   const toggleRegion = () => {
     setRegionOpen((prev) => !prev);
@@ -299,10 +297,14 @@ function GlobalHeader({ onLoginClick }) {
     </>
   );
 
-//로그인 했을 때 role이 company 인지 확인하는 함수
-const isCompanyUser = (u) => (u?.role ?? "").toLowerCase() === "company";
-const isCompany = isLoggedIn && isCompanyUser(user);
-
+  //회사 계정일 시 공고등록버튼만 보이고 이력서 버튼은 안보이게
+  const isCompanyUser = (u) => {
+    const t = (u?.user_type ?? u?.userType ?? "").toString().toLowerCase();
+    return (
+      t === "company" || t === "company_hr" || t === "employer" || t === "hr"
+    );
+  };
+  const isCompany = isAuthed && isCompanyUser(user);
 
   return (
     <header className={`global-header ${isScrolled ? "scrolled" : ""}`}>
@@ -312,15 +314,22 @@ const isCompany = isLoggedIn && isCompanyUser(user);
             <img src={logo} alt="JobHub 로고" />
           </Link>
           <nav className="nav">
+            <button type="button" onClick={() => navigate("/jobpostinglist")}>
+              채용정보
+            </button>
+            <button type="button" onClick={postList}>
+              커뮤니티
+            </button>
 
-            <button type="button" onClick={() => navigate('/jobpostinglist')}>채용정보</button>
-            <button type="button" onClick={postList}>커뮤니티</button>
-
-           {isCompany ? (
-              <button type="button" onClick={jobPosting}>공고 등록</button>
+            {isCompany ? (
+              <button type="button" onClick={jobPosting}>
+                공고 등록
+              </button>
             ) : (
               //role이 company가 아닌경우 이력서 버튼만 보이게
-              <button type="button" onClick={handleResumeClick}>이력서</button>
+              <button type="button" onClick={handleResumeClick}>
+                이력서
+              </button>
             )}
             <button type="button">취업툴</button>
             <button type="button">이력서 코칭 AI</button>
@@ -360,7 +369,7 @@ const isCompany = isLoggedIn && isCompanyUser(user);
               </div>
             )}
             <div className="auth-buttons">
-              {isLoggedIn ? (
+              {isAuthed ? (
                 <button
                   type="button"
                   onClick={handleLogout}
