@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import '../css/PostList.css';
 import axios from 'axios';
+axios.defaults.withCredentials = true; // 쿠키 전송 허용
 import { useNavigate } from 'react-router-dom';
 
 const formatDate = (isoString) => {
@@ -18,7 +19,8 @@ const PostList = () => {
   
 
     useEffect(() => {
-    axios.get("http://localhost:8080/community/list") // 백엔드 API 주소
+      const data = 
+    axios.get("http://localhost:8080/community/list", ) // 백엔드 API 주소
       .then(res => {
         setPosts(res.data ?? []); // 전체 게시글
       })
@@ -32,7 +34,7 @@ const PostList = () => {
   const popularPosts = useMemo(() => {
     if (!posts?.length) return []
     return [...posts]
-      .map(p => ({ ...p, _score: (p.viewCount ?? 0) + (p.comments ?? 0) * 10 }))
+      .map(p => ({ ...p, _score: (p.viewCount ?? 0) + (p.commentCount ?? 0) * 10 }))
       .sort((a, b) => b._score - a._score) //상위 3개
       .slice(0, 3)
   }, [posts])
