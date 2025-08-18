@@ -19,6 +19,7 @@ import {
   PlusCircle,
   X,
   Camera,
+  Pencil,
 } from "lucide-react";
 import {
   ExperienceForm,
@@ -106,20 +107,25 @@ const ActivityItemForm = ({ data = {}, onUpdate }) => {
 /* ---------------------- 프로필 헤더 ---------------------- */
 const ProfileHeader = ({ profile, onUpdate, onSave }) => {
   const fileInputRef = useRef(null);
+  const [isEditing, setIsEditing] = useState(false);
+
   if (!profile)
     return <div className="profile-header loading">프로필 정보 로딩 중...</div>;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "regionName") {
-      // regionName 수정 시 regionId 초기화 → 서버가 name으로 탐색
       onUpdate({ ...profile, regionName: value, regionId: null });
     } else {
       onUpdate({ ...profile, [name]: value });
     }
   };
 
-  const handlePhotoClick = () => fileInputRef.current?.click();
+  const handlePhotoClick = () => {
+    if (!isEditing) return; // 편집 중에만 변경 허용
+    fileInputRef.current?.click();
+  };
+
   const handlePhotoChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -129,22 +135,91 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
     reader.readAsDataURL(file);
   };
 
+  const handleSaveClick = async () => {
+    try {
+      await onSave?.();
+    } finally {
+      setIsEditing(false); // 저장 후 편집 종료
+    }
+  };
+
   return (
-    <div className="profile-header">
-      <div className="profile-photo-edit-wrapper" onClick={handlePhotoClick}>
+    <div className="profile-header" style={{ position: "relative" }}>
+      {/* 오른쪽 상단 편집 토글 */}
+      {!isEditing ? (
+        <button
+          type="button"
+          className="profile-edit-toggle"
+          onClick={() => setIsEditing(true)}
+          title="프로필 수정"
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "6px 10px",
+            borderRadius: 8,
+            border: "1px solid #ddd",
+            background: "#fff",
+            cursor: "pointer",
+          }}
+        >
+          <Pencil size={16} />
+          <span style={{ fontSize: 12 }}>수정</span>
+        </button>
+      ) : (
+        <div
+          className="profile-edit-actions"
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            display: "flex",
+            gap: 8,
+          }}
+        >
+          <button
+            type="button"
+            className="action-btn primary"
+            onClick={handleSaveClick}
+          >
+            <Save size={16} /> 저장
+          </button>
+          <button
+            type="button"
+            className="action-btn"
+            onClick={() => setIsEditing(false)}
+            title="편집 취소"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
+      <div
+        className="profile-photo-edit-wrapper"
+        onClick={handlePhotoClick}
+        style={{ cursor: isEditing ? "pointer" : "default" }}
+      >
         <div className="profile-photo-wrapper">
           {profile.profileImageUrl ? (
             <img
               src={profile.profileImageUrl}
               alt={profile.name || "프로필"}
               className="profile-photo"
+              style={{ opacity: isEditing ? 1 : 0.9 }}
             />
           ) : (
             <div className="profile-photo-placeholder">
               <User size={40} />
             </div>
           )}
-          <div className="photo-edit-icon">
+          <div
+            className="photo-edit-icon"
+            style={{ opacity: isEditing ? 1 : 0.4 }}
+          >
             <Camera size={16} />
           </div>
         </div>
@@ -154,6 +229,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
           style={{ display: "none" }}
           onChange={handlePhotoChange}
           accept="image/*"
+          disabled={!isEditing}
         />
       </div>
 
@@ -165,6 +241,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
           value={profile.name || ""}
           onChange={handleChange}
           placeholder="이름"
+          readOnly={!isEditing}
         />
         <input
           type="text"
@@ -173,6 +250,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
           value={profile.headline || ""}
           onChange={handleChange}
           placeholder="한 줄 소개를 작성해주세요."
+          readOnly={!isEditing}
         />
 
         <div className="profile-info-grid">
@@ -183,6 +261,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
               value={profile.phone || ""}
               onChange={handleChange}
               placeholder="연락처"
+              readOnly={!isEditing}
             />
           </div>
           <div className="profile-info-item">
@@ -192,6 +271,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
               value={profile.regionName || ""}
               onChange={handleChange}
               placeholder="거주지역 (예: 서울특별시)"
+              readOnly={!isEditing}
             />
           </div>
           <div className="profile-info-item">
@@ -204,6 +284,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
                 onUpdate({ ...profile, birthDate: e.target.value })
               }
               placeholder="생년월일"
+              disabled={!isEditing} // date는 disabled가 더 자연스러움
             />
           </div>
         </div>
@@ -215,14 +296,18 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
             value={profile.summary || ""}
             onChange={handleChange}
             placeholder="간단한 자기소개를 입력해주세요."
+            readOnly={!isEditing}
           />
         </div>
 
-        <div style={{ marginTop: 8 }}>
-          <button className="action-btn" onClick={onSave}>
-            <Save size={16} /> 프로필 저장
-          </button>
-        </div>
+        {/* 저장 버튼은 편집 중에만 노출 */}
+        {isEditing && (
+          <div style={{ marginTop: 8 }}>
+            <button className="action-btn" onClick={handleSaveClick}>
+              <Save size={16} /> 프로필 저장
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
