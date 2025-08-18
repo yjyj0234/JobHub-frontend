@@ -104,25 +104,30 @@ const ActivityItemForm = ({ data = {}, onUpdate }) => {
   );
 };
 
-/* ---------------------- 프로필 헤더 ---------------------- */
+/* ---------------------- 프로필 헤더 (레이아웃 수정됨) ---------------------- */
 const ProfileHeader = ({ profile, onUpdate, onSave }) => {
   const fileInputRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState(profile);
+
+  useEffect(() => {
+    setEditData(profile);
+  }, [profile]);
 
   if (!profile)
     return <div className="profile-header loading">프로필 정보 로딩 중...</div>;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    const newData = { ...editData, [name]: value };
     if (name === "regionName") {
-      onUpdate({ ...profile, regionName: value, regionId: null });
-    } else {
-      onUpdate({ ...profile, [name]: value });
+      newData.regionId = null;
     }
+    setEditData(newData);
   };
 
   const handlePhotoClick = () => {
-    if (!isEditing) return; // 편집 중에만 변경 허용
+    if (!isEditing) return;
     fileInputRef.current?.click();
   };
 
@@ -131,181 +136,168 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () =>
-      onUpdate({ ...profile, profileImageUrl: reader.result });
+      setEditData({ ...editData, profileImageUrl: reader.result });
     reader.readAsDataURL(file);
   };
 
   const handleSaveClick = async () => {
     try {
-      await onSave?.();
+      await onUpdate(editData);
+      await onSave(editData);
     } finally {
-      setIsEditing(false); // 저장 후 편집 종료
+      setIsEditing(false);
     }
   };
 
+  const handleCancelEdit = () => {
+    setEditData(profile);
+    setIsEditing(false);
+  };
+
   return (
-    <div className="profile-header" style={{ position: "relative" }}>
-      {/* 오른쪽 상단 편집 토글 */}
+    <div className="profile-header">
+      {/* --- 수정 버튼 (오른쪽 상단) --- */}
       {!isEditing ? (
         <button
           type="button"
           className="profile-edit-toggle"
           onClick={() => setIsEditing(true)}
           title="프로필 수정"
-          style={{
-            position: "absolute",
-            top: 8,
-            right: 8,
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "6px 10px",
-            borderRadius: 8,
-            border: "1px solid #ddd",
-            background: "#fff",
-            cursor: "pointer",
-          }}
         >
           <Pencil size={16} />
-          <span style={{ fontSize: 12 }}>수정</span>
+          <span>수정</span>
         </button>
       ) : (
-        <div
-          className="profile-edit-actions"
-          style={{
-            position: "absolute",
-            top: 8,
-            right: 8,
-            display: "flex",
-            gap: 8,
-          }}
-        >
-          <button
-            type="button"
-            className="action-btn primary"
-            onClick={handleSaveClick}
-          >
+        <div className="profile-edit-actions">
+          <button type="button" className="action-btn primary" onClick={handleSaveClick}>
             <Save size={16} /> 저장
           </button>
-          <button
-            type="button"
-            className="action-btn"
-            onClick={() => setIsEditing(false)}
-            title="편집 취소"
-          >
+          <button type="button" className="action-btn" onClick={handleCancelEdit} title="편집 취소">
             <X size={16} />
           </button>
         </div>
       )}
 
-      <div
-        className="profile-photo-edit-wrapper"
-        onClick={handlePhotoClick}
-        style={{ cursor: isEditing ? "pointer" : "default" }}
-      >
-        <div className="profile-photo-wrapper">
-          {profile.profileImageUrl ? (
-            <img
-              src={profile.profileImageUrl}
-              alt={profile.name || "프로필"}
-              className="profile-photo"
-              style={{ opacity: isEditing ? 1 : 0.9 }}
-            />
-          ) : (
-            <div className="profile-photo-placeholder">
-              <User size={40} />
-            </div>
-          )}
-          <div
-            className="photo-edit-icon"
-            style={{ opacity: isEditing ? 1 : 0.4 }}
-          >
-            <Camera size={16} />
+      <div className="profile-main-info">
+        {/* --- 프로필 포토 (왼쪽) --- */}
+        <div
+          className="profile-photo-edit-wrapper"
+          onClick={handlePhotoClick}
+          style={{ cursor: isEditing ? "pointer" : "default" }}
+        >
+          <div className="profile-photo-wrapper">
+            {(isEditing ? editData.profileImageUrl : profile.profileImageUrl) ? (
+              <img
+                src={isEditing ? editData.profileImageUrl : profile.profileImageUrl}
+                alt={profile.name || "프로필"}
+                className="profile-photo"
+              />
+            ) : (
+              <div className="profile-photo-placeholder">
+                <User size={40} />
+              </div>
+            )}
+            {isEditing && (
+              <div className="photo-edit-icon">
+                <Camera size={16} />
+              </div>
+            )}
           </div>
-        </div>
-        <input
-          type="file"
-          ref={fileInputRef}
-          style={{ display: "none" }}
-          onChange={handlePhotoChange}
-          accept="image/*"
-          disabled={!isEditing}
-        />
-      </div>
-
-      <div className="profile-details">
-        <input
-          type="text"
-          name="name"
-          className="profile-name-input"
-          value={profile.name || ""}
-          onChange={handleChange}
-          placeholder="이름"
-          readOnly={!isEditing}
-        />
-        <input
-          type="text"
-          name="headline"
-          className="profile-headline-input"
-          value={profile.headline || ""}
-          onChange={handleChange}
-          placeholder="한 줄 소개를 작성해주세요."
-          readOnly={!isEditing}
-        />
-
-        <div className="profile-info-grid">
-          <div className="profile-info-item">
-            <Phone size={14} />
-            <input
-              name="phone"
-              value={profile.phone || ""}
-              onChange={handleChange}
-              placeholder="연락처"
-              readOnly={!isEditing}
-            />
-          </div>
-          <div className="profile-info-item">
-            <MapPin size={14} />
-            <input
-              name="regionName"
-              value={profile.regionName || ""}
-              onChange={handleChange}
-              placeholder="거주지역 (예: 서울특별시)"
-              readOnly={!isEditing}
-            />
-          </div>
-          <div className="profile-info-item">
-            <Calendar size={14} />
-            <input
-              type="date"
-              name="birthDate"
-              value={profile.birthDate || ""}
-              onChange={(e) =>
-                onUpdate({ ...profile, birthDate: e.target.value })
-              }
-              placeholder="생년월일"
-              disabled={!isEditing} // date는 disabled가 더 자연스러움
-            />
-          </div>
-        </div>
-
-        <div className="profile-info-wide">
-          <label>자기소개</label>
-          <textarea
-            name="summary"
-            value={profile.summary || ""}
-            onChange={handleChange}
-            placeholder="간단한 자기소개를 입력해주세요."
-            readOnly={!isEditing}
+          <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            onChange={handlePhotoChange}
+            accept="image/*"
+            disabled={!isEditing}
           />
         </div>
 
-        {/* 저장 버튼은 편집 중에만 노출 */}
-        {isEditing && (
-          <div style={{ marginTop: 8 }}>
-            <button className="action-btn" onClick={handleSaveClick}>
-              <Save size={16} /> 프로필 저장
-            </button>
+        {/* --- 개인 정보 (중앙) --- */}
+        <div className="profile-details">
+          {isEditing ? (
+            <input
+              type="text"
+              name="name"
+              className="profile-name-input"
+              value={editData.name || ""}
+              onChange={handleChange}
+              placeholder="이름"
+            />
+          ) : (
+            <h2 className="profile-name-display">{profile.name || "이름"}</h2>
+          )}
+          
+          {isEditing ? (
+            <input
+              type="text"
+              name="headline"
+              className="profile-headline-input"
+              value={editData.headline || ""}
+              onChange={handleChange}
+              placeholder="한 줄 소개를 작성해주세요."
+            />
+          ) : (
+            <p className="profile-headline-display">{profile.headline || "한 줄 소개"}</p>
+          )}
+
+          <div className="profile-info-grid">
+            <div className="profile-info-item">
+              <Phone size={14} />
+              {isEditing ? (
+                <input
+                  name="phone"
+                  value={editData.phone || ""}
+                  onChange={handleChange}
+                  placeholder="연락처"
+                />
+              ) : (
+                <span>{profile.phone || "-"}</span>
+              )}
+            </div>
+            <div className="profile-info-item">
+              <MapPin size={14} />
+              {isEditing ? (
+                <input
+                  name="regionName"
+                  value={editData.regionName || ""}
+                  onChange={handleChange}
+                  placeholder="거주지역"
+                />
+              ) : (
+                <span>{profile.regionName || "-"}</span>
+              )}
+            </div>
+            <div className="profile-info-item">
+              <Calendar size={14} />
+              {isEditing ? (
+                <input
+                  type="date"
+                  name="birthDate"
+                  value={editData.birthDate || ""}
+                  onChange={handleChange}
+                />
+              ) : (
+                <span>{profile.birthDate || "-"}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* --- 자기소개 (하단) --- */}
+      <div className="profile-info-wide">
+        <label>자기소개</label>
+        {isEditing ? (
+          <textarea
+            name="summary"
+            value={editData.summary || ""}
+            onChange={handleChange}
+            placeholder="간단한 자기소개를 입력해주세요."
+          />
+        ) : (
+          <div className="summary-display">
+            {profile.summary || "자기소개가 없습니다."}
           </div>
         )}
       </div>
@@ -482,8 +474,8 @@ function ResumeEditorPage() {
   }, [user]);
 
   /* ---------- 프로필 저장 ---------- */
-  const handleSaveProfile = async () => {
-    if (!userProfile) return;
+  const handleSaveProfile = async (profileToSave) => {
+    if (!profileToSave) return;
     const uid = getUid(user);
     if (!uid) {
       alert("로그인이 필요합니다.");
@@ -491,20 +483,20 @@ function ResumeEditorPage() {
     }
 
     const parsedRegionId =
-      userProfile.regionId !== "" && userProfile.regionId != null
-        ? toIntOrNull(userProfile.regionId)
+    profileToSave.regionId !== "" && profileToSave.regionId != null
+        ? toIntOrNull(profileToSave.regionId)
         : null;
 
     const payload = {
-      name: trimOrNull(userProfile.name),
-      phone: trimOrNull(userProfile.phone),
+      name: trimOrNull(profileToSave.name),
+      phone: trimOrNull(profileToSave.phone),
       birthYear: null, // 연도 컬럼은 사용 안 함(생년월일로 전환)
-      birthDate: userProfile.birthDate || null, // "YYYY-MM-DD"
-      profileImageUrl: trimOrNull(userProfile.profileImageUrl),
-      headline: trimOrNull(userProfile.headline),
-      summary: trimOrNull(userProfile.summary),
+      birthDate: profileToSave.birthDate || null, // "YYYY-MM-DD"
+      profileImageUrl: trimOrNull(profileToSave.profileImageUrl),
+      headline: trimOrNull(profileToSave.headline),
+      summary: trimOrNull(profileToSave.summary),
       regionId: parsedRegionId,
-      regionName: parsedRegionId ? null : trimOrNull(userProfile.regionName),
+      regionName: parsedRegionId ? null : trimOrNull(profileToSave.regionName),
     };
 
     try {
