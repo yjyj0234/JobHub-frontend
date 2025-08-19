@@ -53,7 +53,7 @@ export default function PostDetail() {
     console.log('요청 URL:', `http://localhost:8080/community/${id}`);
 
     try {
-      // FIX: DELETE 메서드로, withCredentials는 옵션 객체에!
+      // FIX: DELETE 메서드로, withCredentials는 옵션 객체에
       const response = await axios.delete(`http://localhost:8080/community/${id}`, {
         withCredentials: true,
       });

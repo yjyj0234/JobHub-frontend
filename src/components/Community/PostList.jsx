@@ -67,6 +67,7 @@ const PostList = () => {
     })
       .then(res => {
         const arr = Array.isArray(res.data) ? res.data : [];
+         console.log('sample post:', res.data?.[0]);
         setPosts(arr);
       })
       .catch(err => {
@@ -106,7 +107,7 @@ const PostList = () => {
   const popularPosts = useMemo(() => {
     if (!posts?.length) return [];
     return [...posts]
-      .map(p => ({ ...p, _score: (p.viewCount ?? 0) + (p.commentCount ?? 0) * 10 }))
+      .map(p => ({ ...p, _score: (p.viewCount ?? 0) * 10 }))
       .sort((a, b) => b._score - a._score)
       .slice(0, 3);
   }, [posts]);
@@ -128,14 +129,28 @@ const PostList = () => {
   const goDetail = (id) => navigate(`/postlist/detail/${id}`);
   const goGroupChat = () => navigate('/group-chat');
 
+  // 삭제되지 않은 댓글만 카운트
+const getVisibleCommentCount = (post) => {
+  if (Array.isArray(post?.comments)) {
+    return post.comments.filter(
+      c => c.content && c.content.trim().length > 0 // 빈 문자열/삭제 제외
+    ).length;
+  }
+  return post?.commentCount ?? 0;
+};
+  
+
+  
   return (
     <div className="pl-page">
       <div className="pl-container">
         <section className="pl-popular" aria-label="인기글 추천">
           <div className="pl-popular-head">
-            <h2 className="pl-popular-title">조회수가 많은 글이에요</h2>
-            <p><button type="button" onClick={addPost}>글 등록하기</button></p>
-            <p><button type="button" onClick={goGroupChat}>그룹 채팅방</button></p>
+            <div className="pl-popular-left">
+              <h2 className="pl-popular-title">조회수가 많은 글이에요</h2>
+              <button type="button" onClick={addPost}>글 등록하기</button>
+            </div>
+            <button type="button" className="group-chat-btn" onClick={goGroupChat}>그룹 채팅방</button>
           </div>
 
           <div className="pl-popular-grid">
@@ -148,9 +163,9 @@ const PostList = () => {
               >
                 <span className="pl-badge">인기글</span>
                 <h3 className="pl-popular-item-title">{item.title}</h3>
-                <p className="pl-popular-item-preview">{stripHtml(item.content)}</p>
+                <p className="pl-popular-item-preview">{stripHtml(item.content).length > 20 ? stripHtml(item.content).substring(0, 20) + '...' : stripHtml(item.content)}</p>
                 <div className="pl-popular-meta">
-                  <span>댓글 {item.commentCount ?? 0}</span>
+                  <span>댓글 {getVisibleCommentCount(item)}</span>
                   <span className="pl-meta-sep">|</span>
                   <span>조회 {item.viewCount ?? 0}</span>
                 </div>
@@ -189,7 +204,7 @@ const PostList = () => {
                   >
                     {post.title}
                   </button>
-                  <p className="pl-card-preview">{stripHtml(post.content)}</p>
+                  <p className="pl-card-preview">{stripHtml(post.content).length > 20 ? stripHtml(post.content).substring(0, 20) + '...' : stripHtml(post.content)}</p>
                   <div className="pl-card-footer">
                     <div className="pl-card-meta">
                       <span className="pl-meta-author">{post.userName ?? '탈퇴회원'}</span>
@@ -199,7 +214,7 @@ const PostList = () => {
                       </time>
                     </div>
                     <div className="pl-card-stats" aria-label="게시글 통계">
-                      <span className="pl-stat">댓글 {post.commentCount ?? 0}</span>
+                      <span className="pl-stat">댓글 {getVisibleCommentCount(post)}</span>
                       <span className="pl-stat">조회 {post.viewCount ?? 0}</span>
                     </div>
                   </div>
