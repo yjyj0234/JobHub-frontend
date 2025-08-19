@@ -13,11 +13,17 @@ import { AuthPage, Hero, Grid, TopGrid } from "../UX";
 import { ResumeListPage, ResumeEditorPage } from "../resume";
 
 // 4. Companies 관련 페이지 그룹
-import { Jobposting, ApplicantsList } from "../Companies";
-
+import { Jobposting, ApplicantsList, CompanyProfile } from "../Companies";
 
 import { JobPostingList } from "../job-posting-list";
-import { PostList, AddPost, PostDetail, UpdatePost, GroupChat, GroupChatRoom } from "../Community";
+import {
+  PostList,
+  AddPost,
+  PostDetail,
+  UpdatePost,
+  GroupChat,
+  GroupChatRoom,
+} from "../Community";
 
 function MainLayout() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -84,14 +90,14 @@ function AppRouter() {
         <Route path="/resumes" element={<ResumeListPage />} />
         <Route path="/resumes/new" element={<ResumeEditorPage />} />
         <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
-
-        <Route path="/jobposting" element={<Jobposting/>}/>
-        <Route path="/companies/applicants" element={<ApplicantsList/>}/>
-        <Route path="/postlist" element={<PostList/>}/>
-        <Route path='/jobpostinglist' element = {<JobPostingList/>}/>
-        <Route path="/postlist/addpost" element={<AddPost/>}/>
-        <Route path="/postlist/detail/:id" element={<PostDetail/>}/>
-        <Route path="/postlist/edit/:id" element={<UpdatePost/>}/>
+        <Route path="/company/profile" element={<CompanyProfile />} />
+        <Route path="/jobposting" element={<Jobposting />} />
+        <Route path="/companies/applicants" element={<ApplicantsList />} />
+        <Route path="/postlist" element={<PostList />} />
+        <Route path="/jobpostinglist" element={<JobPostingList />} />
+        <Route path="/postlist/addpost" element={<AddPost />} />
+        <Route path="/postlist/detail/:id" element={<PostDetail />} />
+        <Route path="/postlist/edit/:id" element={<UpdatePost />} />
         <Route path="/group-chat" element={<GroupChat />} />
         <Route path="/group-chat/rooms/:roomId" element={<GroupChatRoom />} />
         <Route path="/service" element={<Service />} />
