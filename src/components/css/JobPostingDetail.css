@@ -8,7 +8,7 @@
 .detail-header {
   position: relative;
   background:
-    linear-gradient(135deg, rgba(139,92,246,0.92) 0%, rgba(96,165,250,0.92) 100%),
+    linear-gradient(135deg, var(--c-accent) 0%, #8692c2 100%),
     radial-gradient(1200px 200px at 20% -50%, rgba(255,255,255,0.25), transparent 60%);
   padding: 2rem 0;
   margin-bottom: 2rem;
@@ -50,10 +50,29 @@
   color: var(--c-accent);
 }
 
+.company-logo-box.small {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e8f0ff 0%, #d6e4ff 100%);
+  border: 1px solid #d0dfff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--c-accent);
+}
+
 .title-area .job-title {
   font-size: 26px;
   font-weight: 800;
   margin: 0 0 6px 0;
+  background: linear-gradient(45deg, #1a365d, #2d4a77);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.1);
 }
 .company-line {
   display: flex;
@@ -63,6 +82,7 @@
 .company-line .company-name {
   font-size: 15px;
   opacity: .95;
+  color: black;
 }
 .deadline-badge {
   background: rgba(255,255,255,.2);
@@ -74,49 +94,68 @@
   font-weight: 700;
 }
 
+/* === Meta Row (라벨 포함, 연봉까지 5개 항목) === */
 .meta-row {
   display: flex;
-  gap: 14px;
+  gap: 16px;
   flex-wrap: wrap;
   opacity: .95;
+  padding: 16px 20px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  color: var(--c-text, #111);
+  border-radius: 12px;
+  backdrop-filter: none;
+
 }
 .meta {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  background: transparent;          /* 흰 배경 위에서 칩 배경 제거 */
+  border: 1px solid #e5e7eb;        /* 경계선만 가볍게 */
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: var(--c-text, #111);       /* 글자 검정 */
+  flex: 1;
+  min-width: 200px;
+  justify-content: center;
 }
+.meta svg { margin-right: 4px; }
 
+/* 항목별 라벨(연봉, 근무지역, 근무형태, 경력, 학력) */
+.meta-row .meta:nth-child(1)::before { content: "연봉  "; }
+.meta-row .meta:nth-child(2)::before { content: "근무지역  "; }
+.meta-row .meta:nth-child(3)::before { content: "근무형태  "; }
+.meta-row .meta:nth-child(4)::before { content: "경력  "; }
+.meta-row .meta:nth-child(5)::before { content: "학력  "; }
+.meta-row .meta:nth-child(6)::before { content: "근무시간  "; }
 .cta-area {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-.salary-chip {
-  background: rgba(255,255,255,.2);
-  border: 1px solid rgba(255,255,255,.35);
-  color: #fff;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
+
+/* salary-chip 제거됨 (연봉을 meta-row로 이동했기 때문) */
+
 .apply-button {
-  background: linear-gradient(135deg, #8b5cf6 0%, #60a5fa 100%);
+  background :#ff5656;
   color: white;
-  border: none;
-  border-radius: 12px;
+  border: 1px solid;
+  border-radius: 2px;
   padding: 12px 18px;
   font-weight: 800;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 8px 20px rgba(78, 134, 218, 0.30);
   transition: transform .12s ease, filter .2s ease, box-shadow .2s ease;
+  width: 200px;
+  height: 60px;
 }
 .apply-button:hover {
   transform: translateY(-1px);
   filter: brightness(1.02);
-  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 10px 24px rgba(78, 134, 218, 0.40);
 }
 .apply-button.wide { width: 100%; justify-content: center; display: inline-flex; }
 
@@ -125,10 +164,12 @@
   margin: 0 auto;
   padding: 0 20px 40px;
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 1fr;   /* ← 여기만 1열로 */
   gap: 24px;
 }
-
+.detail-body:has(.side-col) {
+  grid-template-columns: 1fr 320px;
+}
 .card {
   background: #fff;
   border: 1px solid var(--c-border);
@@ -152,10 +193,58 @@
 .benefit-item { display: flex; gap: 8px; align-items: center; padding: 10px 12px; background: #f8faff; border: 1px solid #e6eeff; border-radius: 10px; color: var(--c-text); }
 
 .side-col { display: flex; flex-direction: column; gap: 16px; }
-.side-card { padding: 18px; position: sticky; top: 20px; }
-.side-row { display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
-.side-row:last-child { border-bottom: 0; }
+.side-card { 
+  padding: 18px; 
+  position: sticky; 
+  top: 20px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 12px;
+}
+.side-row { 
+  display: grid; 
+  grid-template-columns: 20px 1fr auto; 
+  align-items: center; 
+  gap: 8px; 
+  padding: 10px 0; 
+  border-bottom: 1px solid #f0f0f0; 
+}
+.side-row:last-child { 
+  margin-bottom: 12px;
+  border-bottom: 0; 
+}
 .side-title { margin: 0 0 10px 0; font-size: 15px; font-weight: 800; color: var(--c-text); }
+
+/* 조회수 버튼 밑으로 이동(사이드카드 안 순서 제어는 유지) */
+.side-card .apply-button.wide { order: 1; }
+.side-card .link-button { order: 2; }
+.side-card .side-row { order: 2; }
+
+/* 조회수 — 메인 상세 설명 위로 띄우는 뱃지 */
+.view-count-wrapper {
+  position: relative;
+  margin-bottom: 16px;
+  text-align: right;
+}
+.view-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f8faff;
+  border: 1px solid #e6eeff;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--c-subtext);
+}
+.view-count i { font-size: 16px; color: var(--c-accent); }
+
+.main-col .card:first-child { position: relative; margin-top: 24px; }
+
+/* 사이드 카드에서 조회수 행 숨기기 (Eye 아이콘 기준) */
+.side-card .side-row:has(svg[viewBox="0 0 24 24"]) {
+  display: none;
+}
 
 .skill-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .skill-tag { padding: 6px 10px; background: #f0f6ff; color: var(--c-accent); border-radius: 6px; font-size: 12px; font-weight: 600; }
@@ -170,7 +259,6 @@
   .detail-body { grid-template-columns: 1fr; }
   .side-card { position: static; }
 }
-
 @media (max-width: 640px) {
   .detail-inner { grid-template-columns: 1fr; justify-items: start; }
   .cta-area { width: 100%; justify-content: space-between; }
@@ -183,4 +271,32 @@
   display: block;
   margin: 8px 0;
   border-radius: 8px;
+}
+
+/* 제목 행: 좌측 로고+제목, 우측 버튼 */
+.title-row {
+  grid-column: 1 / -1;           /* ← 핵심: 3열 그리드 전부 차지 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* 왼쪽(로고+제목) ↔ 오른쪽(버튼) */
+  gap: 20px;
+  width: 100%;
+}
+
+.title-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* meta-row를 detail-body처럼 중앙정렬 + max-width */
+.meta-wrapper {
+  max-width: 1200px;
+  margin: 16px auto 0;
+  padding: 0 20px;
+}
+.title-cta {
+   margin-left: auto;              /* 보조: space-between과 함께 쓰면 끝에 고정 */
+  display: flex;
+  align-items: center;
 }

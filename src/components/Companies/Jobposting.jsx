@@ -317,14 +317,26 @@ useEffect(() => {
 const handleSubmit = async (e) => {
   e.preventDefault();
  
+  //현재 사용자(owner) id 확보
+  let ownerId=null;
+
  try {
-    await axios.get(API_PROFILE_ME, { withCredentials: true });
+    const me=await axios.get(API_PROFILE_ME, { withCredentials: true });
+    ownerId=me?.data?.id ?? user?.id ?? null;
     
   } catch {
-    alert("로그인이 필요합니다.");
+    ownerId = user?.id ?? null;
+  }
+   if (!ownerId) {
+    alert("로그인이 필요합니다. (소유자 ID를 찾지 못했습니다)");
     return;
   }
  
+   if(user?.role!=="COMPANY"){
+    alert("기업 계정만 채용공고를 등록할 수 있습니다.");
+    return;
+   }
+
   // 2) 대표 직무 보정 및 변환
   let jobs = selectedJobs;
   if (!jobs.some(j => j.isPrimary) && jobs.length > 0) {
@@ -400,6 +412,7 @@ const handleSubmit = async (e) => {
 
   // 6) 서버로 보낼 payload (companyId/createdBy 없음!)
   const payload = {
+    ownerId,
     title, status, closeType,
     isRemote: document.getElementById("is_remote")?.checked || false,
     openDate, closeDate,
