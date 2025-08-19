@@ -101,6 +101,13 @@ const JobPostingDetail = () => {
     };
     if (id) fetchJobDetail();
   }, [id]);
+  //즐겨찾기 토글 
+const [fav, setFav] = useState(false);
+useEffect(() => {
+  try {
+    setFav(localStorage.getItem(`fav_job_${id}`) === "1");
+  } catch {}
+}, [id]);
 
   const mapCloseType = (t) => {
     switch (t) {
@@ -127,8 +134,8 @@ const JobPostingDetail = () => {
     switch (e) {
       case "ANY": return "학력무관";
       case "HIGH_SCHOOL": return "고졸";
-      case "COLLEGE": return "전문대졸";
-      case "UNIVERSITY": return "대졸(4년)";
+      case "COLLEGE": return "전문대졸(2년제)";
+      case "UNIVERSITY": return "대졸(4년제)";
       case "MASTER": return "석사";
       case "PHD": return "박사";
       default: return e || "";
@@ -141,25 +148,34 @@ const JobPostingDetail = () => {
       case "JUNIOR": return "주니어";
       case "MID": return "미들";
       case "SENIOR": return "시니어";
-      case "LEAD": return "리드";
+      case "LEAD": return "리드급";
       case "EXECUTIVE": return "임원";
       default: return x || "";
     }
   };
 
-  const formatSalaryRange = (min, max, type) => {
-    if (type === "NEGOTIABLE" || type === "UNDISCLOSED") return "협의";
-    const toKrw = (n) =>
-      typeof n === "number" && !Number.isNaN(n) ? n.toLocaleString() : "";
-    const unit =
-      type === "ANNUAL" ? "만원" :
-      type === "MONTHLY" ? "만원/월" :
-      type === "HOURLY" ? "원/시" : "";
-    if (min && max) return `${toKrw(min)} ~ ${toKrw(max)}${unit}`;
-    if (min && !max) return `${toKrw(min)}${unit} 이상`;
-    if (!min && max) return `${toKrw(max)}${unit} 이하`;
-    return "협의";
-  };
+  //급여
+  const formatSalaryRange = (min, max, rawType) => {
+      const type = (rawType || "").toUpperCase();
+    if (type === "NEGOTIABLE" || type === "UNDISCLOSED") return "협의 후 결정";
+        const prefix =
+        type === "ANNUAL"  ? "연봉 " :
+        type === "MONTHLY" ? "월급 " :
+        type === "HOURLY"  ? "시급 " : "";
+
+      const unit =
+        type === "ANNUAL"  ? "만원" :
+        type === "MONTHLY" ? "만원" :
+        type === "HOURLY"  ? "원"   : "";
+
+      const toKrw = (n) =>
+        typeof n === "number" && !Number.isNaN(n) ? n.toLocaleString() : "";
+
+      if (min && max)   return `${prefix}${toKrw(min)} ~ ${toKrw(max)}${unit}`;
+      if (min && !max)  return `${prefix}${toKrw(min)}${unit} 이상`;
+      if (!min && max)  return `${prefix}${toKrw(max)}${unit} 이하`;
+      return "협의 후 결정";
+    };
 
   const normalizeConditions = (cond) => {
     if (!cond) return null;
@@ -212,6 +228,7 @@ const JobPostingDetail = () => {
     preferences: j.preferences ?? [],
     benefits: j.benefits ?? [],
     homepage: j.homepage ?? j.companyHomepage ?? j.company_homepage ?? j.company?.homepage ?? "",
+    isRemote: (j.is_remote ?? j.isRemote ?? 0) ? true : false,  // ← 추가
   });
 
   const closeLabel = useMemo(() => {
@@ -285,9 +302,50 @@ const JobPostingDetail = () => {
   if (error) {
     return <p className="error-text">상세 정보를 불러오지 못했습니다.</p>;
   }
-
   if (!job) return null;
 
+  // ✦ D-n 계산 (Hook 아님)
+const computeDaysLeft = (j) => {
+  if (!j?.closeDate || j?.closeType !== "DEADLINE") return null;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const end = new Date(j.closeDate);
+  const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  return Math.ceil((endDate - today) / 86400000);
+};
+
+const daysLeft = computeDaysLeft(job);
+const deadlineBadge =
+  typeof daysLeft === "number" && daysLeft >= 0 && daysLeft <= 7
+    ? `D-${daysLeft}`
+    : "";
+ 
+    //마감시간 지났을때
+    const isClosedByStatus = (() => {
+  const s = (job?.status ?? job?.jobStatus ?? job?.state ?? "").toString().toUpperCase();
+  return s === "CLOSED" || s === "EXPIRED";
+})();
+const isDeadlinePassed = typeof daysLeft === "number" && daysLeft < 0;
+const isClosed = isClosedByStatus || isDeadlinePassed;
+
+//즐겨찾기
+const toggleFav = () => {
+  const next = !fav;
+  setFav(next);
+  try {
+    localStorage.setItem(`fav_job_${id}`, next ? "1" : "0");
+  } catch {}
+};
+
+//근무지역옆에 재택근무 가능 여부
+const locationText = (() => {
+  const names = (job.locations || [])
+    .map(l => l.name ?? l.regionName ?? l.regionId)
+    .filter(Boolean)
+    .join(" / ");                         // 예: "서울시 강남구"
+  const suffix = job.isRemote ? " (재택근무 가능)" : "";  // ← 정확히 이 형식
+  return (names || "미정") + suffix;
+})();
   return (
     <div className="job-detail-container">
       <div className="detail-header">
@@ -308,7 +366,10 @@ const JobPostingDetail = () => {
         </div>
 
         <div className="title-area">
-          <h1 className="job-title">{job.title}</h1>
+              <div className="title-head">
+                <h1 className="job-title">{job.title}</h1>
+                  {isClosed && <span className="title-closed">마감된 공고입니다.</span>}
+              </div>
           <div className="company-line">
             <span className="company-name">{job.company}</span>
             {closeLabel && <span className="deadline-badge">{closeLabel}</span>}
@@ -318,7 +379,17 @@ const JobPostingDetail = () => {
 
       {/* 오른쪽 지원 버튼 */}
       <div className="title-cta">
-        <button className="apply-button">지원하기</button>
+          <button
+          type="button"
+          className="fav-toggle"
+          aria-pressed={fav}
+          data-active={fav ? "true" : "false"}
+          onClick={toggleFav}
+          title={fav ? "즐겨찾기 해제" : "즐겨찾기"}
+          >
+          <Star />
+        </button>
+        <button className="apply-button" data-deadline={deadlineBadge}>지원하기</button>
       </div>
     </div>
   </div>
@@ -332,15 +403,10 @@ const JobPostingDetail = () => {
       </span>
 
         {/* 2. 근무지역 */}
-          {(job.locations ?? []).length > 0 && (
-        <span className="meta">
-          <MapPin size={16} />{" "}
-          {(job.locations || [])
-            .map((l) => l.name ?? l.regionName ?? l.regionId)
-            .filter(Boolean)
-            .join(" / ")}
-        </span>
-      )}
+      <span className="meta">
+        <MapPin size={16} /> {locationText}
+      </span>
+      
     
       {/* 3. 근무형태  */}
       <span className="meta">
@@ -377,6 +443,7 @@ const JobPostingDetail = () => {
                 </div>
               </div>
               <h2 className="section-title">상세 설명</h2>
+              <hr />
               <div
                 className="desc-text"
                 dangerouslySetInnerHTML={{ __html: safeDescriptionHTML }}
@@ -503,7 +570,7 @@ const JobPostingDetail = () => {
 
 {/* ✅ CTA: 본문 맨 끝에 위치 */}
 <section className="card section">
-  <button className="apply-button wide">지금 지원하기</button>
+  <button className="apply-button wide" disabled={isClosed}>지금 지원하기</button>
 </section>
         </div>
       </div>
