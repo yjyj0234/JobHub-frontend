@@ -15,15 +15,8 @@ import { ResumeListPage, ResumeEditorPage } from "../resume";
 // 4. Companies 관련 페이지 그룹
 import { Jobposting, ApplicantsList } from "../Companies";
 
-import { JobPostingList } from "../job-posting-list";
-import {
-  PostList,
-  AddPost,
-  PostDetail,
-  UpdatePost,
-  GroupChat,
-  GroupChatRoom,
-} from "../Community";
+import { JobPostingList, JobPostingDetail } from "../job-posting-list";
+import { PostList, AddPost, PostDetail, UpdatePost, GroupChat, GroupChatRoom } from "../Community";
 
 function MainLayout() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -101,6 +94,8 @@ function AppRouter() {
         <Route path="/group-chat" element={<GroupChat />} />
         <Route path="/group-chat/rooms/:roomId" element={<GroupChatRoom />} />
         <Route path="/service" element={<Service />} />
+        {/* 공고 디테일 */}
+        <Route path="/jobpostinglist/:id" element={<JobPostingDetail />} />
       </Route>
     </Routes>
   );
