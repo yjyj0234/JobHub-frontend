@@ -244,7 +244,14 @@ function GlobalHeader({ onLoginClick }) {
       page: 0,
       size: 20,
     };
+
     console.log("검색 요청:", searchData);
+
+    // 검색 결과를 JobPostingList 페이지로 전달하며 이동
+    navigate("/jobpostinglist", {
+      state: { searchData },
+    });
+
     setIsExpanded(false);
     setRegionOpen(false);
     setJobOpen(false);
