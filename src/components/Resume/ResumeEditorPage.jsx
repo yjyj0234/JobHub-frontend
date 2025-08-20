@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../css/ResumeEditorPage.css";
+
 import {
   Briefcase,
   GraduationCap,
@@ -829,6 +830,57 @@ function ResumeEditorPage() {
     );
   };
 
+  // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ이력서 페이지 메인 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+  const ResumeStatusPalette = ({
+    completeness,
+    isRepresentative,
+    onRepChange,
+    isPublic,
+    onPublicChange,
+  }) => {
+    return (
+      <aside className="resume-status-palette">
+        <div className="completeness-meter">
+          <div className="meter-header">
+            <span>완성도</span>
+            <span>{completeness}%</span>
+          </div>
+          <div className="meter-bar-background">
+            <div
+              className="meter-bar-foreground"
+              style={{ width: `${completeness}%` }}
+            />
+          </div>
+        </div>
+        <div className="status-toggles">
+          <div className="toggle-item">
+            <label>대표 이력서</label>
+            <div className="toggle-switch">
+              <input
+                type="checkbox"
+                id="rep-switch"
+                checked={isRepresentative}
+                onChange={onRepChange}
+              />
+              <label htmlFor="rep-switch" />
+            </div>
+          </div>
+          <div className="toggle-item">
+            <label>공개 여부</label>
+            <div className="toggle-switch">
+              <input
+                type="checkbox"
+                id="public-switch"
+                checked={isPublic}
+                onChange={onPublicChange}
+              />
+              <label htmlFor="public-switch" />
+            </div>
+          </div>
+        </div>
+      </aside>
+    );
+  };
   /* ---------- 섹션별 저장 ---------- */
   const buildResumePayload = () => ({
     title: (resumeTitle || "").trim() || "새 이력서",
