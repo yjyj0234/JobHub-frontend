@@ -1,0 +1,375 @@
+/* ===== Apply Page (정렬 · 간격 · 반응형 리파인) ===== */
+
+/* 베이스 */
+.apply-page-container {
+  background: var(--c-bg-light, #fafafa);
+  min-height: 100vh;
+  color: var(--c-text, #222);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.45;
+}
+
+/* 헤더 영역 */
+.apply-header {
+  position: relative;
+  background:
+    linear-gradient(135deg, var(--c-accent, #FF7D61) 0%, #FFB2A0 100%),
+    radial-gradient(1200px 200px at 20% -50%, rgba(255,255,255,0.25), transparent 60%);
+  color: #fff;
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+.apply-header-inner {
+  width: min(1100px, 92%);
+  margin: 0 auto;
+}
+.apply-title { font-size: 1.9rem; font-weight: 800; margin: 0 0 .35rem; letter-spacing: -0.02em; }
+.apply-subtitle { opacity: .95; }
+
+/* 그리드 레이아웃 */
+.apply-content {
+  width: min(1100px, 92%);
+  margin: 0 auto 64px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px; /* ✅ 1fr 트랙에 최소폭 0을 줘서 overflow 방지 */
+  gap: 28px;
+}
+@media (max-width: 980px) {
+  .apply-content { grid-template-columns: 1fr; gap: 20px; }
+}
+
+.apply-form { display: flex; flex-direction: column; gap: 16px; }
+
+/* 카드 공통 */
+.apply-card {
+  background: var(--c-surface, #fff);
+  border-radius: 16px;
+  border: 1px solid #eee;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+  padding: 18px 18px 16px;
+}
+.apply-card + .apply-card { margin-top: 4px; } /* 미세 간격 균일화 */
+
+.apply-card-title {
+  font-size: 1.06rem;
+  font-weight: 800;
+  margin: 2px 0 12px;
+  letter-spacing: -0.01em;
+}
+
+.muted { color: #777; font-weight: 500; font-size: .9rem; }
+.req { color: #ff4d4f; margin-left: 2px; }
+
+/* 폼 그리드: auto-fit로 더 안정적인 줄바꿈 */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+  gap: 12px;
+}
+@media (max-width: 980px) { .form-grid { grid-template-columns: 1fr; } }
+
+.form-field label { display:block; font-weight:700; margin-bottom:6px; color:#333; }
+.form-field input {
+
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-size: .95rem;
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.form-field input::placeholder { color:#aaa; }
+.form-field input:focus {
+  border-color: var(--c-accent, #FF7D61);
+  box-shadow: 0 0 0 3px rgba(255,125,97,.16);
+}
+
+/* ==== 저장된 이력서/업로드 선택 레이아웃 ==== */
+.resume-select {
+  display: grid;
+  gap: 12px;
+}
+
+.resume-option {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.resume-existing, .resume-upload {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.resume-existing-title {
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.resume-existing-meta {
+  display: grid;
+  gap: 6px;
+}
+
+.resume-existing-sub { color:#666; font-size:.92rem; }
+
+.resume-existing-empty { padding: 2px 0; }
+
+.dropzone.disabled {
+  pointer-events: none;
+  opacity: .6;
+}
+
+/* 미리보기 제목 정렬 보조 */
+.preview h3 { margin: 0 0 8px; font-weight: 800; }
+
+
+/* 드롭존 */
+.dropzone {
+  border: 1.5px dashed #d9d9d9;
+  border-radius: 14px;
+  padding: 22px 20px;
+  text-align: center;
+  background: #fff;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.dropzone:hover,
+.dropzone:focus-within {
+  border-color: var(--c-accent, #FF7D61);
+  box-shadow: 0 0 0 3px rgba(255,125,97,.12);
+  background: #fffafa;
+}
+.dropzone .dz-title { font-weight:800; margin:6px 0 4px; color:#333; }
+.dropzone .dz-sub { color:#666; }
+.dropzone .dz-browse { color: var(--c-accent, #FF7D61); font-weight:800; cursor:pointer; }
+.file-chip {
+  display: inline-flex; align-items:center; gap:6px;
+  background:#f6f6f6; border-radius:999px; padding:6px 10px; margin-top:10px;
+  border:1px solid #ececec;
+}
+.file-size { color:#777; }
+
+/* 에러 메시지와 드롭존 상호작용(지원 브라우저에서) */
+.dropzone:has(.error-text.small) {
+  border-color:#e5484d; background:#fff6f6; box-shadow:none;
+}
+
+.error-text { color:#e5484d; }
+.error-text.small { font-size:.9rem; margin-top:8px; }
+
+/* 동의 라인 */
+.agree-line { display:flex; gap:10px; align-items:flex-start; line-height: 1.35; }
+.agree-line input { margin-top:4px; }
+.link { color: var(--c-accent, #FF7D61); text-decoration: underline; }
+.link:hover { opacity:.9; }
+
+/* 액션 바 */
+.apply-actions {
+  display:flex; gap:10px; justify-content:flex-end; margin-top: 10px; flex-wrap: wrap;
+}
+@media (max-width: 560px) { .apply-actions { justify-content: flex-start; } }
+
+.btn {
+  display:inline-flex; align-items:center; gap:8px;
+  border-radius: 12px; padding: 10px 14px; font-weight:800; cursor:pointer;
+  border:1px solid transparent; transition: transform .02s ease-in, box-shadow .15s ease, background .15s ease, border-color .15s ease, opacity .15s ease;
+  min-height: 42px;
+  user-select: none;
+}
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--c-accent, #FF7D61); color:#fff; }
+.btn.primary:hover { filter: brightness(.98); box-shadow: 0 6px 14px rgba(255,125,97,.25); }
+.btn.primary:disabled { opacity:.6; cursor:not-allowed; box-shadow:none; }
+.btn.outline { background:#fff; border-color:#e6e6e6; color:#333; }
+.btn.outline:hover { border-color: var(--c-accent, #FF7D61); }
+.btn.ghost { background: #fff; color:#333; border-color: #f0f0f0; }
+.btn.ghost:hover { border-color:#e6e6e6; }
+
+/* 미리보기 */
+.apply-card.preview .preview-grid {
+  display:grid; grid-template-columns: 1fr; gap: 12px;
+}
+.preview-cl { white-space: pre-wrap; line-height:1.6; }
+.link-list { margin:.25rem 0 0 1rem; list-style: disc; color:#333; }
+
+/* 사이드바 & 요약 카드 */
+.apply-sidebar { position: sticky; top: 20px; height: fit-content; align-self: start; }
+@media (max-width: 980px) { .apply-sidebar { position: static; } }
+
+.job-summary-card {
+  background:#fff; border-radius:16px; border:1px solid #eee;
+  box-shadow:0 10px 20px rgba(0,0,0,.05);
+  padding:16px; margin-bottom:16px;
+}
+.job-summary-header { display:flex; gap:12px; align-items:center; margin-bottom:10px; }
+.logo-fallback {
+  width:44px; height:44px; border-radius:12px; background: #FFE4DD; color:#D35238;
+  display:grid; place-items:center; font-weight:900; font-size: 1.05rem;
+}
+.company-name { font-weight:800; }
+.job-title { color:#333; margin-top:2px; font-weight:600; }
+.job-meta { list-style:none; padding:0; margin:10px 0; display:grid; gap:6px; color:#555; }
+.job-meta li { display:flex; gap:8px; align-items:center; }
+
+/* D-day 배지 정렬/강조 */
+.dday {
+  margin-top: 10px;
+  background:#fff1f0; border:1px solid #ffccc7; color:#cf1322;
+  font-weight:900; border-radius:10px; padding:8px 12px; display:inline-flex; align-items:center; justify-content:center;
+  letter-spacing: .02em;
+}
+.dday.urgent {
+  background:#ffe8e6; border-color:#ff9a91; color:#b10f1a;
+  box-shadow: 0 6px 14px rgba(255,154,145,.25);
+}
+
+/* 뒤로가기 링크 */
+.back-link {
+  display:inline-block; margin-top:12px; color:#666; text-underline-offset: 2px;
+}
+.back-link:hover { color:#333; text-decoration: underline; }
+
+/* 팁 카드 */
+.tip-card {
+  background:#fff; border-radius:16px; border:1px solid #eee;
+  box-shadow:0 10px 20px rgba(0,0,0,.05);
+  padding:16px;
+}
+.tip-card h4 { margin:0 0 8px; font-weight:900; }
+.tip-card ul { margin:0; padding-left:18px; color:#555; }
+
+/* 로딩/에러 */
+.loading-text, .error-text { font-weight: 600; }
+
+
+/* ✅ 그리드 아이템들이 칸 안에서 줄어들 수 있게 */
+.apply-form,
+.apply-sidebar,
+.apply-card,
+.form-field,
+.form-field input {
+  min-width: 0;
+}
+
+/* ✅ 사이드 카드가 칼럼폭을 넘지 않게 */
+.apply-sidebar,
+.job-summary-card,
+.tip-card {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ✅ 긴 단어/URL 줄바꿈 강제 (우측 삐져나옴 방지) */
+.job-title,
+.company-name,
+.job-meta,
+.link-list li,
+.preview-cl,
+.back-link,
+.form-field input {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* ✅ 버튼 줄이 컨테이너 밖으로 밀려나지 않게 */
+.apply-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 100%;
+}
+.apply-actions .btn {
+  max-width: 100%;
+}
+
+/* ✅ 전체 박스 사이징 통일 (패딩/보더로 인해 폭 계산 어긋나는 것 방지) */
+.apply-page-container,
+.apply-page-container * {
+  box-sizing: border-box;
+}
+
+/* ✅ 일부 브라우저에서 sticky 폭 계산 이슈 방지 */
+@supports (position: sticky) {
+  .apply-sidebar { position: sticky; top: 20px; }
+}
+
+/* ===== 버튼을 지원팁 아래에 1열로, 사이드바 폭에 딱 맞게 ===== */
+.action-stack {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr;   /* 한 줄에 하나 */
+  gap: 10px;
+  width: 100%;                  /* 지원팁 카드 폭과 동일 */
+}
+
+.action-stack .btn {
+  width: 100%;
+  justify-content: center;      /* 텍스트/아이콘 가운데 정렬 */
+  min-height: 44px;
+}
+
+/* 작은 화면에서도 문제 없도록(사이드바가 아래로 떨어지면 그대로 세로 정렬) */
+@media (max-width: 980px) {
+  .action-stack {
+    margin-top: 14px;
+  }
+}
+
+/* 📱 작은 화면: 하단 여백 확보해 버튼이 안 잘리게 */
+@media (max-width: 980px) {
+  
+
+  /* 버튼 그룹 아래 살짝 간격 */
+  .action-stack,
+  .apply-actions {
+    margin-bottom: 12px;
+  }
+}
+
+/* 아주 작은 화면에서 탭 타겟 살짝 키우기 (선택) */
+@media (max-width: 560px) {
+  .action-stack .btn,
+  .apply-actions .btn {
+    min-height: 46px;
+  }
+}
+
+/* 1) 큰 화면: '개인정보 수집·이용 동의' 카드 아래 여백 살짝 추가 */
+@media (min-width: 981px) {
+  /* 동의 섹션이 보통 왼쪽 폼의 마지막 카드라 가정 */
+  .apply-form .apply-card:last-of-type {
+    margin-bottom: 12px; /* 필요하면 8~16px로 조절 */
+  }
+}
+
+/* 2) 큰 화면: 오른쪽 버튼 스택 높이 업 + 보기 좋게 동일 분할 */
+@media (min-width: 981px) {
+  /* 버튼 높이와 간격을 변수로 관리 */
+  :root {
+    --action-btn-h: 72px;   /* 각 버튼 높이(54~60px 사이 취향대로) */
+    --action-gap: 10px;     /* 버튼 사이 간격 */
+  }
+
+  .action-stack {
+    /* 총 높이 = 버튼3개 + 간격2개 => 동의 박스 높이랑 비슷하게 맞춤 */
+    min-height: calc(var(--action-btn-h) * 3 + var(--action-gap) * 2);
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-auto-rows: 1fr;      /* 3개 버튼이 같은 높이로 균등 분할 */
+    gap: var(--action-gap);
+    align-items: stretch;
+  }
+
+  .action-stack .btn {
+    min-height: var(--action-btn-h);
+    height: 100%;             /* 균등분할 비율 유지 */
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -20,7 +20,7 @@ import AdminPage from "../Admin/AdminPage";
 
 // 6. job-posting-list 관련 페이지 그룹
 import { PostList, AddPost, PostDetail, UpdatePost, GroupChat, GroupChatRoom } from "../Community";
-import { JobPostingList, JobPostingDetail } from "../job-posting-list";
+import { JobPostingList, JobPostingDetail, JobApplication } from "../job-posting-list";
 
 
 function MainLayout() {
@@ -39,6 +39,19 @@ function MainLayout() {
       body.classList.remove("body-no-scroll");
     };
   }, [isModalOpen]);
+
+  // openLoginModal
+    useEffect(() => {
+    const handleOpenLoginModal = () => {
+      setIsModalOpen(true);
+    };
+
+    window.addEventListener('openLoginModal', handleOpenLoginModal);
+    
+    return () => {
+      window.removeEventListener('openLoginModal', handleOpenLoginModal);
+    };
+  }, []);
 
   return (
     <div className="app-container">
@@ -103,6 +116,7 @@ function AppRouter() {
         <Route path="/admin" element={<AdminPage />} />
         {/* 공고 디테일 */}
         <Route path="/jobpostinglist/:id" element={<JobPostingDetail />} />
+        <Route path="/apply/:jobId" element={<JobApplication />} />
       </Route>
     </Routes>
   );
