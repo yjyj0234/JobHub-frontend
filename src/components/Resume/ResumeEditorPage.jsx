@@ -35,6 +35,10 @@ import {
 import { useAuth } from "../context/AuthContext.jsx";
 import axios from "axios";
 
+/* ---------------------- 공통 설정 ---------------------- */
+axios.defaults.withCredentials = true;
+const API = "/api"; // 모든 이력서/프로필 API 경로 접두사
+
 /* ---------------------- 유틸 ---------------------- */
 const getUid = (u) => u?.id ?? u?.userId ?? null;
 const trimOrNull = (v) => (typeof v === "string" ? v.trim() || null : v);
@@ -109,10 +113,19 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
         </button>
       ) : (
         <div className="profile-edit-actions">
-          <button type="button" className="action-btn primary" onClick={handleSaveClick}>
+          <button
+            type="button"
+            className="action-btn primary"
+            onClick={handleSaveClick}
+          >
             <Save size={16} /> 저장
           </button>
-          <button type="button" className="action-btn" onClick={handleCancelEdit} title="편집 취소">
+          <button
+            type="button"
+            className="action-btn"
+            onClick={handleCancelEdit}
+            title="편집 취소"
+          >
             <X size={16} />
           </button>
         </div>
@@ -125,9 +138,13 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
           style={{ cursor: isEditing ? "pointer" : "default" }}
         >
           <div className="profile-photo-wrapper">
-            {(isEditing ? editData.profileImageUrl : profile.profileImageUrl) ? (
+            {(
+              isEditing ? editData.profileImageUrl : profile.profileImageUrl
+            ) ? (
               <img
-                src={isEditing ? editData.profileImageUrl : profile.profileImageUrl}
+                src={
+                  isEditing ? editData.profileImageUrl : profile.profileImageUrl
+                }
                 alt={profile.name || "프로필"}
                 className="profile-photo"
               />
@@ -165,7 +182,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
           ) : (
             <h2 className="profile-name-display">{profile.name || "이름"}</h2>
           )}
-          
+
           {isEditing ? (
             <input
               type="text"
@@ -176,7 +193,9 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
               placeholder="한 줄 소개를 작성해주세요."
             />
           ) : (
-            <p className="profile-headline-display">{profile.headline || "한 줄 소개"}</p>
+            <p className="profile-headline-display">
+              {profile.headline || "한 줄 소개"}
+            </p>
           )}
 
           <div className="profile-info-grid">
@@ -364,6 +383,39 @@ function ResumeEditorPage() {
     projects: { title: "프로젝트", component: ProjectForm },
   };
 
+  /* ---------- 서버 → 화면 상태 변환 도우미 ---------- */
+  const makeSection = (type, items = []) => {
+    if (!Array.isArray(items) || items.length === 0) return null;
+    return {
+      id: `${type}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      type,
+      data: items.map((it, idx) => ({
+        subId: `${type}-item-${Date.now()}-${idx}`,
+        ...it,
+      })),
+    };
+  };
+
+  const buildSectionsFromResponse = (dto) => {
+    const built = [];
+    const push = (s) => s && built.push(s);
+
+    // 서버 필드 네이밍에 따라 조합 (존재하는 것만 추가)
+    push(makeSection("experiences", dto.experiences ?? dto.experienceList));
+    push(makeSection("educations", dto.educations ?? dto.educationList));
+    push(makeSection("skills", dto.skills ?? dto.skillList));
+    push(makeSection("projects", dto.projects ?? dto.projectList));
+    push(makeSection("activities", dto.activities ?? dto.activityList));
+    push(makeSection("awards", dto.awards ?? dto.awardList));
+    push(
+      makeSection("certifications", dto.certifications ?? dto.certificationList)
+    );
+    push(makeSection("languages", dto.languages ?? dto.languageList));
+    push(makeSection("portfolios", dto.portfolios ?? dto.portfolioList));
+
+    return built;
+  };
+
   /* ---------- 프로필 로드 ---------- */
   useEffect(() => {
     if (!user) return;
@@ -371,8 +423,7 @@ function ResumeEditorPage() {
       try {
         const uid = getUid(user);
         if (!uid) return;
-        const { data, status } = await axios.get(`/api/profile/${uid}`, {
-          withCredentials: true,
+        const { data, status } = await axios.get(`${API}/profile/${uid}`, {
           validateStatus: (s) => s === 200 || s === 404 || s === 204,
         });
         if (status === 200 && data) {
@@ -417,6 +468,47 @@ function ResumeEditorPage() {
     })();
   }, [user]);
 
+  /* ---------- 이력서 로드(편집 모드) ---------- */
+  useEffect(() => {
+    if (!resumeId) return; // 새로 만들기 모드
+    let ignore = false;
+
+    (async () => {
+      try {
+        const { data } = await axios.get(`${API}/resumes/${resumeId}`);
+        if (ignore) return;
+
+        // 제목/대표/공개
+        setResumeTitle(data?.title ?? "");
+        setIsRepresentative(
+          Boolean(data?.isPrimary ?? data?.isRepresentative ?? false)
+        );
+        setIsPublic(data?.isPublic !== false);
+
+        // 섹션
+        const built = buildSectionsFromResponse(data ?? {});
+        setSections(built);
+      } catch (err) {
+        console.error("[ResumeLoad] error:", err);
+        const s = err?.response?.status;
+        alert(
+          err?.response?.data?.message ||
+            (s === 404
+              ? "이력서를 찾을 수 없어요."
+              : s === 401
+              ? "로그인이 필요해요."
+              : s === 403
+              ? "권한이 없어요."
+              : "이력서 로드 중 오류가 발생했어요.")
+        );
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
+  }, [resumeId]);
+
   /* ---------- 프로필 저장 ---------- */
   const handleSaveProfile = async (profileToSave) => {
     if (!profileToSave) return;
@@ -427,7 +519,7 @@ function ResumeEditorPage() {
     }
 
     const parsedRegionId =
-    profileToSave.regionId !== "" && profileToSave.regionId != null
+      profileToSave.regionId !== "" && profileToSave.regionId != null
         ? toIntOrNull(profileToSave.regionId)
         : null;
 
@@ -444,9 +536,7 @@ function ResumeEditorPage() {
     };
 
     try {
-      await axios.put(`/api/profile/${uid}`, payload, {
-        withCredentials: true,
-      });
+      await axios.put(`${API}/profile/${uid}`, payload);
       alert("프로필이 저장되었습니다.");
     } catch (err) {
       const s = err?.response?.status;
@@ -595,18 +685,14 @@ function ResumeEditorPage() {
     if (acts.length === 0) return;
     await Promise.all(
       acts.map((it) =>
-        axios.post(
-          `/resumes/${createdId}/activities`,
-          {
-            activityName: it.activityName || "",
-            organization: it.organization || "",
-            role: it.role || "",
-            startDate: it.startDate || null,
-            endDate: it.endDate || null,
-            description: it.description || "",
-          },
-          { withCredentials: true }
-        )
+        axios.post(`${API}/resumes/${createdId}/activities`, {
+          activityName: it.activityName || "",
+          organization: it.organization || "",
+          role: it.role || "",
+          startDate: it.startDate || null,
+          endDate: it.endDate || null,
+          description: it.description || "",
+        })
       )
     );
   };
@@ -644,21 +730,23 @@ function ResumeEditorPage() {
     setIsSaving(true);
     try {
       if (!resumeId) {
-        const { data } = await axios.post("/resumes", buildResumePayload(), {
-          withCredentials: true,
-        });
+        // 생성
+        const { data } = await axios.post(
+          `${API}/resumes`,
+          buildResumePayload()
+        );
         const createdId = typeof data === "number" ? data : Number(data?.id);
         if (!createdId) throw new Error("생성된 이력서 ID가 없습니다.");
 
         await postActivitiesBulk(createdId);
 
         localStorage.removeItem("resume_draft");
-        navigate(`/resumes/${createdId}/edit`, { replace: true });
+        // 현재 라우팅은 /resumes/:id 사용 중 → edit 경로 없이 이동
+        navigate(`/resumes/${createdId}`, { replace: true });
         alert("이력서 작성이 완료되었습니다!");
       } else {
-        await axios.put(`/resumes/${resumeId}`, buildResumePayload(), {
-          withCredentials: true,
-        });
+        // 수정
+        await axios.put(`${API}/resumes/${resumeId}`, buildResumePayload());
         alert("이력서가 저장되었습니다.");
       }
     } catch (err) {
