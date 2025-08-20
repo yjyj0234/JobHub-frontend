@@ -29,7 +29,7 @@
 }
 
 .pl-popular-head button {
-background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);;
+background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
   border: none;
   border-radius: 25px;
   padding: 10px 20px;
@@ -50,15 +50,22 @@ background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);;
   transform: translateY(0);
 }
 
+.pl-popular-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .group-chat-btn {
-  background: rgb(254, 254, 188) !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  color: #546685 !important;
+  background: linear-gradient(135deg, #f7f3d7 0%, #f0e6b3 100%) !important;
+  color: #8b7355 !important;
+  box-shadow: 0 4px 15px rgba(212, 192, 138, 0.3) !important;
 }
 
 .group-chat-btn:hover {
-  background: rgb(249, 249, 37) !important;
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #f0e6b3 0%, #e6d7a0 100%) !important;
+  color: #7a6b4a !important;
+  box-shadow: 0 6px 20px rgba(212, 192, 138, 0.4) !important;
 }
 
 .pl-popular-title {

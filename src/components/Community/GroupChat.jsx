@@ -70,7 +70,10 @@ export default function GroupChat() {
           <h1 className="gc-title">그룹 채팅방</h1>
           <div className="gc-actions">
             <button type="button" className="gc-back-btn" onClick={goBack}>
-              목록으로
+              게시판 목록
+            </button>
+            <button type="button" className="my-room-btn">
+              내가 참여하고 있는 방
             </button>
           </div>
         </header>

@@ -28,11 +28,12 @@
 .gc-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
 }
 
-.gc-back-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
+.my-room-btn {
+  background: linear-gradient(135deg, #f7f3d7 0%, #f0e6b3 100%);
+  color: #8b7355;
   border: none;
   border-radius: 25px;
   padding: 10px 20px;
@@ -40,12 +41,34 @@
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 15px rgba(212, 192, 138, 0.3);
+}
+
+.my-room-btn:hover {
+  background: linear-gradient(135deg, #f0e6b3 0%, #e6d7a0 100%);
+  color: #7a6b4a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 192, 138, 0.4);
+}
+
+.gc-back-btn {
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 25px;
+  padding: 10px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(212, 192, 138, 0.3);
 }
 
 .gc-back-btn:hover {
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  color: #ffffff;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px rgba(212, 192, 138, 0.4);
 }
 
 .gc-back-btn:active {

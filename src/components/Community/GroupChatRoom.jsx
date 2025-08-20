@@ -36,6 +36,9 @@ export default function GroupChatRoom() {
   const [myUid, setMyUid] = useState(null);
   const [loading, setLoading] = useState(true);
 
+   const [roomNameLoading, setRoomNameLoading] = useState(true);
+  const [roomNameError, setRoomNameError] = useState("");
+
   const navigate = useNavigate();
 
   const stompRef = useRef(null);
@@ -47,6 +50,35 @@ export default function GroupChatRoom() {
   const myUidRef = useRef(myUid);
   useEffect(() => { myUidRef.current = myUid; }, [myUid]);
 
+   // ===== 1) 방 이름만 별도 호출 =====
+  useEffect(() => {
+    if (!roomId) return;
+    const ctrl = new AbortController();
+    (async () => {
+      setRoomNameLoading(true);
+      setRoomNameError("");
+      try {
+        const { data } = await axios.get(
+          `http://localhost:8080/group-chat/rooms/${roomId}`,
+          { signal: ctrl.signal }
+        );
+        // 서버 DTO 키 확인: roomName이 맞는지 확인
+        setRoomName(data?.roomName ?? "");
+      } catch (e) {
+        if (e.name !== "CanceledError" && e.code !== "ERR_CANCELED") {
+          console.error(e);
+          if (e?.response?.status === 404) setRoomNameError("방을 찾을 수 없어.");
+          else if (e?.response?.status === 401) setRoomNameError("로그인이 필요해.");
+          else if (e?.response?.status === 403) setRoomNameError("방 접근 권한이 없어.");
+          else setRoomNameError("방 정보를 불러오지 못했어.");
+        }
+      } finally {
+        setRoomNameLoading(false);
+      }
+    })();
+    return () => ctrl.abort();
+  }, [roomId]);
+
   // 히스토리 + (선행) join
   useEffect(() => {
     if (!roomId) return;
@@ -55,8 +87,8 @@ export default function GroupChatRoom() {
       setError("");
       try {
         const { data: joinRes } = await axios.post(`http://localhost:8080/group-chat/rooms/${roomId}/join`);
-        if (joinRes.userId) setMyUid(joinRes.userId);
-        if (joinRes.roomName) setRoomName(joinRes.roomName);
+        setMyUid(joinRes?.userId ?? null);
+        
         
         const { data } = await axios.get(
           `http://localhost:8080/group-chat/rooms/${roomId}/messages`
@@ -79,7 +111,7 @@ export default function GroupChatRoom() {
       }
     })();
     // myUid가 바뀌면 mine 계산이 달라지므로 의존성 포함
-  }, [roomId, myUid]);
+  }, [roomId]);
 
   // STOMP 연결
   useEffect(() => {
@@ -103,9 +135,12 @@ export default function GroupChatRoom() {
         // 구독 경로는 서버 설정(enableSimpleBroker("/topic"))과 맞춰야 함
         client.subscribe(`/topic/rooms/${roomId}`, (frame) => {
           try {
-            const msg = JSON.parse(frame.body);
-            console.log({myUid, msg})
-            const mine = myUidRef.current != null && String(msg.senderId) === String(myUidRef.current);
+           
+                   const raw = typeof frame.body === 'string' ? JSON.parse(frame.body) : frame.body;
+                  const isSystem = raw.system || raw.type === 'SYSTEM' || raw.type === 'LEAVE' || raw.type === 'JOIN';
+                  const mine = !isSystem && myUidRef.current != null && String(raw.senderId) === String(myUidRef.current);
+                  const msg = { ...raw, mine };
+                  console.log('STOMP recv:', msg);
 
             if (mine) {
               const { text, ts } = lastSentRef.current || {};
@@ -113,7 +148,7 @@ export default function GroupChatRoom() {
                 return; // 무시
               }
             }
-            setMessages((prev) => [...prev, {...msg, mine}]);
+            setMessages((prev) => [...prev, msg]);
             lastIdRef.current = msg.id;
           } catch (err) {
             console.error("parse error:", err);
@@ -172,7 +207,22 @@ export default function GroupChatRoom() {
     setInput("");
   };
 
+  // 채팅방 목록으로
   const goBack = () => navigate('/group-chat');
+
+  //채팅방 나가기
+  const leaveRoom = async () => {
+    if (!roomId) return;
+ 
+
+    try {
+      await axios.delete(`http://localhost:8080/group-chat/rooms/${roomId}/leave`);
+      try { await stompRef.current?.deactivate(); } catch {}
+      navigate('/group-chat');
+    } catch (error) {
+      console.error("Error leaving room:", error);
+    }
+  };
 
   if (!roomId) return (
     <div className="gcr-page">
@@ -187,11 +237,11 @@ export default function GroupChatRoom() {
       <div className="gcr-container">
         <header className="gcr-header">
           <div className="gcr-header-left">
-            <h1 className="gcr-title">{roomName || `Room #${roomId}`}</h1>
+            <h1 className="gcr-title"> {roomNameLoading ? "불러오는 중…" : (roomName || "채팅방")}</h1>
             <span className="gcr-room-id">#{roomId}</span>
           </div>
           <button type="button" className="gcr-back-btn" onClick={goBack}>
-            목록으로
+            채팅방 목록
           </button>
         </header>
 
@@ -201,32 +251,76 @@ export default function GroupChatRoom() {
           <div className="gcr-loading" aria-live="polite">채팅방을 불러오는 중…</div>
         ) : (
           <>
-            <div className="gcr-messages-container" ref={scrollBoxRef}>
-              {messages.length === 0 ? (
-                <div className="gcr-empty">
-                  <p>아직 메시지가 없습니다</p>
-                  <p>첫 메시지를 보내보세요!</p>
-                </div>
-              ) : (
-                <div className="gcr-messages">
-                  {messages.map((m) => {
-                    const mine = m.mine ?? (myUid != null && String(m.senderId) === String(myUid));
-                    return (
-                      <div key={m.id ?? `${m.senderId}-${m.sentAt}-${Math.random()}`} className={`gcr-message ${mine ? 'gcr-message-mine' : 'gcr-message-other'}`}>
-                        <div className="gcr-message-header">
-                          <span className="gcr-sender-name">{m.senderName}</span>
-                          <span className="gcr-message-time">
-                            {m.sentAt ? new Date(m.sentAt).toLocaleString() : ""}
-                          </span>
+            <div className="gcr-main-content">
+              <div className="gcr-messages-container" ref={scrollBoxRef}>
+                {messages.length === 0 ? (
+                  <div className="gcr-empty">
+                    <p>아직 메시지가 없습니다</p>
+                    <p>첫 메시지를 보내보세요!</p>
+                  </div>
+                ) : (
+                  <div className="gcr-messages">
+                    {messages.map((m) => {
+                      // 시스템 메시지 (LEAVE 등)도 '헤더 + 말풍선' 형태로 표시
+                        if (m.system || m.type === 'SYSTEM' || m.type === 'LEAVE' || m.type === 'JOIN') {
+                          return (
+                            <div
+                              key={m.id ?? `sys-${m.sentAt ?? ''}`}
+                              className="gcr-message gcr-message-system"
+                            >
+                            
+                              <div className="gcr-message-content">
+                                {m.message}
+                              </div>
+                            </div>
+                          );
+                        }
+                      const mine = m.mine ?? (myUid != null && String(m.senderId) === String(myUid));
+                      return (
+                        <div key={m.id ?? `${m.senderId ?? 'sys'}-${m.sentAt ?? ''}`} className={`gcr-message ${mine ? 'gcr-message-mine' : 'gcr-message-other'}`}>
+                          <div className="gcr-message-header">
+                            <span className="gcr-sender-name">{m.senderName}</span>
+                            <span className="gcr-message-time">
+                              {m.sentAt ? new Date(m.sentAt).toLocaleString() : ""}
+                            </span>
+                          </div>
+                          <div className="gcr-message-content">
+                            {m.message}
+                          </div>
                         </div>
-                        <div className="gcr-message-content">
-                          {m.message}
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="gcr-participants-sidebar">
+                <div className="gcr-participants-header">
+                  <h3 className="gcr-participants-title">참여자 목록</h3>
+                  <span className="gcr-participants-count">3명</span>
                 </div>
-              )}
+                <div className="gcr-participants-list">
+                  <div className="gcr-participant-item">
+                    <div className="gcr-participant-avatar">👤</div>
+                    <div className="gcr-participant-info">
+                      <span className="gcr-participant-name">사용자1</span>
+                    </div>
+                  </div>
+                  <div className="gcr-participant-item">
+                    <div className="gcr-participant-avatar">👤</div>
+                    <div className="gcr-participant-info">
+                      <span className="gcr-participant-name">사용자2</span>
+                      
+                    </div>
+                  </div>
+                  <div className="gcr-participant-item">
+                    <div className="gcr-participant-avatar">👤</div>
+                    <div className="gcr-participant-info">
+                      <span className="gcr-participant-name">사용자3</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="gcr-input-section">
@@ -248,6 +342,9 @@ export default function GroupChatRoom() {
                   전송
                 </button>
               </div>
+                <button type="button" className="gcr-leave-btn" onClick={leaveRoom}>
+                  방 나가기
+                </button>
             </div>
           </>
         )}
