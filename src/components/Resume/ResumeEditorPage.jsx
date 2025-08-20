@@ -8,7 +8,6 @@ import {
   Award,
   Languages,
   Link as LinkIcon,
-  Trash2,
   Eye,
   Server,
   Save,
@@ -31,6 +30,7 @@ import {
   SkillForm,
   ProjectForm,
   ResumePreviewModal,
+  ActivityForm, // 올바르게 import
 } from "./index.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import axios from "axios";
@@ -45,68 +45,9 @@ const trimOrNull = (v) => (typeof v === "string" ? v.trim() || null : v);
 const toIntOrNull = (v) => {
   if (v === "" || v == null) return null;
   const n = Number(v);
-  return Number.isFinite(n) ? Math.trunc(n) : null;
+  return Number.isFinite(n) ? Math.trunc(n) : v;
 };
 
-/* ---------------------- 로컬 전용 활동 폼 ---------------------- */
-const ActivityItemForm = ({ data = {}, onUpdate }) => {
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    onUpdate?.({ ...data, [name]: value });
-  };
-  return (
-    <div className="item-form grid-layout">
-      <div className="form-field full-width">
-        <label>활동명</label>
-        <input
-          name="activityName"
-          value={data.activityName || ""}
-          onChange={onChange}
-          placeholder="예) 개발 동아리, 해커톤 참여"
-        />
-      </div>
-      <div className="form-field">
-        <label>기관/단체</label>
-        <input
-          name="organization"
-          value={data.organization || ""}
-          onChange={onChange}
-        />
-      </div>
-      <div className="form-field">
-        <label>역할</label>
-        <input name="role" value={data.role || ""} onChange={onChange} />
-      </div>
-      <div className="form-field">
-        <label>시작일</label>
-        <input
-          type="date"
-          name="startDate"
-          value={data.startDate || ""}
-          onChange={onChange}
-        />
-      </div>
-      <div className="form-field">
-        <label>종료일</label>
-        <input
-          type="date"
-          name="endDate"
-          value={data.endDate || ""}
-          onChange={onChange}
-        />
-      </div>
-      <div className="form-field full-width">
-        <label>설명</label>
-        <textarea
-          name="description"
-          value={data.description || ""}
-          onChange={onChange}
-          placeholder="무엇을 했고, 어떤 임팩트가 있었는지 적어주세요."
-        />
-      </div>
-    </div>
-  );
-};
 
 /* ---------------------- 프로필 헤더 ---------------------- */
 const ProfileHeader = ({ profile, onUpdate, onSave }) => {
@@ -423,11 +364,18 @@ function ResumeEditorPage() {
   const [isRepresentative, setIsRepresentative] = useState(false);
   const [isPublic, setIsPublic] = useState(true);
 
+  // 섹션별 수정 상태 관리
+  const [editingSections, setEditingSections] = useState({});
+  const [sectionBeforeEdit, setSectionBeforeEdit] = useState({});
+  
+  // 삭제 확인 상태 관리
+  const [confirmingDelete, setConfirmingDelete] = useState(null); // { sectionId, subId }
+
   const sectionComponents = {
     experiences: { title: "경력", component: ExperienceForm },
-    educations: { title: "학력", component: EducationForm },
+    educations: { title: "학력", component: EducationForm, required: true },
     skills: { title: "기술", component: SkillForm },
-    activities: { title: "대외활동", component: ActivityItemForm },
+    activities: { title: "대외활동", component: ActivityForm },
     awards: { title: "수상 경력", component: AwardForm },
     certifications: { title: "자격증", component: CertificationForm },
     languages: { title: "외국어", component: LanguageForm },
@@ -614,6 +562,38 @@ function ResumeEditorPage() {
     return Math.min(100, base + ratio);
   }, [resumeTitle, sections]);
 
+    /* ---------- 섹션 수정 관리 ---------- */
+  const handleEditSection = (sectionId) => {
+    setEditingSections((prev) => ({ ...prev, [sectionId]: true }));
+    setSectionBeforeEdit((prev) => ({
+      ...prev,
+      [sectionId]: sections.find((s) => s.id === sectionId),
+    }));
+  };
+
+  const handleSaveSection = (sectionId) => {
+    setEditingSections((prev) => ({ ...prev, [sectionId]: false }));
+    setSectionBeforeEdit((prev) => {
+      const newState = { ...prev };
+      delete newState[sectionId];
+      return newState;
+    });
+  };
+
+  const handleCancelEditSection = (sectionId) => {
+    setSections((prev) =>
+      prev.map((s) =>
+        s.id === sectionId ? sectionBeforeEdit[sectionId] : s
+      )
+    );
+    setEditingSections((prev) => ({ ...prev, [sectionId]: false }));
+    setSectionBeforeEdit((prev) => {
+        const newState = { ...prev };
+        delete newState[sectionId];
+        return newState;
+    });
+  };
+
   /* ---------- 섹션 조작 ---------- */
   const handleAddItem = (sectionType) => {
     const exists = sections.some((s) => s.type === sectionType);
@@ -632,27 +612,26 @@ function ResumeEditorPage() {
         )
       );
     } else {
+      const newSectionId = `${sectionType}-${Date.now()}`;
       setSections((prev) => [
         ...prev,
         {
-          id: `${sectionType}-${Date.now()}`,
+          id: newSectionId,
           type: sectionType,
           data: [{ subId: `${sectionType}-item-${Date.now()}` }],
         },
       ]);
+      handleEditSection(newSectionId);
     }
   };
 
-  const handleRemoveSection = (sectionId) =>
-    setSections((prev) => prev.filter((s) => s.id !== sectionId));
-
-  const handleAddItemToSection = (sectionId, sectionType) => {
+  const handleAddItemToSection = (sectionId) => {
     setSections((prev) =>
       prev.map((s) =>
         s.id === sectionId
           ? {
               ...s,
-              data: [...s.data, { subId: `${sectionType}-item-${Date.now()}` }],
+              data: [...s.data, { subId: `${s.type}-item-${Date.now()}` }],
             }
           : s
       )
@@ -665,10 +644,11 @@ function ResumeEditorPage() {
         .map((s) => {
           if (s.id !== sectionId) return s;
           const rest = (s.data || []).filter((it) => it.subId !== subId);
-          return rest.length ? { ...s, data: rest } : null;
+          return rest.length > 0 ? { ...s, data: rest } : null;
         })
         .filter(Boolean)
     );
+    setConfirmingDelete(null); // 삭제 확인 상태 초기화
   };
 
   const handleItemChange = (sectionId, subId, updatedData) => {
@@ -848,46 +828,85 @@ function ResumeEditorPage() {
             {sections.map((section) => {
               const def = sectionComponents[section.type];
               if (!def) return null;
-              const { component: Comp, title } = def;
+              const { component: Comp, title, required } = def;
+              const isEditing = !!editingSections[section.id];
 
               return (
                 <section key={section.id} className="editor-section">
                   <div className="section-header">
-                    <h2>{title}</h2>
-                    <button
-                      className="delete-item-btn"
-                      onClick={() => handleRemoveSection(section.id)}
-                    >
-                      <Trash2 size={16} /> 항목 전체 삭제
-                    </button>
+                    <h2>
+                      {title}
+                      {required && <span className="required-text">(필수)</span>}
+                    </h2>
+                    <div className="section-header-actions">
+                      {isEditing ? (
+                        <>
+                          <button className="action-btn primary" onClick={() => handleSaveSection(section.id)}>저장</button>
+                        </>
+                      ) : (
+                        <button className="action-btn" onClick={() => handleEditSection(section.id)}>수정</button>
+                      )}
+                    </div>
                   </div>
                   <div className="section-content">
-                    {(section.data || []).map((item) => (
-                      <div key={item.subId} className="item-form-wrapper">
-                        <Comp
-                          data={item}
-                          onUpdate={(updated) =>
-                            handleItemChange(section.id, item.subId, updated)
-                          }
-                        />
+                    {(section.data || []).map((item) => {
+                      const isConfirmingDelete =
+                        confirmingDelete?.sectionId === section.id &&
+                        confirmingDelete?.subId === item.subId;
+
+                      return (
+                        <div key={item.subId} className="item-form-wrapper">
+                          {/* 삭제 확인 UI */}
+                          {isConfirmingDelete ? (
+                            <div className="delete-confirm-box">
+                              <span>이 항목을 삭제하시겠습니까?</span>
+                              <div className="delete-confirm-actions">
+                                <button
+                                  className="action-btn primary"
+                                  onClick={() => handleRemoveItemFromSection(section.id, item.subId)}
+                                >
+                                  예
+                                </button>
+                                <button
+                                  className="action-btn"
+                                  onClick={() => setConfirmingDelete(null)}
+                                >
+                                  아니오
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <Comp
+                                data={item}
+                                onUpdate={(updated) =>
+                                  handleItemChange(section.id, item.subId, updated)
+                                }
+                                isEditing={isEditing}
+                              />
+                              <button
+                                className="remove-item-btn"
+                                onClick={() =>
+                                  setConfirmingDelete({ sectionId: section.id, subId: item.subId })
+                                }
+                              >
+                                <X size={16} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {isEditing && (
                         <button
-                          className="remove-item-btn"
-                          onClick={() =>
-                            handleRemoveItemFromSection(section.id, item.subId)
-                          }
+                        className="add-item-btn"
+                        onClick={() =>
+                            handleAddItemToSection(section.id)
+                        }
                         >
-                          <X size={16} />
+                        <PlusCircle size={16} /> {title} 추가
                         </button>
-                      </div>
-                    ))}
-                    <button
-                      className="add-item-btn"
-                      onClick={() =>
-                        handleAddItemToSection(section.id, section.type)
-                      }
-                    >
-                      <PlusCircle size={16} /> {title} 추가
-                    </button>
+                    )}
                   </div>
                 </section>
               );

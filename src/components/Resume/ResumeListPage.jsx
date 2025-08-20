@@ -13,6 +13,7 @@ import {
 import "../css/ResumeListPage.css";
 import { useAuth } from "../context/AuthContext.jsx";
 import { Modal } from "../UI/index.js";
+import { Bot } from "lucide-react";
 
 /* ---------------------- 공통 설정 ---------------------- */
 const API_BASE_URL = "http://localhost:8080/api"; // 백엔드 표준 프리픽스

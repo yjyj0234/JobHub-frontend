@@ -25,6 +25,13 @@
   top: 20px;
 }
 
+/* --- ProfileHeader (디자인 및 레이아웃 수정됨) --- */
+.profile-header-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
 .profile-header {
   position: relative;
   background-color: #ffffff;
@@ -85,9 +92,9 @@
   flex-shrink: 0;
 }
 .profile-photo-wrapper {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
+  width: 120px; /* 가로 크기 */
+  height: 160px; /* 세로 크기 (3:4 비율) */
+  border-radius: 12px; /* 사각형에 어울리게 원형 -> 사각 라운드 */
   overflow: hidden;
   border: 4px solid #fff;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -111,8 +118,8 @@
 }
 .photo-edit-icon {
   position: absolute;
-  bottom: 0px;
-  right: 0px;
+  bottom: 5px; /* 위치 조정 */
+  right: 5px; /* 위치 조정 */
   background-color: white;
   border-radius: 50%;
   width: 30px;
@@ -121,14 +128,18 @@
   align-items: center;
   justify-content: center;
   border: 1px solid #ced4da;
+  cursor: pointer; /* 커서 추가 */
 }
 
-/* 정보 (중앙) */
-.profile-details {
-  flex-grow: 1;
+/* 정보 (중앙) - 사진 크기 변경으로 인한 간격 조정 */
+.profile-main-info {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  align-items: center;
+  gap: 30px; /* 간격 조정 */
+  width: 100%;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f3f8;
+  margin-bottom: 20px;
 }
 .profile-name-display { font-size: 1.8rem; font-weight: 700; color: #1c3d5a; margin: 0; }
 .profile-headline-display { font-size: 1.1rem; color: #4a69bd; margin: 0; }
@@ -198,6 +209,7 @@
   white-space: pre-wrap;
   text-align: left;
 }
+/* --- --- */
 
 /* 이력서 제목 및 액션 버튼 */
 .editor-header {
@@ -248,7 +260,7 @@
   border-color: var(--c-accent);
 }
 .action-btn.primary:hover {
-  background-color: #3a75c4;
+  background-color: #3a5aa0; /* darken color */
 }
 
 /* 에디터 컨텐츠 영역 */
@@ -280,16 +292,24 @@
 .section-header h2 {
   margin: 0;
   font-size: 1.1rem;
-}
-.delete-item-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
-  color: #868e96;
-  font-size: 0.85rem;
+  gap: 8px;
 }
-.delete-item-btn:hover {
-  color: #ff6b6b;
+.required-mark {
+  color: #ff4d4f;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+.required-text { /* 필수 텍스트 스타일 추가 */
+  color: #ff4d4f;
+  font-size: 0.8rem;
+  font-weight: normal;
+  margin-left: 4px;
+}
+.section-header-actions {
+  display: flex;
+  gap: 10px;
 }
 .section-content {
   padding: 20px;
@@ -463,4 +483,24 @@
 }
 .toggle-switch input:checked + label:before {
   transform: translateX(20px);
+}
+
+.delete-confirm-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  gap: 15px;
+  text-align: center;
+}
+
+.delete-confirm-box span {
+  font-weight: 600;
+  color: #333;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 10px;
 }
