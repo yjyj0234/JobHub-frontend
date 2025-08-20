@@ -44,7 +44,7 @@ const companyData = [
 function Grid({ sectionRef }) {
   return (
     <section ref={sectionRef} className="grid-section">
-      <h2 className="grid-title">✨ 추천 기업</h2>
+      <h2 className="grid-title">✨ 추천 공고</h2>
       <div className="grid">
         {companyData.map((company, index) => (
           <Card key={index} data={company} />

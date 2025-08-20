@@ -4,11 +4,21 @@
   min-height: 100vh;
 }
 
+/* src/css/JobPostingList.css */
 .job-posting-header {
   position: relative;
   background:
-    linear-gradient(135deg, rgba(139,92,246,0.92) 0%, rgba(96,165,250,0.92) 100%),
-    radial-gradient(1200px 200px at 20% -50%, rgba(255,255,255,0.25), transparent 60%);
+    /* Hero의 텍스트 그라데이션과 동일한 팔레트/각도로 통일 */ linear-gradient(
+      45deg,
+      var(--c-accent) 0%,
+      #ffb2a0 100%
+    ),
+    /* 기존의 은은한 하이라이트(radial) 오버레이는 유지 */
+      radial-gradient(
+        1200px 200px at 20% -50%,
+        rgba(255, 255, 255, 0.25),
+        transparent 60%
+      );
   padding: 2.25rem 0;
   margin-bottom: 2rem;
   backdrop-filter: saturate(140%) blur(2px);
@@ -18,9 +28,16 @@
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(1200px 400px at -10% -10%, rgba(255,255,255,0.25), transparent 60%),
-    radial-gradient(800px 300px at 120% 10%, rgba(255,255,255,0.18), transparent 60%);
+  background: radial-gradient(
+      1200px 400px at -10% -10%,
+      rgba(255, 255, 255, 0.25),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px 300px at 120% 10%,
+      rgba(255, 255, 255, 0.18),
+      transparent 60%
+    );
   pointer-events: none;
 }
 
@@ -39,8 +56,8 @@
 
 /* 검색 카드 */
 .search-tab-container {
-  background: rgba(255,255,255,0.92);
-  border: 1px solid rgba(140,150,170,0.15);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(140, 150, 170, 0.15);
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 6px 24px rgba(17, 24, 39, 0.06);
@@ -51,7 +68,7 @@
   display: flex;
   gap: 0;
   margin-bottom: 1.25rem;
-  border-bottom: 2px solid rgba(0,0,0,0.06);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.06);
 }
 
 .search-tab {
@@ -69,7 +86,7 @@
   color: var(--c-accent);
 }
 .search-tab.active::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -2px;
   left: 0;
@@ -131,7 +148,9 @@
   font-size: 15px;
   padding: 0; /* 리본 높이에 맞춤 */
 }
-.input-with-icon input::placeholder { color: #9aa3b2; }
+.input-with-icon input::placeholder {
+  color: #9aa3b2;
+}
 
 /* 셀렉트(플랫) */
 .ribbon-cell.select select.flat-select {
@@ -204,7 +223,7 @@
   filter: brightness(0.98);
 }
 .search-button:disabled {
-  opacity: .6;
+  opacity: 0.6;
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -263,7 +282,7 @@
   height: fit-content;
   position: sticky;
   top: 20px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 .filter-group {
   margin-bottom: 2rem;
@@ -309,7 +328,7 @@
   background: var(--c-bg);
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 .job-list-header {
   display: flex;
@@ -402,8 +421,12 @@
   transition: color 0.2s;
   padding: 4px;
 }
-.bookmark-button:hover { color: #fbbf24; }
-.bookmark-button.active { color: #fbbf24; }
+.bookmark-button:hover {
+  color: #fbbf24;
+}
+.bookmark-button.active {
+  color: #fbbf24;
+}
 
 .job-details {
   display: flex;
@@ -418,7 +441,9 @@
   font-size: 14px;
   color: var(--c-subtext);
 }
-.job-detail-item svg { color: #b0b0b0; }
+.job-detail-item svg {
+  color: #b0b0b0;
+}
 
 .job-skills {
   display: flex;

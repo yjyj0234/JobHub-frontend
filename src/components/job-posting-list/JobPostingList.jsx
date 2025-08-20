@@ -884,11 +884,13 @@ const JobPosting = () => {
   const navigate = useNavigate();
 
   //디테일페이지 이동
-  const openDetail = React.useCallback((jobId) => {
-    if (!jobId) return;
-    navigate(`/jobpostinglist/${jobId}`);
-  }, [navigate]);
-
+  const openDetail = React.useCallback(
+    (jobId) => {
+      if (!jobId) return;
+      navigate(`/jobpostinglist/${jobId}`);
+    },
+    [navigate]
+  );
 
   return (
     <div className="job-posting-container">
