@@ -8,9 +8,7 @@ import {
   Award,
   Languages,
   Link as LinkIcon,
-  Trash2,
   Eye,
-  Server,
   Save,
   User,
   Phone,
@@ -20,6 +18,7 @@ import {
   X,
   Camera,
   Pencil,
+  Server,
 } from "lucide-react";
 import {
   ExperienceForm,
@@ -37,18 +36,141 @@ import axios from "axios";
 
 /* ---------------------- 공통 설정 ---------------------- */
 axios.defaults.withCredentials = true;
-const API = "/api"; // 모든 이력서/프로필 API 경로 접두사
+const API = "/api";
 
 /* ---------------------- 유틸 ---------------------- */
 const getUid = (u) => u?.id ?? u?.userId ?? null;
-const trimOrNull = (v) => (typeof v === "string" ? v.trim() || null : v);
+const trim = (v) => (typeof v === "string" ? v.trim() : v);
+const trimOrNull = (v) => {
+  if (v == null) return null;
+  if (typeof v !== "string") return v;
+  const t = v.trim();
+  return t === "" ? null : t;
+};
 const toIntOrNull = (v) => {
   if (v === "" || v == null) return null;
   const n = Number(v);
   return Number.isFinite(n) ? Math.trunc(n) : null;
 };
+const toNumOrNull = (v) => {
+  if (v === "" || v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+const stripMeta = (obj = {}) => {
+  const { subId, _temp, ...rest } = obj;
+  return rest;
+};
+const hasAnyValue = (obj = {}) =>
+  Object.values(obj).some((v) => {
+    if (v == null) return false;
+    if (typeof v === "string") return v.trim() !== "";
+    return true;
+  });
 
-/* ---------------------- 로컬 전용 활동 폼 ---------------------- */
+/* ---------------------- 섹션별 API/정규화 ---------------------- */
+/** 대외활동: 응답 키가 다른 경우를 위해 정규화 */
+const normalizeActivity = (it = {}) => ({
+  id: it.id ?? it.activityId ?? it.resumeActivityId ?? it.seq ?? null,
+  activityName: it.activityName ?? it.name ?? it.title ?? "",
+  organization: it.organization ?? it.org ?? it.company ?? "",
+  role: it.role ?? it.position ?? "",
+  startDate: it.startDate ?? it.start ?? it.beginDate ?? null,
+  endDate: it.endDate ?? it.finishDate ?? it.end ?? null,
+  description: it.description ?? it.desc ?? "",
+});
+
+/** 백엔드 경로 컨벤션 차이(중첩 vs 납작)를 함수 인자 수(length)로 구분 */
+const SECTION_API = {
+  activities: {
+    list: (rid) => `${API}/resumes/${rid}/activities`,
+    create: (rid) => `${API}/resumes/${rid}/activities`,
+    update: (rid, id) => `${API}/resumes/${rid}/activities/${id}`, // (rid,id)
+    remove: (rid, id) => `${API}/resumes/${rid}/activities/${id}`, // (rid,id)
+    toPayload: (it) => ({
+      activityName: trimOrNull(it.activityName),
+      organization: trimOrNull(it.organization),
+      role: trimOrNull(it.role),
+      startDate: it.startDate || null,
+      endDate: it.endDate || null,
+      description: trimOrNull(it.description),
+    }),
+    normalize: normalizeActivity,
+  },
+
+  // ======= 아래 섹션들은 BE 준비상황에 맞춰 사용 (예시) =======
+  educations: {
+    list: (rid) => `${API}/resumes/${rid}/educations`,
+    create: (rid) => `${API}/resumes/${rid}/educations`,
+    update: (id) => `${API}/resumes/educations/${id}`, // (id)
+    remove: (id) => `${API}/resumes/educations/${id}`, // (id)
+    // DB 엔티티(ResumeEducations)에 맞춘 payload
+    toPayload: (it) => ({
+      schoolName: trimOrNull(it.schoolName),
+      schoolType: trimOrNull(it.schoolType),
+      major: trimOrNull(it.major),
+      minor: trimOrNull(it.minor),
+      degree: trimOrNull(it.degree),
+      admissionDate: it.admissionDate || null,
+      graduationDate: it.graduationDate || null,
+      graduationStatus: trimOrNull(it.graduationStatus),
+      gpa: toNumOrNull(it.gpa),
+      maxGpa: toNumOrNull(it.maxGpa),
+    }),
+  },
+
+  experiences: {
+    list: (rid) => `${API}/resumes/${rid}/experiences`,
+    create: (rid) => `${API}/resumes/${rid}/experiences`,
+    update: (id) => `${API}/resumes/experiences/${id}`,
+    remove: (id) => `${API}/resumes/experiences/${id}`,
+    toPayload: (it) => stripMeta(it),
+  },
+  skills: {
+    list: (rid) => `${API}/resumes/${rid}/skills`,
+    create: (rid) => `${API}/resumes/${rid}/skills`,
+    update: (id) => `${API}/resumes/skills/${id}`,
+    remove: (id) => `${API}/resumes/skills/${id}`,
+    toPayload: (it) => stripMeta(it),
+  },
+  projects: {
+    list: (rid) => `${API}/resumes/${rid}/projects`,
+    create: (rid) => `${API}/resumes/${rid}/projects`,
+    update: (id) => `${API}/resumes/projects/${id}`,
+    remove: (id) => `${API}/resumes/projects/${id}`,
+    toPayload: (it) => stripMeta(it),
+  },
+  awards: {
+    list: (rid) => `${API}/resumes/${rid}/awards`,
+    create: (rid) => `${API}/resumes/${rid}/awards`,
+    update: (id) => `${API}/resumes/awards/${id}`,
+    remove: (id) => `${API}/resumes/awards/${id}`,
+    toPayload: (it) => stripMeta(it),
+  },
+  certifications: {
+    list: (rid) => `${API}/resumes/${rid}/certifications`,
+    create: (rid) => `${API}/resumes/${rid}/certifications`,
+    update: (id) => `${API}/resumes/certifications/${id}`,
+    remove: (id) => `${API}/resumes/certifications/${id}`,
+    toPayload: (it) => stripMeta(it),
+  },
+  languages: {
+    list: (rid) => `${API}/resumes/${rid}/languages`,
+    create: (rid) => `${API}/resumes/${rid}/languages`,
+    update: (id) => `${API}/resumes/languages/${id}`,
+    remove: (id) => `${API}/resumes/languages/${id}`,
+    toPayload: (it) => stripMeta(it),
+  },
+  portfolios: {
+    list: (rid) => `${API}/resumes/${rid}/portfolios`,
+    create: (rid) => `${API}/resumes/${rid}/portfolios`,
+    update: (id) => `${API}/resumes/portfolios/${id}`,
+    remove: (id) => `${API}/resumes/portfolios/${id}`,
+    toPayload: (it) => stripMeta(it),
+  },
+};
+
+/* ---------------------- (로컬) 대외활동 폼 ---------------------- */
 const ActivityItemForm = ({ data = {}, onUpdate }) => {
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -124,9 +246,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     const newData = { ...editData, [name]: value };
-    if (name === "regionName") {
-      newData.regionId = null;
-    }
+    if (name === "regionName") newData.regionId = null; // name 수정 시 id 초기화
     setEditData(newData);
   };
 
@@ -339,7 +459,7 @@ const ResumeStatusPalette = ({
           <div
             className="meter-bar-foreground"
             style={{ width: `${completeness}%` }}
-          ></div>
+          />
         </div>
       </div>
       <div className="status-toggles">
@@ -412,9 +532,10 @@ const EditorPalette = ({ onAddItem, addedSections = [] }) => {
 function ResumeEditorPage() {
   const navigate = useNavigate();
   const { resumeId: p1, id: p2 } = useParams();
-  const resumeId = p1 ? Number(p1) : p2 ? Number(p2) : null;
+  const initialResumeId = p1 ? Number(p1) : p2 ? Number(p2) : null;
   const { user } = useAuth();
 
+  const [resumeId, setResumeId] = useState(initialResumeId);
   const [userProfile, setUserProfile] = useState(null);
   const [sections, setSections] = useState([]);
   const [resumeTitle, setResumeTitle] = useState("");
@@ -435,7 +556,7 @@ function ResumeEditorPage() {
     projects: { title: "프로젝트", component: ProjectForm },
   };
 
-  /* ---------- 서버 → 화면 상태 변환 도우미 ---------- */
+  /* ---------- 서버 → 화면 상태 변환 ---------- */
   const makeSection = (type, items = []) => {
     if (!Array.isArray(items) || items.length === 0) return null;
     return {
@@ -452,7 +573,6 @@ function ResumeEditorPage() {
     const built = [];
     const push = (s) => s && built.push(s);
 
-    // 서버 필드 네이밍에 따라 조합 (존재하는 것만 추가)
     push(makeSection("experiences", dto.experiences ?? dto.experienceList));
     push(makeSection("educations", dto.educations ?? dto.educationList));
     push(makeSection("skills", dto.skills ?? dto.skillList));
@@ -466,6 +586,72 @@ function ResumeEditorPage() {
     push(makeSection("portfolios", dto.portfolios ?? dto.portfolioList));
 
     return built;
+  };
+
+  /** 개별 엔드포인트로 로드(없는 건 무시) */
+  const fetchSectionsByEndpoints = async (rid) => {
+    const out = [];
+
+    const tryFetch = async (type, cfg) => {
+      if (!cfg?.list) return;
+      try {
+        const res = await axios.get(cfg.list(rid), {
+          validateStatus: () => true,
+        });
+        if (res.status >= 200 && res.status < 300) {
+          const raw = Array.isArray(res.data)
+            ? res.data
+            : Array.isArray(res.data?.content)
+            ? res.data.content
+            : [];
+          const items =
+            type === "activities" && SECTION_API.activities.normalize
+              ? raw.map(SECTION_API.activities.normalize)
+              : raw;
+          const sec = makeSection(type, items);
+          if (sec) out.push(sec);
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+
+    await Promise.all(
+      Object.entries(SECTION_API).map(([type, cfg]) => tryFetch(type, cfg))
+    );
+
+    return out;
+  };
+
+  /** 같은 type 섹션 합치기 */
+  const mergeSections = (base = [], extra = []) => {
+    const map = new Map();
+    const add = (sec) => {
+      if (!sec) return;
+      const exist = map.get(sec.type);
+      if (exist) exist.data = [...exist.data, ...sec.data];
+      else map.set(sec.type, { ...sec });
+    };
+    base.forEach(add);
+    extra.forEach(add);
+    return Array.from(map.values());
+  };
+
+  /** 필요 시 이력서 자동 생성해서 ID 확보 */
+  const ensureResumeId = async () => {
+    if (resumeId) return resumeId;
+    const payload = {
+      title: resumeTitle.trim() || "새 이력서",
+      isPrimary: isRepresentative,
+      isPublic,
+      completionRate: 0,
+    };
+    const res = await axios.post(`${API}/resumes`, payload);
+    const newId =
+      typeof res.data === "number" ? res.data : Number(res.data?.id);
+    setResumeId(newId);
+    navigate(`/resumes/${newId}`, { replace: true });
+    return newId;
   };
 
   /* ---------- 프로필 로드 ---------- */
@@ -522,24 +708,40 @@ function ResumeEditorPage() {
 
   /* ---------- 이력서 로드(편집 모드) ---------- */
   useEffect(() => {
-    if (!resumeId) return; // 새로 만들기 모드
+    if (!resumeId) return;
     let ignore = false;
 
     (async () => {
       try {
-        const { data } = await axios.get(`${API}/resumes/${resumeId}`);
+        const res = await axios.get(`${API}/resumes/${resumeId}`, {
+          validateStatus: () => true,
+        });
         if (ignore) return;
 
-        // 제목/대표/공개
-        setResumeTitle(data?.title ?? "");
-        setIsRepresentative(
-          Boolean(data?.isPrimary ?? data?.isRepresentative ?? false)
-        );
-        setIsPublic(data?.isPublic !== false);
+        if (res.status >= 200 && res.status < 300) {
+          const data = res.data ?? {};
+          setResumeTitle(data?.title ?? "");
+          setIsRepresentative(
+            Boolean(data?.isPrimary ?? data?.isRepresentative ?? false)
+          );
+          setIsPublic(data?.isPublic !== false);
 
-        // 섹션
-        const built = buildSectionsFromResponse(data ?? {});
-        setSections(built);
+          const base = buildSectionsFromResponse(data);
+          const extra = await fetchSectionsByEndpoints(resumeId);
+          setSections(mergeSections(base, extra));
+        } else {
+          const s = res.status;
+          alert(
+            (res.data && res.data.message) ||
+              (s === 404
+                ? "이력서를 찾을 수 없어요."
+                : s === 401
+                ? "로그인이 필요해요."
+                : s === 403
+                ? "권한이 없어요."
+                : "이력서 로드 중 오류가 발생했어요.")
+          );
+        }
       } catch (err) {
         console.error("[ResumeLoad] error:", err);
         const s = err?.response?.status;
@@ -578,7 +780,7 @@ function ResumeEditorPage() {
     const payload = {
       name: trimOrNull(profileToSave.name),
       phone: trimOrNull(profileToSave.phone),
-      birthYear: null,
+      birthYear: null, // 미사용
       birthDate: profileToSave.birthDate || null,
       profileImageUrl: trimOrNull(profileToSave.profileImageUrl),
       headline: trimOrNull(profileToSave.headline),
@@ -607,9 +809,7 @@ function ResumeEditorPage() {
   const completeness = useMemo(() => {
     const base = resumeTitle.trim() ? 10 : 0;
     const items = sections.flatMap((s) => s.data || []);
-    const filled = items.filter((it) =>
-      Object.values(it || {}).some(Boolean)
-    ).length;
+    const filled = items.filter((it) => hasAnyValue(stripMeta(it))).length;
     const ratio = items.length ? Math.round((filled / items.length) * 90) : 0;
     return Math.min(100, base + ratio);
   }, [resumeTitle, sections]);
@@ -643,27 +843,49 @@ function ResumeEditorPage() {
     }
   };
 
-  const handleRemoveSection = (sectionId) =>
-    setSections((prev) => prev.filter((s) => s.id !== sectionId));
+  const handleRemoveSection = (sectionIdParam) =>
+    setSections((prev) => prev.filter((s) => s.id !== sectionIdParam));
 
-  const handleAddItemToSection = (sectionId, sectionType) => {
-    setSections((prev) =>
-      prev.map((s) =>
-        s.id === sectionId
-          ? {
-              ...s,
-              data: [...s.data, { subId: `${sectionType}-item-${Date.now()}` }],
-            }
-          : s
-      )
-    );
-  };
+  /** 아이템 X 버튼: DB 삭제 포함 ((rid,id)/(id) 자동 판별) */
+  const handleRemoveItemFromSection = async (sectionIdParam, subId) => {
+    const sec = sections.find((s) => s.id === sectionIdParam);
+    if (!sec) return;
 
-  const handleRemoveItemFromSection = (sectionId, subId) => {
+    const api = SECTION_API[sec.type];
+    const item = (sec.data || []).find((it) => it.subId === subId);
+
+    if (item?.id && api?.remove) {
+      try {
+        let rid = resumeId;
+        if (!rid && api.remove.length === 2) {
+          rid = await ensureResumeId();
+        }
+        const urlForDelete =
+          api.remove.length === 2
+            ? api.remove(rid, item.id)
+            : api.remove(item.id);
+        await axios.delete(urlForDelete);
+      } catch (e) {
+        console.error("[Delete item] error", e);
+        const s = e?.response?.status;
+        alert(
+          e?.response?.data?.message ||
+            (s === 401
+              ? "로그인이 필요해요."
+              : s === 403
+              ? "권한이 없어요."
+              : s === 404
+              ? "이미 삭제된 항목이에요."
+              : "삭제에 실패했어요.")
+        );
+        return;
+      }
+    }
+
     setSections((prev) =>
       prev
         .map((s) => {
-          if (s.id !== sectionId) return s;
+          if (s.id !== sectionIdParam) return s;
           const rest = (s.data || []).filter((it) => it.subId !== subId);
           return rest.length ? { ...s, data: rest } : null;
         })
@@ -671,10 +893,10 @@ function ResumeEditorPage() {
     );
   };
 
-  const handleItemChange = (sectionId, subId, updatedData) => {
+  const handleItemChange = (sectionIdParam, subId, updatedData) => {
     setSections((prev) =>
       prev.map((s) =>
-        s.id === sectionId
+        s.id === sectionIdParam
           ? {
               ...s,
               data: (s.data || []).map((it) =>
@@ -686,37 +908,119 @@ function ResumeEditorPage() {
     );
   };
 
-  /* ---------- 프로필 변경 ---------- */
-  const handleProfileChange = (updatedProfile) =>
-    setUserProfile(updatedProfile);
-
-  /* ---------- 저장 헬퍼들 ---------- */
-  const statusFromCompleteness = () =>
-    completeness >= 100 ? "작성 완료" : "작성 중";
+  /* ---------- 섹션별 저장(입력/수정) ---------- */
   const buildResumePayload = () => ({
-    title: resumeTitle.trim(),
+    title: resumeTitle.trim() || "새 이력서",
     isPrimary: isRepresentative,
     isPublic,
-    status: statusFromCompleteness(),
+    completionRate: completeness,
   });
 
-  const postActivitiesBulk = async (createdId) => {
-    const acts = sections.find((s) => s.type === "activities")?.data ?? [];
-    if (acts.length === 0) return;
-    await Promise.all(
-      acts.map((it) =>
-        axios.post(`${API}/resumes/${createdId}/activities`, {
-          activityName: it.activityName || "",
-          organization: it.organization || "",
-          role: it.role || "",
-          startDate: it.startDate || null,
-          endDate: it.endDate || null,
-          description: it.description || "",
+  const saveSection = async (sectionIdParam) => {
+    const sec = sections.find((s) => s.id === sectionIdParam);
+    if (!sec) return;
+
+    if (!resumeTitle.trim()) {
+      alert("이력서 제목을 먼저 입력해주세요.");
+      return;
+    }
+
+    const rid = await ensureResumeId();
+    const cfg = SECTION_API[sec.type];
+    if (!cfg) {
+      alert("이 섹션은 아직 서버 연동이 설정되지 않았어요.");
+      return;
+    }
+
+    try {
+      await Promise.all(
+        (sec.data || []).map(async (it) => {
+          const payload = cfg.toPayload ? cfg.toPayload(it) : stripMeta(it);
+
+          // 완전히 비어있으면 생성/수정 스킵
+          if (!hasAnyValue(payload)) return;
+
+          if (it.id) {
+            if (!cfg.update) return;
+            const urlForUpdate =
+              cfg.update.length === 2
+                ? cfg.update(rid, it.id) // (rid,id)
+                : cfg.update(it.id); // (id)
+            await axios.put(urlForUpdate, payload);
+          } else {
+            if (!cfg.create) return;
+            const res = await axios.post(cfg.create(rid), payload, {
+              validateStatus: () => true,
+            });
+            if (res.status >= 200 && res.status < 300) {
+              const body = res.data;
+              const newId =
+                typeof body === "number"
+                  ? body
+                  : body?.id ?? body?.activityId ?? null;
+              if (newId) {
+                setSections((prev) =>
+                  prev.map((s) =>
+                    s.id === sectionIdParam
+                      ? {
+                          ...s,
+                          data: s.data.map((d) =>
+                            d.subId === it.subId ? { ...d, id: newId } : d
+                          ),
+                        }
+                      : s
+                  )
+                );
+              }
+            } else {
+              throw res;
+            }
+          }
         })
-      )
-    );
+      );
+
+      // 저장 후 해당 섹션만 서버 기준 재로드
+      if (cfg.list) {
+        const listRes = await axios.get(cfg.list(rid), {
+          validateStatus: () => true,
+        });
+        if (listRes.status >= 200 && listRes.status < 300) {
+          const raw = Array.isArray(listRes.data)
+            ? listRes.data
+            : Array.isArray(listRes.data?.content)
+            ? listRes.data.content
+            : [];
+          const items =
+            sec.type === "activities" && SECTION_API.activities.normalize
+              ? raw.map(SECTION_API.activities.normalize)
+              : raw;
+
+          const refreshed = makeSection(sec.type, items);
+          setSections((prev) =>
+            prev.map((s) => (s.id === sectionIdParam ? refreshed || s : s))
+          );
+        }
+      }
+
+      // 이력서 메타(완성도 등)도 업데이트
+      await axios.put(`${API}/resumes/${rid}`, buildResumePayload());
+
+      alert("섹션이 저장되었습니다.");
+    } catch (err) {
+      console.error("[SaveSection] error:", err);
+      const s = err?.response?.status;
+      alert(
+        err?.response?.data?.message ||
+          (s === 401
+            ? "로그인이 필요해요."
+            : s === 403
+            ? "권한이 없어요."
+            : "섹션 저장 중 오류가 발생했어요.")
+      );
+    }
   };
 
+  /* ---------- 상단(이력서) 단위 저장 ---------- */
   const handleTemporarySave = () => {
     if (!resumeTitle.trim()) return alert("이력서 제목을 입력해주세요.");
     const lastModified = new Date()
@@ -750,22 +1054,15 @@ function ResumeEditorPage() {
     setIsSaving(true);
     try {
       if (!resumeId) {
-        // 생성
-        const { data } = await axios.post(
-          `${API}/resumes`,
-          buildResumePayload()
-        );
-        const createdId = typeof data === "number" ? data : Number(data?.id);
+        const res = await axios.post(`${API}/resumes`, buildResumePayload());
+        const createdId =
+          typeof res.data === "number" ? res.data : Number(res.data?.id);
         if (!createdId) throw new Error("생성된 이력서 ID가 없습니다.");
-
-        await postActivitiesBulk(createdId);
-
+        setResumeId(createdId);
         localStorage.removeItem("resume_draft");
-        // 현재 라우팅은 /resumes/:id 사용 중 → edit 경로 없이 이동
         navigate(`/resumes/${createdId}`, { replace: true });
         alert("이력서 작성이 완료되었습니다!");
       } else {
-        // 수정
         await axios.put(`${API}/resumes/${resumeId}`, buildResumePayload());
         alert("이력서가 저장되었습니다.");
       }
@@ -801,7 +1098,7 @@ function ResumeEditorPage() {
         <main className="editor-main">
           <ProfileHeader
             profile={userProfile}
-            onUpdate={handleProfileChange}
+            onUpdate={(p) => setUserProfile(p)}
             onSave={handleSaveProfile}
           />
 
@@ -854,13 +1151,17 @@ function ResumeEditorPage() {
                 <section key={section.id} className="editor-section">
                   <div className="section-header">
                     <h2>{title}</h2>
-                    <button
-                      className="delete-item-btn"
-                      onClick={() => handleRemoveSection(section.id)}
-                    >
-                      <Trash2 size={16} /> 항목 전체 삭제
-                    </button>
+                    <div className="section-header-actions">
+                      <button
+                        className="action-btn"
+                        onClick={() => saveSection(section.id)}
+                        title="이 섹션만 저장"
+                      >
+                        <Save size={16} /> 저장
+                      </button>
+                    </div>
                   </div>
+
                   <div className="section-content">
                     {(section.data || []).map((item) => (
                       <div key={item.subId} className="item-form-wrapper">
@@ -875,6 +1176,7 @@ function ResumeEditorPage() {
                           onClick={() =>
                             handleRemoveItemFromSection(section.id, item.subId)
                           }
+                          title={item.id ? "DB에서도 삭제" : "삭제"}
                         >
                           <X size={16} />
                         </button>
@@ -883,7 +1185,23 @@ function ResumeEditorPage() {
                     <button
                       className="add-item-btn"
                       onClick={() =>
-                        handleAddItemToSection(section.id, section.type)
+                        setSections((prev) =>
+                          prev.map((s) =>
+                            s.id === section.id
+                              ? {
+                                  ...s,
+                                  data: [
+                                    ...s.data,
+                                    {
+                                      subId: `${
+                                        section.type
+                                      }-item-${Date.now()}`,
+                                    },
+                                  ],
+                                }
+                              : s
+                          )
+                        )
                       }
                     >
                       <PlusCircle size={16} /> {title} 추가
