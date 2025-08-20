@@ -46,6 +46,8 @@ export default function GroupChatRoom() {
   const scrollBoxRef = useRef(null);
   const lastSentRef = useRef({ text: null, ts: 0 });
 
+  const [participants, setParticipants] = useState([]);
+
   // 내 uid ref
   const myUidRef = useRef(myUid);
   useEffect(() => { myUidRef.current = myUid; }, [myUid]);
@@ -78,6 +80,19 @@ export default function GroupChatRoom() {
     })();
     return () => ctrl.abort();
   }, [roomId]);
+
+  // 참여자 목록 초기 로딩
+useEffect(() => {
+  if (!roomId) return;
+  (async () => {
+    try {
+      const { data } = await axios.get(`http://localhost:8080/group-chat/rooms/${roomId}/members`);
+      setParticipants(data ?? []);
+    } catch (e) {
+      console.error("참여자 목록 불러오기 실패:", e);
+    }
+  })();
+}, [roomId]);
 
   // 히스토리 + (선행) join
   useEffect(() => {
@@ -135,8 +150,14 @@ export default function GroupChatRoom() {
         // 구독 경로는 서버 설정(enableSimpleBroker("/topic"))과 맞춰야 함
         client.subscribe(`/topic/rooms/${roomId}`, (frame) => {
           try {
+            const raw = typeof frame.body === 'string' ? JSON.parse(frame.body) : frame.body;
+                            if (raw.type === 'JOIN') {
+                    setParticipants(prev => [...prev, { userId: raw.senderId, name: raw.senderName }]);
+                  } else if (raw.type === 'LEAVE') {
+                    setParticipants(prev => prev.filter(p => String(p.userId) !== String(raw.senderId)));
+                  }
            
-                   const raw = typeof frame.body === 'string' ? JSON.parse(frame.body) : frame.body;
+                   
                   const isSystem = raw.system || raw.type === 'SYSTEM' || raw.type === 'LEAVE' || raw.type === 'JOIN';
                   const mine = !isSystem && myUidRef.current != null && String(raw.senderId) === String(myUidRef.current);
                   const msg = { ...raw, mine };
@@ -176,10 +197,14 @@ export default function GroupChatRoom() {
   }, [roomId, myUid]); // 내 uid도 의존 (mine 판단용)
 
   // 새 메시지 오면 스크롤 최하단으로
-  useEffect(() => {
-    const box = scrollBoxRef.current;
-    if (box) box.scrollTop = box.scrollHeight;
-  }, [messages]);
+useEffect(() => {
+  const box = scrollBoxRef.current;
+  if (box) {
+    requestAnimationFrame(() => {
+      box.scrollTop = box.scrollHeight;
+    });
+  }
+}, [messages]);
 
   const send = () => {
     const text = input.trim();
@@ -252,14 +277,14 @@ export default function GroupChatRoom() {
         ) : (
           <>
             <div className="gcr-main-content">
-              <div className="gcr-messages-container" ref={scrollBoxRef}>
+              <div className="gcr-messages-container">
                 {messages.length === 0 ? (
                   <div className="gcr-empty">
                     <p>아직 메시지가 없습니다</p>
                     <p>첫 메시지를 보내보세요!</p>
                   </div>
                 ) : (
-                  <div className="gcr-messages">
+                  <div className="gcr-messages"  ref={scrollBoxRef}>
                     {messages.map((m) => {
                       // 시스템 메시지 (LEAVE 등)도 '헤더 + 말풍선' 형태로 표시
                         if (m.system || m.type === 'SYSTEM' || m.type === 'LEAVE' || m.type === 'JOIN') {
@@ -297,28 +322,17 @@ export default function GroupChatRoom() {
               <div className="gcr-participants-sidebar">
                 <div className="gcr-participants-header">
                   <h3 className="gcr-participants-title">참여자 목록</h3>
-                  <span className="gcr-participants-count">3명</span>
+                  <span className="gcr-participants-count">{participants.length}명</span>
                 </div>
                 <div className="gcr-participants-list">
-                  <div className="gcr-participant-item">
-                    <div className="gcr-participant-avatar">👤</div>
-                    <div className="gcr-participant-info">
-                      <span className="gcr-participant-name">사용자1</span>
+                  {participants.map((p) => (
+                    <div key={p.userId} className="gcr-participant-item">
+                      <div className="gcr-participant-avatar">👤</div>
+                      <div className="gcr-participant-info">
+                        <span className="gcr-participant-name">{p.name}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="gcr-participant-item">
-                    <div className="gcr-participant-avatar">👤</div>
-                    <div className="gcr-participant-info">
-                      <span className="gcr-participant-name">사용자2</span>
-                      
-                    </div>
-                  </div>
-                  <div className="gcr-participant-item">
-                    <div className="gcr-participant-avatar">👤</div>
-                    <div className="gcr-participant-info">
-                      <span className="gcr-participant-name">사용자3</span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
