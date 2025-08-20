@@ -1,3 +1,5 @@
+// src/components/layout/GlobalHeader.jsx
+
 import React, { useState, useEffect, useRef } from "react";
 import "../css/GlobalHeader.css";
 import logo from "../../assets/img/logo4.png";
@@ -8,6 +10,7 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8080/api";
 axios.defaults.withCredentials = true;
+
 const useOnClickOutside = (ref, handler) => {
   useEffect(() => {
     const listener = (event) => {
@@ -23,62 +26,43 @@ const useOnClickOutside = (ref, handler) => {
   }, [ref, handler]);
 };
 
-const DropdownPanel = ({
-  dataTree,
-  selectedIds,
-  onSelect,
-  onClose,
-  type, // 'region' or 'job'
-}) => {
-  const [activeParent, setActiveParent] = useState(dataTree[0] || null);
-
+const DropdownPanel = ({ dataTree, selectedIds, onSelect, onClose, type }) => {
+  const [activeParent, setActiveParent] = useState(dataTree?.[0] || null);
   useEffect(() => {
-    // 데이터가 로드되면 첫 번째 항목을 기본으로 활성화
-    if (dataTree.length > 0 && !activeParent) {
-      setActiveParent(dataTree[0]);
-    }
+    if (dataTree?.length > 0 && !activeParent) setActiveParent(dataTree?.[0]);
   }, [dataTree, activeParent]);
 
-  // 상위 카테고리에 속한 하위 항목 중 몇 개가 선택되었는지 계산
   const getSelectionCount = (parentId) => {
-    const parent = dataTree.find((p) => p.id === parentId);
+    const parent = dataTree?.find((p) => p.id === parentId);
     if (!parent || !parent.children) return 0;
     return parent.children.filter((child) => selectedIds.includes(child.id))
       .length;
   };
 
-  // '전체 선택' 버튼 핸들러
   const handleSelectAll = () => {
     if (!activeParent || !activeParent.children) return;
-
-    const childIds = activeParent.children.map((child) => child.id);
+    const childIds = activeParent.children.map((c) => c.id);
     const allSelected = childIds.every((id) => selectedIds.includes(id));
-
-    let newSelectedIds;
-    if (allSelected) {
-      // 모두 선택된 상태면 모두 해제 (상위 ID는 유지)
-      newSelectedIds = selectedIds.filter((id) => !childIds.includes(id));
-    } else {
-      // 하나라도 선택 안 된 상태면 모두 선택
-      newSelectedIds = [...new Set([...selectedIds, ...childIds])];
-    }
-    onSelect(newSelectedIds);
+    onSelect(
+      allSelected
+        ? selectedIds.filter((id) => !childIds.includes(id))
+        : [...new Set([...selectedIds, ...childIds])]
+    );
   };
 
-  // 개별 항목 선택 핸들러
   const handleChildSelect = (childId) => {
-    const newSelectedIds = selectedIds.includes(childId)
-      ? selectedIds.filter((id) => id !== childId)
-      : [...selectedIds, childId];
-    onSelect(newSelectedIds);
+    onSelect(
+      selectedIds.includes(childId)
+        ? selectedIds.filter((id) => id !== childId)
+        : [...selectedIds, childId]
+    );
   };
 
   return (
     <div className={`dropdown-panel ${type}-panel`}>
       <div className="dropdown-panel-body">
-        {/* 왼쪽 패널 (상위 카테고리) */}
         <div className="panel-left">
-          {dataTree.map((parent) => (
+          {dataTree?.map((parent) => (
             <button
               key={parent.id}
               className={`panel-left-item ${
@@ -95,8 +79,6 @@ const DropdownPanel = ({
             </button>
           ))}
         </div>
-
-        {/* 오른쪽 패널 (하위 카테고리) */}
         <div className="panel-right">
           {activeParent && (
             <>
@@ -117,27 +99,25 @@ const DropdownPanel = ({
                 </label>
               </div>
               <div className="panel-right-list">
-                {activeParent.children &&
-                  activeParent.children.map((child) => (
-                    <label key={child.id} className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.includes(child.id)}
-                        onChange={() => handleChildSelect(child.id)}
-                      />
-                      <span className="checkmark"></span>
-                      {child.name}
-                    </label>
-                  ))}
+                {activeParent.children?.map((child) => (
+                  <label key={child.id} className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(child.id)}
+                      onChange={() => handleChildSelect(child.id)}
+                    />
+                    <span className="checkmark"></span>
+                    {child.name}
+                  </label>
+                ))}
               </div>
             </>
           )}
         </div>
       </div>
-      {/* 푸터 */}
       <div className="dropdown-footer">
         <div className="selection-info">
-          {selectedIds.length > 0 ? (
+          {selectedIds?.length > 0 ? (
             <>
               <Info size={16} /> <strong>{selectedIds.length}개</strong> 선택됨
             </>
@@ -164,97 +144,70 @@ function GlobalHeader({ onLoginClick }) {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [scrolledSearchExpanded, setScrolledSearchExpanded] = useState(false); // 스크롤 시 검색창 확장 상태
   const [isRegionOpen, setRegionOpen] = useState(false);
   const [isJobOpen, setJobOpen] = useState(false);
 
   const [searchKeyword, setSearchKeyword] = useState("");
   const [selectedRegions, setSelectedRegions] = useState([]);
   const [selectedJobs, setSelectedJobs] = useState([]);
-
   const [regionTree, setRegionTree] = useState([]);
   const [jobCategoryTree, setJobCategoryTree] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const expandedSearchRef = useRef(null);
-  const scrolledSearchRef = useRef(null);
+  const searchContainerRef = useRef(null);
+  const isAdmin = isAuthed && user?.role === "ADMIN";
 
-  // 컴포넌트 마운트 시 데이터 로드
-
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  useOnClickOutside(expandedSearchRef, () => {
+  useOnClickOutside(searchContainerRef, () => {
     setRegionOpen(false);
     setJobOpen(false);
-  });
-  useOnClickOutside(scrolledSearchRef, () => {
-    setRegionOpen(false);
-    setJobOpen(false);
+    setScrolledSearchExpanded(false); // 외부 클릭 시 스크롤 검색창 닫기
   });
 
   useEffect(() => {
     const handleScroll = () => {
-      // scrollY가 0을 넘었는지 여부를 상태로 관리
       const shouldBeScrolled = window.scrollY > 0;
-      // 상태가 변경될 때만 리렌더링을 트리거하여 성능 향상
+      if (!shouldBeScrolled) {
+        setScrolledSearchExpanded(false); // 스크롤 올리면 닫기
+      }
       setIsScrolled((prev) =>
         prev === shouldBeScrolled ? prev : shouldBeScrolled
       );
     };
-
-    // passive: true 옵션으로 스크롤 성능 향상
     window.addEventListener("scroll", handleScroll, { passive: true });
-
-    // 컴포넌트 언마운트 시 이벤트 리스너 제거
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  //지역 선택/해제
-  const handleRegionSelect = (regionId) => {
-    setSelectedRegions((prev) => {
-      if (prev.includes(regionId)) {
-        return prev.filter((id) => id !== regionId);
-      } else {
-        return [...prev, regionId];
+  useEffect(() => {
+    const loadInitialData = async () => {
+      setLoading(true);
+      try {
+        const [regionsRes, jobsRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/search/regions/tree`),
+          axios.get(`${API_BASE_URL}/search/job-categories/tree`),
+        ]);
+        setRegionTree(regionsRes.data.regions || []);
+        setJobCategoryTree(jobsRes.data.categories || []);
+      } catch (error) {
+        console.error("데이터 로드 실패:", error);
+      } finally {
+        setLoading(false);
       }
-    });
-  };
-  const loadInitialData = async () => {
-    setLoading(true);
-    try {
-      const [regionsRes, jobsRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/search/regions/tree`),
-        axios.get(`${API_BASE_URL}/search/job-categories/tree`),
-      ]);
-      setRegionTree(regionsRes.data.regions || []);
-      setJobCategoryTree(jobsRes.data.categories || []);
-    } catch (error) {
-      console.error("데이터 로드 실패:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    loadInitialData();
+  }, []);
 
-  const handleSearch = async () => {
+  const handleSearch = () => {
     const searchData = {
       keyword: searchKeyword || null,
-      regionIds: selectedRegions.length > 0 ? selectedRegions : null,
-      categoryIds: selectedJobs.length > 0 ? selectedJobs : null,
-      page: 0,
-      size: 20,
+      regionIds: selectedRegions?.length > 0 ? selectedRegions : null,
+      categoryIds: selectedJobs?.length > 0 ? selectedJobs : null,
     };
-
-    console.log("검색 요청:", searchData);
-
-    // 검색 결과를 JobPostingList 페이지로 전달하며 이동
-    navigate("/jobpostinglist", {
-      state: { searchData },
-    });
-
+    navigate("/jobpostinglist", { state: { searchData } });
     setIsExpanded(false);
     setRegionOpen(false);
     setJobOpen(false);
+    setScrolledSearchExpanded(false);
   };
 
   const handleLogout = () => {
@@ -262,13 +215,19 @@ function GlobalHeader({ onLoginClick }) {
     navigate("/");
   };
 
-  const handleResumeClick = () => {
-    if (isAuthed) navigate("/resumes");
-    else onLoginClick();
-  };
-
+  const handleResumeClick = () =>
+    isAuthed ? navigate("/resumes") : onLoginClick();
   const postList = () => navigate("/postlist");
 
+  // 기업정보 페이지 이동 (COMPANY 권한 체크 포함)
+  const handleCompanyInfo = () => {
+    // 이중 체크: 프론트에서도 권한 확인
+    if (isCompany) {
+      navigate("/company-info");
+    } else {
+      alert("기업 회원만 접근 가능합니다");
+    }
+  };
   const jobPosting = () => navigate("/jobposting");
 
   const toggleRegion = () => {
@@ -280,6 +239,8 @@ function GlobalHeader({ onLoginClick }) {
     setJobOpen((prev) => !prev);
     setRegionOpen(false);
   };
+
+  const showSearchContainer = !isScrolled || scrolledSearchExpanded;
 
   const renderDropdownPanels = () => (
     <>
@@ -314,7 +275,11 @@ function GlobalHeader({ onLoginClick }) {
   const isCompany = isAuthed && isCompanyUser(user);
 
   return (
-    <header className={`global-header ${isScrolled ? "scrolled" : ""}`}>
+    <header
+      className={`global-header ${isScrolled ? "scrolled" : ""} ${
+        scrolledSearchExpanded ? "search-expanded" : ""
+      }`}
+    >
       <div className="header-content">
         <div className="top-bar">
           <Link to="/" className="logo">
@@ -327,52 +292,42 @@ function GlobalHeader({ onLoginClick }) {
             <button type="button" onClick={postList}>
               커뮤니티
             </button>
-
             {isCompany ? (
-              <button type="button" onClick={jobPosting}>
-                공고 등록
+              <button type="button" onClick={handleCompanyInfo}>
+                기업정보
               </button>
             ) : (
-              //role이 company가 아닌경우 이력서 버튼만 보이게
-              <button type="button" onClick={handleResumeClick}>
+              <button
+                type="button"
+                className="resume-btn"
+                onClick={handleResumeClick}
+              >
                 이력서
               </button>
             )}
             <button type="button">취업툴</button>
             <button type="button">이력서 코칭 AI</button>
+            {isAdmin && (
+              <button type="button" onClick={() => navigate("/admin")}>
+                관리자
+              </button>
+            )}
           </nav>
           <div className="top-right-section">
-            {isScrolled && (
-              <div className="scrolled-search" ref={scrolledSearchRef}>
-                <div className="search-input-wrapper-scrolled">
-                  <Search size={16} className="icon" />
-                  <input
-                    type="text"
-                    placeholder="검색"
-                    value={searchKeyword}
-                    onChange={(e) => setSearchKeyword(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                  />
-                </div>
+            {isScrolled && !scrolledSearchExpanded && (
+              <div className="scrolled-triggers">
                 <button
-                  className="dropdown-trigger-scrolled"
-                  onClick={toggleRegion}
+                  className="scrolled-trigger-btn"
+                  onClick={() => setScrolledSearchExpanded(true)}
                 >
-                  <span>
-                    지역{" "}
-                    {selectedRegions.length > 0 &&
-                      `(${selectedRegions.length})`}
-                  </span>
+                  <MapPin size={16} /> 지역
                 </button>
                 <button
-                  className="dropdown-trigger-scrolled"
-                  onClick={toggleJob}
+                  className="scrolled-trigger-btn"
+                  onClick={() => setScrolledSearchExpanded(true)}
                 >
-                  <span>
-                    직무 {selectedJobs.length > 0 && `(${selectedJobs.length})`}
-                  </span>
+                  <Briefcase size={16} /> 직무
                 </button>
-                {renderDropdownPanels()}
               </div>
             )}
             <div className="auth-buttons">
@@ -397,9 +352,9 @@ function GlobalHeader({ onLoginClick }) {
           </div>
         </div>
 
-        {!isScrolled && (
-          <div className="search-container">
-            {!isExpanded ? (
+        {showSearchContainer && (
+          <div className="search-container" ref={searchContainerRef}>
+            {!isExpanded && !isScrolled ? (
               <button
                 className="pre-search-button"
                 onClick={() => setIsExpanded(true)}
@@ -408,7 +363,7 @@ function GlobalHeader({ onLoginClick }) {
                 <span>어떤 기업을 찾고 계신가요?</span>
               </button>
             ) : (
-              <div className="expanded-search" ref={expandedSearchRef}>
+              <div className="expanded-search">
                 <div className="search-input-wrapper">
                   <label htmlFor="keyword-search">
                     <Search size={20} color="#888" />
@@ -427,7 +382,7 @@ function GlobalHeader({ onLoginClick }) {
                   <div>
                     <MapPin size={20} color="#888" />
                     <span>
-                      {selectedRegions.length > 0
+                      {selectedRegions?.length > 0
                         ? `${selectedRegions.length}개 지역 선택됨`
                         : "지역"}
                     </span>
@@ -439,7 +394,7 @@ function GlobalHeader({ onLoginClick }) {
                   <div>
                     <Briefcase size={20} color="#888" />
                     <span>
-                      {selectedJobs.length > 0
+                      {selectedJobs?.length > 0
                         ? `${selectedJobs.length}개 직무 선택됨`
                         : "직무"}
                     </span>
@@ -449,7 +404,25 @@ function GlobalHeader({ onLoginClick }) {
                 <button className="search-submit-button" onClick={handleSearch}>
                   검색
                 </button>
-                {renderDropdownPanels()}
+
+                {isRegionOpen && (
+                  <DropdownPanel
+                    dataTree={regionTree}
+                    selectedIds={selectedRegions}
+                    onSelect={setSelectedRegions}
+                    onClose={() => setRegionOpen(false)}
+                    type="region"
+                  />
+                )}
+                {isJobOpen && (
+                  <DropdownPanel
+                    dataTree={jobCategoryTree}
+                    selectedIds={selectedJobs}
+                    onSelect={setSelectedJobs}
+                    onClose={() => setJobOpen(false)}
+                    type="job"
+                  />
+                )}
               </div>
             )}
           </div>

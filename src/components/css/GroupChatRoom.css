@@ -1,0 +1,464 @@
+/* 페이지 컨테이너 */
+.gcr-page {
+  background: #ffffff;
+  padding: 24px 16px;
+  min-height: 100vh;
+}
+
+.gcr-container {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 48px);
+}
+
+/* 헤더 영역 */
+.gcr-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.gcr-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gcr-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.gcr-room-id {
+  font-size: 14px;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.gcr-back-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border: none;
+  border-radius: 25px;
+  padding: 10px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.gcr-back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.gcr-back-btn:active {
+  transform: translateY(0);
+}
+
+/* 메인 콘텐츠 영역 */
+.gcr-main-content {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* 메시지 컨테이너 */
+.gcr-messages-container {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+  max-height: 500px;
+}
+
+.gcr-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 참여자 사이드바 */
+.gcr-participants-sidebar {
+  width: 280px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  max-height: 500px;
+}
+
+.gcr-participants-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gcr-participants-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.gcr-participants-count {
+  background: #f3f4f6;
+  color: #6b7280;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.gcr-participants-list {
+  flex: 1;
+  padding: 12px 0;
+  overflow-y: auto;
+}
+
+.gcr-participant-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  transition: background-color 0.2s ease;
+}
+
+.gcr-participant-item:hover {
+  background-color: #f9fafb;
+}
+
+.gcr-participant-avatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.gcr-participant-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gcr-participant-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.gcr-participant-status {
+  font-size: 12px;
+  color: #10b981;
+  font-weight: 500;
+}
+
+/* 메시지 스타일 */
+.gcr-message {
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+}
+
+.gcr-message-mine {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.gcr-message-other {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.gcr-message-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.gcr-sender-name {
+  font-weight: 600;
+  color: #374151;
+}
+
+.gcr-message-time {
+  opacity: 0.7;
+}
+
+.gcr-message-content {
+  background: #f3f4f6;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #111827;
+  word-break: break-word;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.gcr-message-mine .gcr-message-content {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+/* 시스템 메시지 스타일 */
+.gcr-message-system {
+  align-self: center;
+  align-items: center;
+  max-width: 80%;
+  margin: 8px 0;
+}
+
+.gcr-message-system .gcr-message-content {
+  background: linear-gradient(135deg, #f7f3d7 0%, #f0e6b3 100%);
+  color: #8b7355;
+  border: 1px solid #d4c08a;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(212, 192, 138, 0.2);
+}
+
+/* 입력 섹션 */
+.gcr-input-section {
+  margin-top: -1px !important;
+  position: relative;
+  top: -195px;
+}
+
+.gcr-input-container {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.gcr-input-container:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.1);
+}
+
+.gcr-message-input {
+  flex: 1;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  background: #f9fafb;
+}
+
+.gcr-message-input:focus {
+  border-color: #667eea;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.gcr-message-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gcr-send-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 25px;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  white-space: nowrap;
+}
+
+.gcr-send-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.gcr-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 빈 상태 */
+.gcr-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #6b7280;
+  padding: 40px 20px;
+}
+
+.gcr-empty p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.gcr-empty::before {
+  content: '💬';
+  display: block;
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+/* 로딩 상태 */
+.gcr-loading {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.gcr-loading::before {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+/* 에러 상태 */
+.gcr-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 스크롤바 스타일링 */
+.gcr-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gcr-messages::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.gcr-messages::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.gcr-messages::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .gcr-container {
+    height: calc(100vh - 32px);
+  }
+  
+  .gcr-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .gcr-message {
+    max-width: 85%;
+  }
+  
+  .gcr-input-container {
+    padding: 12px;
+  }
+  
+  .gcr-messages {
+    padding: 16px;
+  }
+  
+  .gcr-title {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .gcr-page {
+    padding: 16px 12px;
+  }
+  
+  .gcr-message {
+    max-width: 90%;
+  }
+  
+  .gcr-messages {
+    padding: 12px;
+  }
+  
+  .gcr-input-container {
+    padding: 10px;
+  }
+  
+  .gcr-send-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+

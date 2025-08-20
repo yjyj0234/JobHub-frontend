@@ -57,6 +57,7 @@ export default function Comments({ postId }) {
     }
   };
 
+  //삭제
   const onDelete = async (commentId) => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
     try {
@@ -74,9 +75,10 @@ export default function Comments({ postId }) {
     try { return new Date(iso).toLocaleString('ko-KR'); } catch { return iso; }
   };
 
+  const visibleCount = list.filter(c => c.content && c.content.trim().length > 0).length;
   return (
     <section className="comments-wrap">
-      <h2 className="comments-title">댓글 {list.length}</h2>
+      <h2 className="comments-title">댓글 {visibleCount}</h2>
 
       <form className="comment-form" onSubmit={onSubmit}>
         <textarea

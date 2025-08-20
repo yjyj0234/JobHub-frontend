@@ -30,6 +30,7 @@ import {
   SkillForm,
   ProjectForm,
   ResumePreviewModal,
+  ActivityForm, // 올바르게 import
 } from "./index.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import axios from "axios";
@@ -50,7 +51,7 @@ const trimOrNull = (v) => {
 const toIntOrNull = (v) => {
   if (v === "" || v == null) return null;
   const n = Number(v);
-  return Number.isFinite(n) ? Math.trunc(n) : null;
+  return Number.isFinite(n) ? Math.trunc(n) : v;
 };
 const toNumOrNull = (v) => {
   if (v === "" || v == null) return null;
@@ -544,11 +545,18 @@ function ResumeEditorPage() {
   const [isRepresentative, setIsRepresentative] = useState(false);
   const [isPublic, setIsPublic] = useState(true);
 
+  // 섹션별 수정 상태 관리
+  const [editingSections, setEditingSections] = useState({});
+  const [sectionBeforeEdit, setSectionBeforeEdit] = useState({});
+  
+  // 삭제 확인 상태 관리
+  const [confirmingDelete, setConfirmingDelete] = useState(null); // { sectionId, subId }
+
   const sectionComponents = {
     experiences: { title: "경력", component: ExperienceForm },
-    educations: { title: "학력", component: EducationForm },
+    educations: { title: "학력", component: EducationForm, required: true },
     skills: { title: "기술", component: SkillForm },
-    activities: { title: "대외활동", component: ActivityItemForm },
+    activities: { title: "대외활동", component: ActivityForm },
     awards: { title: "수상 경력", component: AwardForm },
     certifications: { title: "자격증", component: CertificationForm },
     languages: { title: "외국어", component: LanguageForm },
@@ -814,6 +822,38 @@ function ResumeEditorPage() {
     return Math.min(100, base + ratio);
   }, [resumeTitle, sections]);
 
+    /* ---------- 섹션 수정 관리 ---------- */
+  const handleEditSection = (sectionId) => {
+    setEditingSections((prev) => ({ ...prev, [sectionId]: true }));
+    setSectionBeforeEdit((prev) => ({
+      ...prev,
+      [sectionId]: sections.find((s) => s.id === sectionId),
+    }));
+  };
+
+  const handleSaveSection = (sectionId) => {
+    setEditingSections((prev) => ({ ...prev, [sectionId]: false }));
+    setSectionBeforeEdit((prev) => {
+      const newState = { ...prev };
+      delete newState[sectionId];
+      return newState;
+    });
+  };
+
+  const handleCancelEditSection = (sectionId) => {
+    setSections((prev) =>
+      prev.map((s) =>
+        s.id === sectionId ? sectionBeforeEdit[sectionId] : s
+      )
+    );
+    setEditingSections((prev) => ({ ...prev, [sectionId]: false }));
+    setSectionBeforeEdit((prev) => {
+        const newState = { ...prev };
+        delete newState[sectionId];
+        return newState;
+    });
+  };
+
   /* ---------- 섹션 조작 ---------- */
   const handleAddItem = (sectionType) => {
     const exists = sections.some((s) => s.type === sectionType);
@@ -832,14 +872,16 @@ function ResumeEditorPage() {
         )
       );
     } else {
+      const newSectionId = `${sectionType}-${Date.now()}`;
       setSections((prev) => [
         ...prev,
         {
-          id: `${sectionType}-${Date.now()}`,
+          id: newSectionId,
           type: sectionType,
           data: [{ subId: `${sectionType}-item-${Date.now()}` }],
         },
       ]);
+      handleEditSection(newSectionId);
     }
   };
 
@@ -887,10 +929,11 @@ function ResumeEditorPage() {
         .map((s) => {
           if (s.id !== sectionIdParam) return s;
           const rest = (s.data || []).filter((it) => it.subId !== subId);
-          return rest.length ? { ...s, data: rest } : null;
+          return rest.length > 0 ? { ...s, data: rest } : null;
         })
         .filter(Boolean)
     );
+    setConfirmingDelete(null); // 삭제 확인 상태 초기화
   };
 
   const handleItemChange = (sectionIdParam, subId, updatedData) => {
@@ -1135,82 +1178,144 @@ function ResumeEditorPage() {
           </div>
 
           <div className="editor-content">
-            {sections.length === 0 && (
-              <div className="editor-placeholder">
-                오른쪽 팔레트에서 추가할 항목을 클릭하여 이력서 작성을
-                시작하세요.
-              </div>
+  {sections.length === 0 && (
+    <div className="editor-placeholder">
+      오른쪽 팔레트에서 추가할 항목을 클릭하여 이력서 작성을 시작하세요.
+    </div>
+  )}
+
+  {sections.map((section) => {
+    const def = sectionComponents[section.type];
+    if (!def) return null;
+    const { component: Comp, title, required } = def;
+    const isEditing = !!editingSections[section.id];
+
+    return (
+      <section key={section.id} className="editor-section">
+        <div className="section-header">
+          <h2>
+            {title}
+            {required && <span className="required-text">(필수)</span>}
+          </h2>
+          <div className="section-header-actions">
+            {isEditing ? (
+              <>
+                <button
+                  className="action-btn primary"
+                  onClick={async () => {
+                    await saveSection(section.id);
+                    setEditingSections((p) => ({ ...p, [section.id]: false }));
+                  }}
+                >
+                  저장
+                </button>
+                <button
+                  className="action-btn"
+                  onClick={() =>
+                    setEditingSections((p) => ({ ...p, [section.id]: false }))
+                  }
+                >
+                  취소
+                </button>
+              </>
+            ) : (
+              <button
+                className="action-btn"
+                onClick={() =>
+                  setEditingSections((p) => ({ ...p, [section.id]: true }))
+                }
+              >
+                수정
+              </button>
             )}
+          </div>
+        </div>
 
-            {sections.map((section) => {
-              const def = sectionComponents[section.type];
-              if (!def) return null;
-              const { component: Comp, title } = def;
+        <div className="section-content">
+          {(section.data || []).map((item) => {
+            const isConfirmingDelete =
+              confirmingDelete?.sectionId === section.id &&
+              confirmingDelete?.subId === item.subId;
 
-              return (
-                <section key={section.id} className="editor-section">
-                  <div className="section-header">
-                    <h2>{title}</h2>
-                    <div className="section-header-actions">
+            return (
+              <div key={item.subId} className="item-form-wrapper">
+                {isConfirmingDelete ? (
+                  <div className="delete-confirm-box">
+                    <span>이 항목을 삭제하시겠습니까?</span>
+                    <div className="delete-confirm-actions">
+                      <button
+                        className="action-btn primary"
+                        onClick={() => {
+                          handleRemoveItemFromSection(section.id, item.subId);
+                          setConfirmingDelete(null);
+                        }}
+                      >
+                        예
+                      </button>
                       <button
                         className="action-btn"
-                        onClick={() => saveSection(section.id)}
-                        title="이 섹션만 저장"
+                        onClick={() => setConfirmingDelete(null)}
                       >
-                        <Save size={16} /> 저장
+                        아니오
                       </button>
                     </div>
                   </div>
-
-                  <div className="section-content">
-                    {(section.data || []).map((item) => (
-                      <div key={item.subId} className="item-form-wrapper">
-                        <Comp
-                          data={item}
-                          onUpdate={(updated) =>
-                            handleItemChange(section.id, item.subId, updated)
-                          }
-                        />
-                        <button
-                          className="remove-item-btn"
-                          onClick={() =>
-                            handleRemoveItemFromSection(section.id, item.subId)
-                          }
-                          title={item.id ? "DB에서도 삭제" : "삭제"}
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      className="add-item-btn"
-                      onClick={() =>
-                        setSections((prev) =>
-                          prev.map((s) =>
-                            s.id === section.id
-                              ? {
-                                  ...s,
-                                  data: [
-                                    ...s.data,
-                                    {
-                                      subId: `${
-                                        section.type
-                                      }-item-${Date.now()}`,
-                                    },
-                                  ],
-                                }
-                              : s
-                          )
-                        )
+                ) : (
+                  <>
+                    <Comp
+                      data={item}
+                      onUpdate={(updated) =>
+                        handleItemChange(section.id, item.subId, updated)
                       }
+                      isEditing={isEditing}
+                    />
+                    <button
+                      className="remove-item-btn"
+                      onClick={() =>
+                        setConfirmingDelete({
+                          sectionId: section.id,
+                          subId: item.subId,
+                        })
+                      }
+                      title={item.id ? "DB에서도 삭제" : "삭제"}
                     >
-                      <PlusCircle size={16} /> {title} 추가
+                      <X size={16} />
                     </button>
-                  </div>
-                </section>
-              );
-            })}
-          </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+
+          {/* 편집 중일 때만 항목 추가 버튼 노출 */}
+          {isEditing && (
+            <button
+              className="add-item-btn"
+              onClick={() =>
+                setSections((prev) =>
+                  prev.map((s) =>
+                    s.id === section.id
+                      ? {
+                          ...s,
+                          data: [
+                            ...((s.data as any[]) || []),
+                            { subId: `${section.type}-item-${Date.now()}` },
+                          ],
+                        }
+                      : s
+                  )
+                )
+              }
+            >
+              <PlusCircle size={16} /> {title} 추가
+            </button>
+          )}
+        </div>
+      </section>
+    );
+  })}
+</div>
+
         </main>
 
         <div className="editor-sidebar">

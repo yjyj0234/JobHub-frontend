@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import '../css/Form.css';
 import { PlusCircle, XCircle } from 'lucide-react';
 
-function SkillForm({ data, onUpdate }) {
+function SkillForm({ data, onUpdate, isEditing }) {
   const [skills, setSkills] = useState(Array.isArray(data.skills) ? data.skills : [{ name: '', category: '' }]);
   const handleChange = (index, e) => {
     const { name, value } = e.target;
@@ -46,6 +46,7 @@ function SkillForm({ data, onUpdate }) {
                 value={skill.name || ''}
                 onChange={(e) => handleChange(index, e)}
                 placeholder="예: React"
+                disabled={!isEditing}
               />
             </div>
             <div className="form-field">
@@ -57,18 +58,23 @@ function SkillForm({ data, onUpdate }) {
                 value={skill.category || ''}
                 onChange={(e) => handleChange(index, e)}
                 placeholder="예: 프론트엔드"
+                disabled={!isEditing}
               />
             </div>
           </div>
-          <button type="button" className="remove-skill-btn" onClick={() => removeSkill(index)}>
-            <XCircle size={18} />
-          </button>
+          {isEditing && (
+              <button type="button" className="remove-skill-btn" onClick={() => removeSkill(index)}>
+                <XCircle size={18} />
+              </button>
+          )}
         </div>
       ))}
       
-      <button type="button" className="add-item-btn" onClick={addSkill}>
-        <PlusCircle size={16} /> 스킬 추가
-      </button>
+      {isEditing && (
+        <button type="button" className="add-item-btn" onClick={addSkill}>
+          <PlusCircle size={16} /> 스킬 추가
+        </button>
+      )}
     </div>
   );
 }

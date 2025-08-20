@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+
 // 1. layout 컴포넌트 그룹
 import { GlobalHeader, SideNav, GlobalFooter, Service } from "../layout";
 
@@ -9,14 +10,29 @@ import { GlobalHeader, SideNav, GlobalFooter, Service } from "../layout";
 import { Modal } from "../UI";
 import { AuthPage, Hero, Grid, TopGrid } from "../UX";
 
-// 3. resume 관련 페이지 그룹
-import { ResumeListPage, ResumeEditorPage } from "../resume";
+// 3. resume 관련 페이지 그룹 (수정: resume -> Resume)
+import { ResumeListPage, ResumeEditorPage } from "../Resume";
 
 // 4. Companies 관련 페이지 그룹
-import { Jobposting, ApplicantsList } from "../Companies";
+import {
+  Jobposting,
+  ApplicantsList,
+  CompanyProfile,
+  CompanyDashboard,
+} from "../Companies";
 
+import AdminPage from "../Admin/AdminPage";
+
+// 6. job-posting-list 관련 페이지 그룹
+import {
+  PostList,
+  AddPost,
+  PostDetail,
+  UpdatePost,
+  GroupChat,
+  GroupChatRoom,
+} from "../Community";
 import { JobPostingList, JobPostingDetail } from "../job-posting-list";
-import { PostList, AddPost, PostDetail, UpdatePost, GroupChat, GroupChatRoom } from "../Community";
 
 function MainLayout() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -82,8 +98,10 @@ function AppRouter() {
         <Route path="/" element={<HomePage />} />
         <Route path="/resumes" element={<ResumeListPage />} />
         <Route path="/resumes/new" element={<ResumeEditorPage />} />
+        <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
+        <Route path="/company-info" element={<CompanyDashboard />} />
+        <Route path="/company/profile" element={<CompanyProfile />} />
         <Route path="/resumes/:id" element={<ResumeEditorPage />} />
-
         <Route path="/jobposting" element={<Jobposting />} />
         <Route path="/companies/applicants" element={<ApplicantsList />} />
         <Route path="/postlist" element={<PostList />} />
@@ -94,6 +112,7 @@ function AppRouter() {
         <Route path="/group-chat" element={<GroupChat />} />
         <Route path="/group-chat/rooms/:roomId" element={<GroupChatRoom />} />
         <Route path="/service" element={<Service />} />
+        <Route path="/admin" element={<AdminPage />} />
         {/* 공고 디테일 */}
         <Route path="/jobpostinglist/:id" element={<JobPostingDetail />} />
       </Route>

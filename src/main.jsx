@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./components/context/AuthContext.jsx"; // 1. 로그인/인증 상태를 관리하는 컴포넌트
-import AppRouter from "./components/router/router.jsx";
+import AppRouter from "./components/router/Router.jsx";
 import "ckeditor5/ckeditor5.css";
 import axios from "axios";
 axios.defaults.baseURL = "http://localhost:8080";
@@ -21,4 +21,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>
+
 );
