@@ -22,18 +22,17 @@ const api = axios.create({
 
 const CompanyProfile = () => {
   const navigate = useNavigate();
-  const { user, isAuthed } = useAuth(); // 수정 안 함 (있으면 활용)
+  const { user, isAuthed } = useAuth();
   const booted = useRef(false);
 
-  // 로컬 가드 상태: 'checking' | 'ok' | 'denied'
+  // 로컬 가드 상태
   const [guard, setGuard] = useState("checking");
-
   const [loading, setLoading] = useState(false);
   const [industries, setIndustries] = useState([]);
   const [companySizes, setCompanySizes] = useState([]);
 
+  // 초기값은 모두 빈 문자열로 설정
   const [formData, setFormData] = useState({
-    // 모든 필드를 빈 문자열로 초기화 (undefined 방지)
     name: "",
     businessNumber: "",
     industryId: "",
@@ -44,7 +43,7 @@ const CompanyProfile = () => {
     description: "",
     mission: "",
     culture: "",
-    benefits: [], // 배열은 빈 배열로
+    benefits: [],
   });
 
   const [currentBenefit, setCurrentBenefit] = useState("");
@@ -56,7 +55,6 @@ const CompanyProfile = () => {
 
     const check = async () => {
       try {
-        // 1) 우선 useAuth 값으로 빠른 통과 시도
         const roles = new Set([
           ...(Array.isArray(user?.authorities) ? user.authorities : []),
           ...(user?.role ? [user.role] : []),
@@ -73,7 +71,6 @@ const CompanyProfile = () => {
           return;
         }
 
-        // 2) 아니면 서버에 직접 질의 (/auth/me)
         const res = await api.get("/auth/me");
         const u = res.data;
         const roles2 = new Set([
@@ -97,8 +94,6 @@ const CompanyProfile = () => {
     return () => {
       cancelled = true;
     };
-    // 의존성 비움: 페이지 진입 시 한 번만
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ---- (2) 가드 통과 시 초기 데이터 한 번만 로드 ----
@@ -106,7 +101,6 @@ const CompanyProfile = () => {
     if (guard !== "ok" || booted.current) return;
     booted.current = true;
     loadInitialData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [guard]);
 
   // 가드 실패 → 안내 후 홈으로
@@ -118,16 +112,40 @@ const CompanyProfile = () => {
 
   const loadInitialData = async () => {
     try {
-      // ✅ 백엔드 컨트롤러 경로와 일치시킴
       const [industriesRes, sizesRes, profileRes] = await Promise.all([
         api.get("/api/company/industries"),
         api.get("/api/company/company-sizes"),
-        api.get("/api/company/profile").catch(() => null), // 없으면 무시
+        api.get("/api/company/profile").catch(() => null),
       ]);
 
       setIndustries(industriesRes.data || []);
       setCompanySizes(sizesRes.data || []);
-      if (profileRes?.data) setFormData(profileRes.data);
+
+      // 서버 데이터가 있으면 안전하게 병합
+      if (profileRes?.data) {
+        const serverData = profileRes.data;
+        setFormData({
+          name: serverData.name || "",
+          businessNumber: serverData.businessNumber || "",
+          industryId: serverData.industryId
+            ? String(serverData.industryId)
+            : "",
+          companySizeId: serverData.companySizeId
+            ? String(serverData.companySizeId)
+            : "",
+          foundedYear: serverData.foundedYear
+            ? String(serverData.foundedYear)
+            : "",
+          websiteUrl: serverData.websiteUrl || "",
+          logoUrl: serverData.logoUrl || "",
+          description: serverData.description || "",
+          mission: serverData.mission || "",
+          culture: serverData.culture || "",
+          benefits: Array.isArray(serverData.benefits)
+            ? serverData.benefits
+            : [],
+        });
+      }
     } catch (error) {
       console.error("데이터 로드 실패:", error);
     }
@@ -157,12 +175,21 @@ const CompanyProfile = () => {
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
     const fd = new FormData();
     fd.append("file", file);
+    fd.append("module", "companies");
+    fd.append("public", "true");
+
     try {
-      const response = await api.post("/api/upload/logo", fd);
-      setFormData((prev) => ({ ...prev, logoUrl: response.data.url }));
+      const response = await api.post("/api/upload", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const logoUrl = response.data.viewerUrl || response.data.url || "";
+      setFormData((prev) => ({ ...prev, logoUrl }));
     } catch (error) {
+      console.error("로고 업로드 실패:", error);
       alert("로고 업로드 실패");
     }
   };
@@ -170,15 +197,41 @@ const CompanyProfile = () => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      await api.put("/api/company/profile", formData);
+      const dataToSend = {
+        ...formData,
+        industryId:
+          formData.industryId === "" ? null : Number(formData.industryId),
+        companySizeId:
+          formData.companySizeId === "" ? null : Number(formData.companySizeId),
+        foundedYear:
+          formData.foundedYear === "" ? null : Number(formData.foundedYear),
+        benefits: Array.isArray(formData.benefits) ? formData.benefits : [],
+      };
+
+      console.log("전송할 데이터:", dataToSend);
+
+      await api.put("/api/company/profile", dataToSend);
       alert("기업 정보가 저장되었습니다");
       navigate("/");
     } catch (error) {
-      const msg =
-        error.response?.status === 403
-          ? "권한이 없습니다. 기업 계정인지 확인해주세요."
-          : error.response?.data?.message || error.message;
-      alert("저장 실패: " + msg);
+      console.error("저장 실패 전체 에러:", error.response?.data);
+
+      // ✅ 상세 에러 확인
+      if (error.response?.data?.errors) {
+        console.error("필드별 에러:", error.response.data.errors);
+        const errorMessages = Object.entries(error.response.data.errors)
+          .map(([field, msg]) => `${field}: ${msg}`)
+          .join("\n");
+        alert(`검증 실패:\n${errorMessages}`);
+      } else if (error.response?.data?.message) {
+        // ✅ path 정보가 있으면 표시
+        if (error.response?.data?.path) {
+          console.error("에러 경로:", error.response.data.path);
+        }
+        alert(`저장 실패: ${error.response.data.message}`);
+      } else {
+        alert("저장에 실패했습니다");
+      }
     } finally {
       setLoading(false);
     }
@@ -186,14 +239,19 @@ const CompanyProfile = () => {
 
   const validateStep1 = () => {
     const { name, businessNumber, industryId, companySizeId } = formData;
-    if (!name || !businessNumber || !industryId || !companySizeId) {
+    if (
+      !name.trim() ||
+      !businessNumber.trim() ||
+      !industryId ||
+      !companySizeId
+    ) {
       alert("필수 정보를 모두 입력해주세요");
       return false;
     }
     return true;
   };
 
-  // 로컬 가드 중이면 스켈레톤/로딩
+  // 로딩 중
   if (guard === "checking") {
     return (
       <div className="company-profile-container">
@@ -204,7 +262,6 @@ const CompanyProfile = () => {
     );
   }
 
-  // ==== 기존 렌더링 그대로 ====
   return (
     <div className="company-profile-container">
       <h2 className="profile-title">
@@ -284,7 +341,7 @@ const CompanyProfile = () => {
                   <option value="">선택하세요</option>
                   {companySizes.map((size) => (
                     <option key={size.id} value={size.id}>
-                      {size.label ?? size.name}
+                      {size.label || size.name || `규모 ${size.id}`}
                     </option>
                   ))}
                 </select>
