@@ -31,7 +31,6 @@
 }
 
 .form-field input[type="text"],
-.form-field input[type="date"],
 .form-field input[type="url"],
 .form-field select,
 .form-field textarea {
@@ -44,11 +43,43 @@
   transition: all 0.2s;
 }
 
+/* --- 달력 입력창 수정 --- */
+.form-field input[type="date"] {
+  /* 다른 input과 동일한 기본 스타일 적용 */
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 1rem;
+  transition: all 0.2s;
+  
+  /* 클릭 영역을 넓히기 위한 설정 */
+  position: relative;
+  cursor: pointer;
+}
+
+/* Webkit 브라우저(크롬, 사파리 등)의 기본 달력 아이콘을 투명하게 만들고 전체 영역으로 확장 */
+.form-field input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  color: transparent;
+  background: transparent;
+}
+/* --- 수정 끝 --- */
+
+
 .form-field input:focus,
 .form-field select:focus,
 .form-field textarea:focus {
   border-color: var(--c-accent);
-  box-shadow: 0 0 0 3px rgba(78, 134, 218, 0.1);
+  box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
 }
 
 .form-field textarea {

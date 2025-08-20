@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "../css/Form.css";
 
-function PortfolioForm({ data, onUpdate }) {
+function PortfolioForm({ data, onUpdate, isEditing }) {
   const [formData, setFormData] = useState(data || {});
 
   const handleChange = (e) => {
@@ -23,6 +23,7 @@ function PortfolioForm({ data, onUpdate }) {
             value={formData.url || ""}
             onChange={handleChange}
             placeholder="https://example.com"
+            disabled={!isEditing}
           />
         </div>
         <div className="form-field full-width">
@@ -33,6 +34,7 @@ function PortfolioForm({ data, onUpdate }) {
             value={formData.description || ""}
             onChange={handleChange}
             placeholder="포트폴리오에 대한 간단한 설명을 입력하세요."
+            disabled={!isEditing}
           />
         </div>
       </div>

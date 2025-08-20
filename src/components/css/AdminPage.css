@@ -1,0 +1,79 @@
+.admin-page-container {
+  max-width: 960px;
+  margin: 40px auto;
+  padding: 40px;
+  background-color: #f8f9fa;
+  border-radius: 16px;
+}
+
+.admin-header {
+  text-align: center;
+  margin-bottom: 50px;
+  color: #343a40;
+}
+
+.admin-header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 16px 0 8px 0;
+}
+
+.admin-header p {
+  font-size: 1.1rem;
+  color: #6c757d;
+}
+
+.admin-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+}
+
+.admin-menu-item {
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.admin-menu-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  border-color: var(--c-accent);
+}
+
+.admin-menu-item svg {
+  color: var(--c-accent);
+  margin-bottom: 16px;
+}
+
+.admin-menu-item h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+}
+
+.admin-menu-item p {
+  color: #6c757d;
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.admin-button {
+  background-color: var(--c-accent);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.admin-button:hover {
+  background-color: #3a75c4;
+}

@@ -8,7 +8,6 @@ import {
   Award,
   Languages,
   Link as LinkIcon,
-  Trash2,
   Eye,
   Server,
   Save,
@@ -31,9 +30,14 @@ import {
   SkillForm,
   ProjectForm,
   ResumePreviewModal,
+  ActivityForm, // 올바르게 import
 } from "./index.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import axios from "axios";
+
+/* ---------------------- 공통 설정 ---------------------- */
+axios.defaults.withCredentials = true;
+const API = "/api"; // 모든 이력서/프로필 API 경로 접두사
 
 /* ---------------------- 유틸 ---------------------- */
 const getUid = (u) => u?.id ?? u?.userId ?? null;
@@ -41,70 +45,11 @@ const trimOrNull = (v) => (typeof v === "string" ? v.trim() || null : v);
 const toIntOrNull = (v) => {
   if (v === "" || v == null) return null;
   const n = Number(v);
-  return Number.isFinite(n) ? Math.trunc(n) : null;
+  return Number.isFinite(n) ? Math.trunc(n) : v;
 };
 
-/* ---------------------- 로컬 전용 활동 폼 ---------------------- */
-const ActivityItemForm = ({ data = {}, onUpdate }) => {
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    onUpdate?.({ ...data, [name]: value });
-  };
-  return (
-    <div className="item-form grid-layout">
-      <div className="form-field full-width">
-        <label>활동명</label>
-        <input
-          name="activityName"
-          value={data.activityName || ""}
-          onChange={onChange}
-          placeholder="예) 개발 동아리, 해커톤 참여"
-        />
-      </div>
-      <div className="form-field">
-        <label>기관/단체</label>
-        <input
-          name="organization"
-          value={data.organization || ""}
-          onChange={onChange}
-        />
-      </div>
-      <div className="form-field">
-        <label>역할</label>
-        <input name="role" value={data.role || ""} onChange={onChange} />
-      </div>
-      <div className="form-field">
-        <label>시작일</label>
-        <input
-          type="date"
-          name="startDate"
-          value={data.startDate || ""}
-          onChange={onChange}
-        />
-      </div>
-      <div className="form-field">
-        <label>종료일</label>
-        <input
-          type="date"
-          name="endDate"
-          value={data.endDate || ""}
-          onChange={onChange}
-        />
-      </div>
-      <div className="form-field full-width">
-        <label>설명</label>
-        <textarea
-          name="description"
-          value={data.description || ""}
-          onChange={onChange}
-          placeholder="무엇을 했고, 어떤 임팩트가 있었는지 적어주세요."
-        />
-      </div>
-    </div>
-  );
-};
 
-/* ---------------------- 프로필 헤더 (레이아웃 수정됨) ---------------------- */
+/* ---------------------- 프로필 헤더 ---------------------- */
 const ProfileHeader = ({ profile, onUpdate, onSave }) => {
   const fileInputRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -156,7 +101,6 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
 
   return (
     <div className="profile-header">
-      {/* --- 수정 버튼 (오른쪽 상단) --- */}
       {!isEditing ? (
         <button
           type="button"
@@ -169,26 +113,38 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
         </button>
       ) : (
         <div className="profile-edit-actions">
-          <button type="button" className="action-btn primary" onClick={handleSaveClick}>
+          <button
+            type="button"
+            className="action-btn primary"
+            onClick={handleSaveClick}
+          >
             <Save size={16} /> 저장
           </button>
-          <button type="button" className="action-btn" onClick={handleCancelEdit} title="편집 취소">
+          <button
+            type="button"
+            className="action-btn"
+            onClick={handleCancelEdit}
+            title="편집 취소"
+          >
             <X size={16} />
           </button>
         </div>
       )}
 
       <div className="profile-main-info">
-        {/* --- 프로필 포토 (왼쪽) --- */}
         <div
           className="profile-photo-edit-wrapper"
           onClick={handlePhotoClick}
           style={{ cursor: isEditing ? "pointer" : "default" }}
         >
           <div className="profile-photo-wrapper">
-            {(isEditing ? editData.profileImageUrl : profile.profileImageUrl) ? (
+            {(
+              isEditing ? editData.profileImageUrl : profile.profileImageUrl
+            ) ? (
               <img
-                src={isEditing ? editData.profileImageUrl : profile.profileImageUrl}
+                src={
+                  isEditing ? editData.profileImageUrl : profile.profileImageUrl
+                }
                 alt={profile.name || "프로필"}
                 className="profile-photo"
               />
@@ -213,7 +169,6 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
           />
         </div>
 
-        {/* --- 개인 정보 (중앙) --- */}
         <div className="profile-details">
           {isEditing ? (
             <input
@@ -227,7 +182,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
           ) : (
             <h2 className="profile-name-display">{profile.name || "이름"}</h2>
           )}
-          
+
           {isEditing ? (
             <input
               type="text"
@@ -238,7 +193,9 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
               placeholder="한 줄 소개를 작성해주세요."
             />
           ) : (
-            <p className="profile-headline-display">{profile.headline || "한 줄 소개"}</p>
+            <p className="profile-headline-display">
+              {profile.headline || "한 줄 소개"}
+            </p>
           )}
 
           <div className="profile-info-grid">
@@ -285,7 +242,6 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
         </div>
       </div>
 
-      {/* --- 자기소개 (하단) --- */}
       <div className="profile-info-wide">
         <label>자기소개</label>
         {isEditing ? (
@@ -408,16 +364,56 @@ function ResumeEditorPage() {
   const [isRepresentative, setIsRepresentative] = useState(false);
   const [isPublic, setIsPublic] = useState(true);
 
+  // 섹션별 수정 상태 관리
+  const [editingSections, setEditingSections] = useState({});
+  const [sectionBeforeEdit, setSectionBeforeEdit] = useState({});
+  
+  // 삭제 확인 상태 관리
+  const [confirmingDelete, setConfirmingDelete] = useState(null); // { sectionId, subId }
+
   const sectionComponents = {
     experiences: { title: "경력", component: ExperienceForm },
-    educations: { title: "학력", component: EducationForm },
+    educations: { title: "학력", component: EducationForm, required: true },
     skills: { title: "기술", component: SkillForm },
-    activities: { title: "대외활동", component: ActivityItemForm },
+    activities: { title: "대외활동", component: ActivityForm },
     awards: { title: "수상 경력", component: AwardForm },
     certifications: { title: "자격증", component: CertificationForm },
     languages: { title: "외국어", component: LanguageForm },
     portfolios: { title: "포트폴리오", component: PortfolioForm },
     projects: { title: "프로젝트", component: ProjectForm },
+  };
+
+  /* ---------- 서버 → 화면 상태 변환 도우미 ---------- */
+  const makeSection = (type, items = []) => {
+    if (!Array.isArray(items) || items.length === 0) return null;
+    return {
+      id: `${type}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      type,
+      data: items.map((it, idx) => ({
+        subId: `${type}-item-${Date.now()}-${idx}`,
+        ...it,
+      })),
+    };
+  };
+
+  const buildSectionsFromResponse = (dto) => {
+    const built = [];
+    const push = (s) => s && built.push(s);
+
+    // 서버 필드 네이밍에 따라 조합 (존재하는 것만 추가)
+    push(makeSection("experiences", dto.experiences ?? dto.experienceList));
+    push(makeSection("educations", dto.educations ?? dto.educationList));
+    push(makeSection("skills", dto.skills ?? dto.skillList));
+    push(makeSection("projects", dto.projects ?? dto.projectList));
+    push(makeSection("activities", dto.activities ?? dto.activityList));
+    push(makeSection("awards", dto.awards ?? dto.awardList));
+    push(
+      makeSection("certifications", dto.certifications ?? dto.certificationList)
+    );
+    push(makeSection("languages", dto.languages ?? dto.languageList));
+    push(makeSection("portfolios", dto.portfolios ?? dto.portfolioList));
+
+    return built;
   };
 
   /* ---------- 프로필 로드 ---------- */
@@ -427,8 +423,7 @@ function ResumeEditorPage() {
       try {
         const uid = getUid(user);
         if (!uid) return;
-        const { data, status } = await axios.get(`/api/profile/${uid}`, {
-          withCredentials: true,
+        const { data, status } = await axios.get(`${API}/profile/${uid}`, {
           validateStatus: (s) => s === 200 || s === 404 || s === 204,
         });
         if (status === 200 && data) {
@@ -473,6 +468,47 @@ function ResumeEditorPage() {
     })();
   }, [user]);
 
+  /* ---------- 이력서 로드(편집 모드) ---------- */
+  useEffect(() => {
+    if (!resumeId) return; // 새로 만들기 모드
+    let ignore = false;
+
+    (async () => {
+      try {
+        const { data } = await axios.get(`${API}/resumes/${resumeId}`);
+        if (ignore) return;
+
+        // 제목/대표/공개
+        setResumeTitle(data?.title ?? "");
+        setIsRepresentative(
+          Boolean(data?.isPrimary ?? data?.isRepresentative ?? false)
+        );
+        setIsPublic(data?.isPublic !== false);
+
+        // 섹션
+        const built = buildSectionsFromResponse(data ?? {});
+        setSections(built);
+      } catch (err) {
+        console.error("[ResumeLoad] error:", err);
+        const s = err?.response?.status;
+        alert(
+          err?.response?.data?.message ||
+            (s === 404
+              ? "이력서를 찾을 수 없어요."
+              : s === 401
+              ? "로그인이 필요해요."
+              : s === 403
+              ? "권한이 없어요."
+              : "이력서 로드 중 오류가 발생했어요.")
+        );
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
+  }, [resumeId]);
+
   /* ---------- 프로필 저장 ---------- */
   const handleSaveProfile = async (profileToSave) => {
     if (!profileToSave) return;
@@ -483,15 +519,15 @@ function ResumeEditorPage() {
     }
 
     const parsedRegionId =
-    profileToSave.regionId !== "" && profileToSave.regionId != null
+      profileToSave.regionId !== "" && profileToSave.regionId != null
         ? toIntOrNull(profileToSave.regionId)
         : null;
 
     const payload = {
       name: trimOrNull(profileToSave.name),
       phone: trimOrNull(profileToSave.phone),
-      birthYear: null, // 연도 컬럼은 사용 안 함(생년월일로 전환)
-      birthDate: profileToSave.birthDate || null, // "YYYY-MM-DD"
+      birthYear: null,
+      birthDate: profileToSave.birthDate || null,
       profileImageUrl: trimOrNull(profileToSave.profileImageUrl),
       headline: trimOrNull(profileToSave.headline),
       summary: trimOrNull(profileToSave.summary),
@@ -500,9 +536,7 @@ function ResumeEditorPage() {
     };
 
     try {
-      await axios.put(`/api/profile/${uid}`, payload, {
-        withCredentials: true,
-      });
+      await axios.put(`${API}/profile/${uid}`, payload);
       alert("프로필이 저장되었습니다.");
     } catch (err) {
       const s = err?.response?.status;
@@ -528,6 +562,38 @@ function ResumeEditorPage() {
     return Math.min(100, base + ratio);
   }, [resumeTitle, sections]);
 
+    /* ---------- 섹션 수정 관리 ---------- */
+  const handleEditSection = (sectionId) => {
+    setEditingSections((prev) => ({ ...prev, [sectionId]: true }));
+    setSectionBeforeEdit((prev) => ({
+      ...prev,
+      [sectionId]: sections.find((s) => s.id === sectionId),
+    }));
+  };
+
+  const handleSaveSection = (sectionId) => {
+    setEditingSections((prev) => ({ ...prev, [sectionId]: false }));
+    setSectionBeforeEdit((prev) => {
+      const newState = { ...prev };
+      delete newState[sectionId];
+      return newState;
+    });
+  };
+
+  const handleCancelEditSection = (sectionId) => {
+    setSections((prev) =>
+      prev.map((s) =>
+        s.id === sectionId ? sectionBeforeEdit[sectionId] : s
+      )
+    );
+    setEditingSections((prev) => ({ ...prev, [sectionId]: false }));
+    setSectionBeforeEdit((prev) => {
+        const newState = { ...prev };
+        delete newState[sectionId];
+        return newState;
+    });
+  };
+
   /* ---------- 섹션 조작 ---------- */
   const handleAddItem = (sectionType) => {
     const exists = sections.some((s) => s.type === sectionType);
@@ -546,27 +612,26 @@ function ResumeEditorPage() {
         )
       );
     } else {
+      const newSectionId = `${sectionType}-${Date.now()}`;
       setSections((prev) => [
         ...prev,
         {
-          id: `${sectionType}-${Date.now()}`,
+          id: newSectionId,
           type: sectionType,
           data: [{ subId: `${sectionType}-item-${Date.now()}` }],
         },
       ]);
+      handleEditSection(newSectionId);
     }
   };
 
-  const handleRemoveSection = (sectionId) =>
-    setSections((prev) => prev.filter((s) => s.id !== sectionId));
-
-  const handleAddItemToSection = (sectionId, sectionType) => {
+  const handleAddItemToSection = (sectionId) => {
     setSections((prev) =>
       prev.map((s) =>
         s.id === sectionId
           ? {
               ...s,
-              data: [...s.data, { subId: `${sectionType}-item-${Date.now()}` }],
+              data: [...s.data, { subId: `${s.type}-item-${Date.now()}` }],
             }
           : s
       )
@@ -579,10 +644,11 @@ function ResumeEditorPage() {
         .map((s) => {
           if (s.id !== sectionId) return s;
           const rest = (s.data || []).filter((it) => it.subId !== subId);
-          return rest.length ? { ...s, data: rest } : null;
+          return rest.length > 0 ? { ...s, data: rest } : null;
         })
         .filter(Boolean)
     );
+    setConfirmingDelete(null); // 삭제 확인 상태 초기화
   };
 
   const handleItemChange = (sectionId, subId, updatedData) => {
@@ -619,18 +685,14 @@ function ResumeEditorPage() {
     if (acts.length === 0) return;
     await Promise.all(
       acts.map((it) =>
-        axios.post(
-          `/resumes/${createdId}/activities`,
-          {
-            activityName: it.activityName || "",
-            organization: it.organization || "",
-            role: it.role || "",
-            startDate: it.startDate || null,
-            endDate: it.endDate || null,
-            description: it.description || "",
-          },
-          { withCredentials: true }
-        )
+        axios.post(`${API}/resumes/${createdId}/activities`, {
+          activityName: it.activityName || "",
+          organization: it.organization || "",
+          role: it.role || "",
+          startDate: it.startDate || null,
+          endDate: it.endDate || null,
+          description: it.description || "",
+        })
       )
     );
   };
@@ -668,21 +730,23 @@ function ResumeEditorPage() {
     setIsSaving(true);
     try {
       if (!resumeId) {
-        const { data } = await axios.post("/resumes", buildResumePayload(), {
-          withCredentials: true,
-        });
+        // 생성
+        const { data } = await axios.post(
+          `${API}/resumes`,
+          buildResumePayload()
+        );
         const createdId = typeof data === "number" ? data : Number(data?.id);
         if (!createdId) throw new Error("생성된 이력서 ID가 없습니다.");
 
         await postActivitiesBulk(createdId);
 
         localStorage.removeItem("resume_draft");
-        navigate(`/resumes/${createdId}/edit`, { replace: true });
+        // 현재 라우팅은 /resumes/:id 사용 중 → edit 경로 없이 이동
+        navigate(`/resumes/${createdId}`, { replace: true });
         alert("이력서 작성이 완료되었습니다!");
       } else {
-        await axios.put(`/resumes/${resumeId}`, buildResumePayload(), {
-          withCredentials: true,
-        });
+        // 수정
+        await axios.put(`${API}/resumes/${resumeId}`, buildResumePayload());
         alert("이력서가 저장되었습니다.");
       }
     } catch (err) {
@@ -764,46 +828,85 @@ function ResumeEditorPage() {
             {sections.map((section) => {
               const def = sectionComponents[section.type];
               if (!def) return null;
-              const { component: Comp, title } = def;
+              const { component: Comp, title, required } = def;
+              const isEditing = !!editingSections[section.id];
 
               return (
                 <section key={section.id} className="editor-section">
                   <div className="section-header">
-                    <h2>{title}</h2>
-                    <button
-                      className="delete-item-btn"
-                      onClick={() => handleRemoveSection(section.id)}
-                    >
-                      <Trash2 size={16} /> 항목 전체 삭제
-                    </button>
+                    <h2>
+                      {title}
+                      {required && <span className="required-text">(필수)</span>}
+                    </h2>
+                    <div className="section-header-actions">
+                      {isEditing ? (
+                        <>
+                          <button className="action-btn primary" onClick={() => handleSaveSection(section.id)}>저장</button>
+                        </>
+                      ) : (
+                        <button className="action-btn" onClick={() => handleEditSection(section.id)}>수정</button>
+                      )}
+                    </div>
                   </div>
                   <div className="section-content">
-                    {(section.data || []).map((item) => (
-                      <div key={item.subId} className="item-form-wrapper">
-                        <Comp
-                          data={item}
-                          onUpdate={(updated) =>
-                            handleItemChange(section.id, item.subId, updated)
-                          }
-                        />
+                    {(section.data || []).map((item) => {
+                      const isConfirmingDelete =
+                        confirmingDelete?.sectionId === section.id &&
+                        confirmingDelete?.subId === item.subId;
+
+                      return (
+                        <div key={item.subId} className="item-form-wrapper">
+                          {/* 삭제 확인 UI */}
+                          {isConfirmingDelete ? (
+                            <div className="delete-confirm-box">
+                              <span>이 항목을 삭제하시겠습니까?</span>
+                              <div className="delete-confirm-actions">
+                                <button
+                                  className="action-btn primary"
+                                  onClick={() => handleRemoveItemFromSection(section.id, item.subId)}
+                                >
+                                  예
+                                </button>
+                                <button
+                                  className="action-btn"
+                                  onClick={() => setConfirmingDelete(null)}
+                                >
+                                  아니오
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <Comp
+                                data={item}
+                                onUpdate={(updated) =>
+                                  handleItemChange(section.id, item.subId, updated)
+                                }
+                                isEditing={isEditing}
+                              />
+                              <button
+                                className="remove-item-btn"
+                                onClick={() =>
+                                  setConfirmingDelete({ sectionId: section.id, subId: item.subId })
+                                }
+                              >
+                                <X size={16} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {isEditing && (
                         <button
-                          className="remove-item-btn"
-                          onClick={() =>
-                            handleRemoveItemFromSection(section.id, item.subId)
-                          }
+                        className="add-item-btn"
+                        onClick={() =>
+                            handleAddItemToSection(section.id)
+                        }
                         >
-                          <X size={16} />
+                        <PlusCircle size={16} /> {title} 추가
                         </button>
-                      </div>
-                    ))}
-                    <button
-                      className="add-item-btn"
-                      onClick={() =>
-                        handleAddItemToSection(section.id, section.type)
-                      }
-                    >
-                      <PlusCircle size={16} /> {title} 추가
-                    </button>
+                    )}
                   </div>
                 </section>
               );
