@@ -1,0 +1,275 @@
+.job-posting-management {
+  width: 100%;
+}
+
+/* 탭 스타일 */
+.management-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0;
+}
+
+.tab-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 15px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  margin-bottom: -2px;
+}
+
+.tab-button:hover {
+  color: #374151;
+  background: #f9fafb;
+}
+
+.tab-button.active {
+  color: #111827;
+  border-bottom-color: #4e86da;
+}
+
+.tab-button.active.green {
+  border-bottom-color: #10b981;
+  color: #10b981;
+}
+
+.tab-button.active.gray {
+  border-bottom-color: #6b7280;
+  color: #6b7280;
+}
+
+.tab-button.active.red {
+  border-bottom-color: #ef4444;
+  color: #ef4444;
+}
+
+.tab-button.active.orange {
+  border-bottom-color: #f97316;
+  color: #f97316;
+}
+
+.tab-count {
+  background: #e5e7eb;
+  color: #374151;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tab-button.active .tab-count {
+  background: linear-gradient(135deg, #4e86da 0%, #8692c2 100%);
+  color: white;
+}
+
+/* 공고 카드 */
+.postings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.posting-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s;
+}
+
+.posting-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+}
+
+.posting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.posting-title-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.posting-title-section h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.status-icon {
+  flex-shrink: 0;
+}
+
+.status-icon.open {
+  color: #10b981;
+}
+.status-icon.draft {
+  color: #6b7280;
+}
+.status-icon.closed {
+  color: #ef4444;
+}
+.status-icon.expired {
+  color: #f97316;
+}
+
+.posting-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.action-btn.publish {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.action-btn.publish:hover {
+  background: #059669;
+}
+
+.action-btn.close {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+.action-btn.close:hover {
+  background: #dc2626;
+}
+
+.action-btn.edit:hover {
+  color: #4e86da;
+  border-color: #4e86da;
+}
+
+.action-btn.delete:hover {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+/* 정보 섹션 */
+.posting-info {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.info-item svg {
+  color: #9ca3af;
+}
+
+/* 통계 섹션 */
+.posting-stats {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.stat-item svg {
+  color: #4e86da;
+}
+
+.employment-type {
+  background: #eff6ff;
+  color: #3730a3;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* 빈 상태 */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #9ca3af;
+}
+
+.empty-state svg {
+  color: #d1d5db;
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  font-size: 16px;
+  margin: 0 0 20px 0;
+}
+
+.create-btn {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #4e86da 0%, #8692c2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.create-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(78, 134, 218, 0.4);
+}
+
+.loading-state {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 16px;
+}
