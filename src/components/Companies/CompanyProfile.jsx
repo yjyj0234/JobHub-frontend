@@ -33,19 +33,18 @@ const CompanyProfile = () => {
   const [companySizes, setCompanySizes] = useState([]);
 
   const [formData, setFormData] = useState({
-    // 기본 정보
+    // 모든 필드를 빈 문자열로 초기화 (undefined 방지)
     name: "",
     businessNumber: "",
     industryId: "",
     companySizeId: "",
     foundedYear: "",
-    // 상세 정보
     websiteUrl: "",
     logoUrl: "",
     description: "",
     mission: "",
     culture: "",
-    benefits: [],
+    benefits: [], // 배열은 빈 배열로
   });
 
   const [currentBenefit, setCurrentBenefit] = useState("");
