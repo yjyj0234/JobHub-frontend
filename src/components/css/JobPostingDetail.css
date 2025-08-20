@@ -414,3 +414,17 @@
 .fav-toggle:disabled {
   cursor: not-allowed;
 }
+
+.deadline-callout { padding-top: 0; }
+.deadline-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 8px 12px;
+  border: 1px solid #eee;
+}
+.deadline-pill.soon { background: #fff8e7; border-color: #ffd79a; } /* D-14~8 */
+.deadline-pill.urgent { background: #fff5f5; border-color: #ff9aa2; } /* D-7~0 */
+.deadline-pill .close-date { opacity: 0.8; font-weight: 500; }
