@@ -13,10 +13,9 @@ import { AuthPage, Hero, Grid, TopGrid } from "../UX";
 import { ResumeListPage, ResumeEditorPage } from "../resume";
 
 // 4. Companies 관련 페이지 그룹
-<<<<<<< HEAD
 import { Jobposting, ApplicantsList, CompanyProfile } from "../Companies";
 
-import { JobPostingList } from "../job-posting-list";
+import { JobPostingList, JobPostingDetail } from "../job-posting-list";
 import {
   PostList,
   AddPost,
@@ -25,12 +24,6 @@ import {
   GroupChat,
   GroupChatRoom,
 } from "../Community";
-=======
-import { Jobposting, ApplicantsList } from "../Companies";
-
-import { JobPostingList, JobPostingDetail } from "../job-posting-list";
-import { PostList, AddPost, PostDetail, UpdatePost, GroupChat, GroupChatRoom } from "../Community";
->>>>>>> 6ac231e026f1b2dbc1c35a5451738ea5f11951c7
 
 function MainLayout() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -96,13 +89,9 @@ function AppRouter() {
         <Route path="/" element={<HomePage />} />
         <Route path="/resumes" element={<ResumeListPage />} />
         <Route path="/resumes/new" element={<ResumeEditorPage />} />
-<<<<<<< HEAD
         <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
         <Route path="/company/profile" element={<CompanyProfile />} />
-=======
         <Route path="/resumes/:id" element={<ResumeEditorPage />} />
-
->>>>>>> 6ac231e026f1b2dbc1c35a5451738ea5f11951c7
         <Route path="/jobposting" element={<Jobposting />} />
         <Route path="/companies/applicants" element={<ApplicantsList />} />
         <Route path="/postlist" element={<PostList />} />
