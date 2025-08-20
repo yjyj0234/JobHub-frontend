@@ -222,7 +222,7 @@ function GlobalHeader({ onLoginClick }) {
     setRegionOpen(false);
   };
 
-  const isCompany = isAuthed && (user?.user_type ?? user?.userType ?? "").toLowerCase().includes("company");
+  
 
   const showSearchContainer = !isScrolled || scrolledSearchExpanded;
 
