@@ -1,3 +1,5 @@
+/* src/components/css/GlobalHeader.css */
+
 .global-header {
   width: 100%;
   background-color: #fff;
@@ -7,6 +9,16 @@
   top: 0;
   z-index: 100;
   border-bottom: 1px solid #e0e0e0;
+  height: 140px;
+  transition: height 0.3s ease-in-out;
+}
+
+.global-header.scrolled {
+  height: 70px;
+}
+
+/* 스크롤되고 검색창이 확장됐을 때 헤더 높이를 다시 늘림 */
+.global-header.scrolled.search-expanded {
   height: 140px;
 }
 
@@ -20,11 +32,6 @@
   justify-content: space-between;
   align-items: center;
   height: 70px;
-  transition: height 0.3s ease-in-out;
-}
-
-.global-header.scrolled .top-bar {
-  height: 60px;
 }
 
 .logo img {
@@ -73,73 +80,51 @@
   border-color: #ccc;
 }
 
-.scrolled-search-wrapper {
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-}
-
-.scrolled-search {
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
+/* --- 신규: 스크롤 시 나타나는 버튼 스타일 --- */
+.scrolled-triggers {
+  display: flex;
   align-items: center;
-  width: 300px;
+  gap: 8px;
   border: 1px solid #e0e0e0;
   border-radius: 20px;
   height: 38px;
   background-color: #f7f7f7;
-  position: relative;
+  padding: 0 4px;
 }
-
-.search-input-wrapper-scrolled {
-  display: contents;
-}
-.search-input-wrapper-scrolled .icon {
-  padding: 0 4px 0 12px;
-  color: #888;
-}
-.search-input-wrapper-scrolled input {
-  font-size: 0.9rem;
-  width: 100%;
-}
-
-.dropdown-trigger-scrolled {
+.scrolled-trigger-btn {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 0 12px;
-  height: 100%;
-  border-left: 1px solid #e0e0e0;
+  height: 30px;
   font-size: 0.9rem;
   color: #555;
-  background-color: transparent;
-  transition: background-color 0.2s ease;
-  white-space: nowrap;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  transition: all 0.2s ease;
 }
-.dropdown-trigger-scrolled span {
-  max-width: 50px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.scrolled-trigger-btn:hover {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
 }
-.dropdown-trigger-scrolled:hover {
-  background-color: #efefef;
-}
+/* --- 신규 스타일 끝 --- */
 
 .search-container {
   display: flex;
   justify-content: center;
   position: relative;
-  transition: opacity 0.3s ease-in-out, height 0.3s ease-in-out, padding 0.3s ease-in-out, transform 0.3s ease-in-out;
   height: 70px;
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
   opacity: 1;
   transform: translateY(0);
 }
 
-.global-header.scrolled .search-container {
-  height: 0;
-  padding: 0;
+/* 스크롤 시 기본적으로 검색창 숨김 (scrolled 클래스만 있을 때) */
+.global-header.scrolled:not(.search-expanded) .search-container {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translateY(-20px);
 }
 
 .pre-search-button {
@@ -161,6 +146,7 @@
 .pre-search-button:hover {
   border-color: #aaa;
 }
+
 .expanded-search {
   display: grid;
   grid-template-columns: 2.5fr auto 1.5fr auto 1.5fr 90px;
@@ -172,9 +158,9 @@
   border: 2px solid var(--c-accent);
   background-color: #fff;
   padding: 0;
-  overflow: visible;
   position: relative;
 }
+
 .search-input-wrapper,
 .dropdown-trigger {
   height: 100%;
@@ -227,6 +213,8 @@
   font-size: 1rem;
   font-weight: 600;
 }
+
+/* 드롭다운 패널 스타일 (이하 동일) */
 @keyframes dropdown-appear {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }

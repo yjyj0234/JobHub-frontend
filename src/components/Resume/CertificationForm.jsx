@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import '../css/Form.css';
 
-function CertificationForm({ data, onUpdate }) {
+function LanguageForm({ data, onUpdate, isEditing }) {
   const [formData, setFormData] = useState(data || {});
 
   const handleChange = (e) => {
@@ -14,12 +14,12 @@ function CertificationForm({ data, onUpdate }) {
   return (
     <div className="item-form">
       <div className="grid-layout">
-        <div className="form-field full-width"><label htmlFor="certName">자격증명</label><input type="text" id="certName" name="certName" value={formData.certName || ''} onChange={handleChange} placeholder="예) 정보처리기사"/></div>
-        <div className="form-field"><label htmlFor="certIssuer">발급기관</label><input type="text" id="certIssuer" name="certIssuer" value={formData.certIssuer || ''} onChange={handleChange} placeholder="예) 한국산업인력공단"/></div>
-        <div className="form-field"><label htmlFor="certDate">취득일</label><input type="date" id="certDate" name="certDate" value={formData.certDate || ''} onChange={handleChange}/></div>
-        <div className="form-field"><label htmlFor="certNumber">자격증 번호</label><input type="text" id="certNumber" name="certNumber" value={formData.certNumber || ''} onChange={handleChange}/></div>
+        <div className="form-field"><label htmlFor="language">언어</label><input type="text" id="language" name="language" value={formData.language || ''} onChange={handleChange} placeholder="예) 영어" disabled={!isEditing}/></div>
+        <div className="form-field"><label htmlFor="fluency">숙련도</label><input type="text" id="fluency" name="fluency" value={formData.fluency || ''} onChange={handleChange} placeholder="예) 비즈니스 회화 가능" disabled={!isEditing}/></div>
+        <div className="form-field"><label htmlFor="testName">어학시험명</label><input type="text" id="testName" name="testName" value={formData.testName || ''} onChange={handleChange} placeholder="예) TOEIC" disabled={!isEditing}/></div>
+        <div className="form-field"><label htmlFor="testScore">시험점수</label><input type="text" id="testScore" name="testScore" value={formData.testScore || ''} onChange={handleChange} placeholder="예) 950" disabled={!isEditing}/></div>
       </div>
     </div>
   );
 }
-export default CertificationForm;
+export default LanguageForm;
