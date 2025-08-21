@@ -45,6 +45,13 @@ const top100Data = [
     skills: ["Service", "Global", "Logistics"],
     talent: "고객 만족을 최우선으로 하는 인재",
   },
+  {
+    icon: "✈️",
+    name: "대한항공",
+    desc: "세계 항공업계를 선도하는 글로벌 항공사",
+    skills: ["Service", "Global", "Logistics"],
+    talent: "고객 만족을 최우선으로 하는 인재",
+  },
 ];
 
 function TopGrid({ sectionRef }) {
