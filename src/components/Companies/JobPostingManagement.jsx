@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
   Eye,
@@ -24,6 +24,12 @@ const JobPostingManagement = ({ onEditClick, onNewClick }) => {
   const [activeTab, setActiveTab] = useState("OPEN");
   const [postings, setPostings] = useState([]);
   const [loading, setLoading] = useState(false);
+  const booted = useRef(false);
+  useEffect(() => {
+    if (booted.current) return; // React StrictMode로 2번 실행 방지(개발모드)
+    booted.current = true;
+    fetchPostings();
+  }, []);
   const [stats, setStats] = useState({
     open: 0,
     draft: 0,

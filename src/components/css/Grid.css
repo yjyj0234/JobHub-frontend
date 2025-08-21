@@ -1,249 +1,42 @@
-/* ========== 기존 Grid.css와 TopGrid.css에 추가할 스타일들 ========== */
-
-/* Grid.css와 TopGrid.css 공통 추가 스타일 */
-
-/* ========== 타이틀 배지 ========== */
-.grid-title,
-.top100-grid-title {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.personalized-badge {
-  background: linear-gradient(45deg, var(--c-accent), #ff8a65);
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  animation: pulse 2s infinite;
-}
-
-.demo-badge {
-  background: linear-gradient(45deg, #9e9e9e, #757575);
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  opacity: 0.8;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-/* ========== 로딩 상태 ========== */
-.loading-container {
+.grid-title {
   text-align: center;
-  padding: 4rem 2rem;
-  color: var(--c-subtext);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 40px;
 }
 
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-left: 4px solid var(--c-accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
+/* 기존 */
+.grid-section {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 60px 20px 100px 20px;
+  position: relative; /* 배경 장식용 */
+  overflow: hidden; /* 장식이 튀어나오지 않도록 */
 }
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+/* 은은한 배경 하이라이트(Top banner와 톤 맞춤) */
+.grid-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    1400px 300px at -10% -20%,
+    rgba(255, 255, 255, 0.35),
+    transparent 60%
+  );
+  pointer-events: none;
 }
 
-.loading-container p {
-  font-size: 1rem;
-  margin: 0;
-  opacity: 0.8;
+/* Top10처럼 좀 더 조밀하게 보이고 싶을 때(옵션) */
+.grid-section--top10 .grid {
+  gap: 20px;
 }
 
-/* ========== 더보기 버튼 개선 ========== */
-.view-more-container {
-  text-align: center;
-  margin-top: 3rem;
-}
-
-.view-more-button {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  color: var(--c-text);
-  padding: 1rem 2.5rem;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-}
-
-.view-more-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-/* ========== TopGrid 전용: 순위 선택 탭 ========== */
-.ranking-tabs {
-  display: flex;
+/* 카드가 화면을 적당히 채우도록 최소/최대 폭 보정(선택) */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 300px));
+  gap: 25px;
   justify-content: center;
-  gap: 0;
-  margin-bottom: 2.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 0.5rem;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 2.5rem;
-}
-
-.ranking-tab {
-  flex: 1;
-  padding: 0.875rem 1.5rem;
-  background: none;
-  border: none;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--c-subtext);
-  cursor: pointer;
-  position: relative;
-  transition: all 0.3s ease;
-  border-radius: 8px;
-}
-
-.ranking-tab.active {
-  background: linear-gradient(45deg, var(--c-accent), #ff8a65);
-  color: white;
-  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-}
-
-.ranking-tab:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--c-text);
-}
-
-/* ========== 반응형 개선 ========== */
-@media (max-width: 768px) {
-  .grid-title,
-  .top100-grid-title {
-    font-size: 1.75rem;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .personalized-badge,
-  .demo-badge {
-    font-size: 0.7rem;
-    padding: 0.2rem 0.6rem;
-  }
-
-  .ranking-tabs {
-    max-width: 100%;
-    margin-bottom: 2rem;
-  }
-
-  .ranking-tab {
-    padding: 0.75rem 1rem;
-    font-size: 0.85rem;
-  }
-
-  .view-more-button {
-    padding: 0.875rem 2rem;
-    font-size: 0.9rem;
-  }
-
-  .loading-container {
-    padding: 3rem 1rem;
-  }
-
-  .loading-spinner {
-    width: 35px;
-    height: 35px;
-    border-width: 3px;
-  }
-}
-
-@media (max-width: 480px) {
-  .grid-title,
-  .top100-grid-title {
-    font-size: 1.5rem;
-  }
-
-  .ranking-tabs {
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.75rem;
-  }
-
-  .ranking-tab {
-    padding: 0.75rem;
-  }
-
-  .view-more-button {
-    width: 100%;
-    max-width: 280px;
-  }
-
-  .personalized-badge,
-  .demo-badge {
-    font-size: 0.65rem;
-    padding: 0.15rem 0.5rem;
-  }
-}
-
-/* ========== 다크모드 대응 ========== */
-@media (prefers-color-scheme: dark) {
-  .view-more-button {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.1);
-    color: #e2e8f0;
-  }
-
-  .view-more-button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-  }
-
-  .ranking-tabs {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .ranking-tab {
-    color: #94a3b8;
-  }
-
-  .ranking-tab:hover:not(.active) {
-    background: rgba(255, 255, 255, 0.05);
-    color: #e2e8f0;
-  }
-
-  .loading-container {
-    color: #94a3b8;
-  }
-
-  .demo-badge {
-    background: linear-gradient(45deg, #4a5568, #2d3748);
-  }
 }
