@@ -80,7 +80,7 @@ const PostList = () => {
     return () => controller.abort();
   }, []);
 
-  // 검색어 바뀌면 목록을 다시 6개부터 보여주자
+  // 검색어 바뀌면 목록을 다시 6개부터 보여주기
   useEffect(() => {
     setVisibleCount(6);
   }, [searchTerm]);

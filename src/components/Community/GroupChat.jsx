@@ -9,8 +9,10 @@ export default function GroupChat() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showMyRooms, setShowMyRooms] = useState(false);
   const navigate = useNavigate();
 
+  //전체 방목록 불러오기
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -26,6 +28,30 @@ export default function GroupChat() {
       }
     })();
   }, []);
+
+  //채팅방 목록 토글 불러오기(내가 참여한 방, 전체 방)
+  const handleToggleRooms = async () => {
+  setShowMyRooms(true);
+  setLoading(true);
+   try {
+    if (showMyRooms) {
+      // 현재 "내 방" → 전체 방으로 전환
+      const { data } = await axios.get("http://localhost:8080/group-chat/rooms/explore");
+      setRooms(data ?? []);
+      setShowMyRooms(false);
+    } else {
+      // 현재 "전체 방" → 내 방으로 전환
+      const { data } = await axios.get("http://localhost:8080/group-chat/rooms/my");
+      setRooms(data ?? []);
+      setShowMyRooms(true);
+    }
+  } catch (err) {
+    setError(showMyRooms ? "전체 방 목록을 불러오지 못했습니다." : "내 방 목록을 불러오지 못했습니다.");
+    console.error("방 목록 불러오기 실패:", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const createRoom = async () => {
     if (!name.trim()) return;
@@ -72,8 +98,8 @@ export default function GroupChat() {
             <button type="button" className="gc-back-btn" onClick={goBack}>
               게시판 목록
             </button>
-            <button type="button" className="my-room-btn">
-              내가 참여하고 있는 방
+            <button type="button" className="my-room-btn" onClick={handleToggleRooms}>
+              {showMyRooms ? "모든 채팅방" : "내가 참여하고 있는 채팅방"}
             </button>
           </div>
         </header>
@@ -103,7 +129,9 @@ export default function GroupChat() {
 
         {!loading && !error && (
           <section className="gc-rooms-section">
-            <h2 className="gc-rooms-title">채팅방 목록</h2>
+            <h2 className="gc-rooms-title">
+              {showMyRooms ? "내가 참여한 채팅방" : "전체 채팅방"}
+            </h2>
             {rooms.length === 0 ? (
               <div className="gc-empty">생성된 채팅방이 없습니다</div>
             ) : (
