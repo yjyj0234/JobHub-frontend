@@ -581,19 +581,16 @@ const isClosed = isClosedByStatus || isDeadlineClosed;
     } catch {}
   };
 
-  /**
-   * 근무지역 표시 텍스트
-   * - 라벨 없이 지역만
-   * - 재택 가능이면 꼬리표 추가
-   */
- 
+  // 지원하기 버튼 눌렀을때 상황별 
   const handleApplyClick = () => {
+    //로그인 안된 경우
     if (!isAuthed) {
       alert("로그인이 필요합니다.");
+      //전역 이벤트(openLoginModal)
       window.dispatchEvent(new CustomEvent('openLoginModal'));
       return;
     }
-    
+    // 로그인 했지만 다른 회사인 경우
     if (user?.role === "COMPANY") {
       if (!isOwner) {
         alert("해당 공고문을 올린 회사가 아닙니다.");
@@ -609,7 +606,7 @@ const isClosed = isClosedByStatus || isDeadlineClosed;
     navigate(`/apply/${job.id}`);
     // TODO: 실제 지원 API 호출
   };
-
+// 공고를 올린 회사로 로그인
   const handleJobClose = () => {
     if (window.confirm("정말로 이 채용공고를 마감하시겠습니까?")) {
       console.log("마감하기 클릭");
