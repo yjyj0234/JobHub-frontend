@@ -47,7 +47,8 @@ const stripHtml = (html) => {
 };
 
 const PostList = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(''); //입력중인 값
+  const [committedSearchTerm, setCommittedSearchTerm] = useState(''); // 실제 검색어
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState('');
@@ -85,17 +86,31 @@ const PostList = () => {
     setVisibleCount(6);
   }, [searchTerm]);
 
-  const lower = (v) => (v ?? '').toString().toLowerCase();
+  
 
+  // 검색 실행 함수
+const handleSearch = (e) => {
+  if (e.key === 'Enter') {
+    setCommittedSearchTerm(searchTerm.trim());
+    setSearchTerm('');
+  }
+  else if (e.type === 'click') {
+    setCommittedSearchTerm(searchTerm.trim());
+    setSearchTerm('');
+  }
+  
+};
+
+//검색함수에 Enter 키 이벤트 추가
   const filteredPosts = useMemo(() => {
-    const q = lower(searchTerm.trim());
-    if (!q) return posts;
-    return posts.filter(p =>
-      lower(p.title).includes(q) ||
-      lower(p.content).includes(q) ||
-      lower(p.userName).includes(q)
-    );
-  }, [posts, searchTerm]);
+  const q = (committedSearchTerm ?? '').toLowerCase();
+  if (!q) return posts;
+  return posts.filter(p =>
+    (p.title ?? '').toLowerCase().includes(q) ||
+    (p.content ?? '').toLowerCase().includes(q) ||
+    (p.userName ?? '').toLowerCase().includes(q)
+  );
+}, [posts, committedSearchTerm]);
 
   // 목록 축소(검색 등)로 길이가 줄면 visibleCount도 보정
  useEffect(() => {
@@ -168,8 +183,10 @@ const PostList = () => {
               placeholder="검색어를 입력하세요"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={handleSearch}
               aria-label="게시글 검색"
             />
+             <button type='button' className='pl-search-btn' onClick={handleSearch}>검색</button>
           </div>
         </header>
 

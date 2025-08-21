@@ -178,7 +178,7 @@
 }
 
 .submit-btn {
-   background: linear-gradient(135deg, #685fca 0%, #7e44da 100%);
+   background: linear-gradient(135deg, #4e86da 0%, #8692c2 100%);
   color: white;
   border: none;
   border-radius: 6px;
@@ -191,7 +191,7 @@
 }
 
 .submit-btn:hover {
-   background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+   background: linear-gradient(135deg, #3074d9 0%, #5b6eba 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
 }
@@ -209,7 +209,7 @@
 }
 
 .backBtn {
-  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, #4e86da 0%, #8692c2 100%);
   border: none;
   border-radius: 25px;
   padding: 10px 20px;
