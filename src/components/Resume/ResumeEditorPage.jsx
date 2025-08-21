@@ -385,7 +385,7 @@ const EditorPalette = ({ onAddItem, addedSections = [] }) => {
       id: "educations",
       name: (
         <>
-          학력 <span style={{ color: "red", fontSize: 12 }}>(필수)</span>
+          학력 <span className="palette-required-text">(필수)</span>
         </>
       ),
       icon: <GraduationCap size={20} />,
@@ -1104,16 +1104,6 @@ function ResumeEditorPage() {
               >
                 <Eye size={16} /> 미리보기
               </button>
-
-              {/* 임시저장 */}
-
-              {/* <button
-                className="action-btn"
-                onClick={handleTemporarySave}
-                disabled={isSaving}
-              >
-                <Save size={16} /> 임시저장
-              </button> */}
               <button
                 className="action-btn primary"
                 onClick={handleFinalSave}
@@ -1144,7 +1134,9 @@ function ResumeEditorPage() {
                     <h2>
                       {title}
                       {required && (
-                        <span className="required-text">(필수)</span>
+                        <span className={`required-text ${isEditing ? 'active' : ''}`}>
+                          (필수)
+                        </span>
                       )}
                     </h2>
                     <div className="section-header-actions">
@@ -1154,7 +1146,6 @@ function ResumeEditorPage() {
                             className="action-btn primary"
                             onClick={async () => {
                               await saveSection(section.id);
-                              // handleSaveSection은 saveSection 내부에서 호출됨
                             }}
                           >
                             저장
@@ -1241,30 +1232,30 @@ function ResumeEditorPage() {
                     })}
 
                     {isEditing && (
-                      <button
+                        <button
                         className="add-item-btn"
                         onClick={() =>
-                          setSections((prev) =>
-                            prev.map((s) =>
-                              s.id === section.id
-                                ? {
-                                    ...s,
-                                    data: [
-                                      ...(s.data || []),
-                                      {
-                                        subId: `${
-                                          section.type
-                                        }-item-${Date.now()}`,
-                                      },
-                                    ],
-                                  }
-                                : s
+                            setSections((prev) =>
+                                prev.map((s) =>
+                                    s.id === section.id
+                                        ? {
+                                            ...s,
+                                            data: [
+                                                ...(s.data || []),
+                                                {
+                                                    subId: `${
+                                                        section.type
+                                                    }-item-${Date.now()}`,
+                                                },
+                                            ],
+                                        }
+                                        : s
+                                )
                             )
-                          )
                         }
-                      >
+                        >
                         <PlusCircle size={16} /> {title} 추가
-                      </button>
+                        </button>
                     )}
                   </div>
                 </section>

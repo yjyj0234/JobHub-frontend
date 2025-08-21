@@ -324,13 +324,18 @@
   font-size: 1.2rem;
   font-weight: bold;
 }
+
 .required-text {
-  /* 필수 텍스트 스타일 추가 */
-  color: #ff4d4f;
+  color: #d90429;
   font-size: 0.8rem;
-  font-weight: normal;
+  font-weight: 900;
   margin-left: 4px;
+  transition: all 0.2s;
 }
+.required-text.active {
+  color: #ff7b7b;
+}
+
 .section-header-actions {
   display: flex;
   gap: 10px;
@@ -395,7 +400,7 @@
 .resume-status-palette {
   background-color: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   padding: 20px;
 }
 .editor-palette h3 {
@@ -424,10 +429,16 @@
   border-color: #dee2e6;
 }
 .palette-item.disabled {
-  background-color: #e9ecef;
-  color: #adb5bd;
-  cursor: not-allowed;
-  opacity: 0.7;
+    background-color: #e9ecef;
+    color: #adb5bd;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.palette-required-text {
+  color: rgb(212, 20, 20);
+  font-size: 12px;
+  font-weight: normal;
 }
 
 /* 완성도 및 토글 스위치 */
@@ -490,7 +501,7 @@
   right: 0;
   bottom: 0;
   background-color: #ccc;
-  transition: 0.4s;
+  transition: .4s;
   border-radius: 24px;
 }
 .toggle-switch label:before {
@@ -501,7 +512,7 @@
   left: 2px;
   bottom: 2px;
   background-color: white;
-  transition: 0.4s;
+  transition: .4s;
   border-radius: 50%;
 }
 .toggle-switch input:checked + label {
