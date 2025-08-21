@@ -381,7 +381,15 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
 const EditorPalette = ({ onAddItem, addedSections = [] }) => {
   const allItems = [
     { id: "experiences", name: "경력", icon: <Briefcase size={20} /> },
-    { id: "educations", name: "학력", icon: <GraduationCap size={20} /> },
+    {
+      id: "educations",
+      name: (
+        <>
+          학력 <span style={{ color: "red", fontSize: 12 }}>(필수)</span>
+        </>
+      ),
+      icon: <GraduationCap size={20} />,
+    },
     { id: "skills", name: "기술", icon: <Server size={20} /> },
     { id: "projects", name: "프로젝트", icon: <Server size={20} /> },
     { id: "activities", name: "대외활동", icon: <Award size={20} /> },
@@ -1036,11 +1044,14 @@ function ResumeEditorPage() {
         if (!createdId) throw new Error("생성된 이력서 ID가 없습니다.");
         setResumeId(createdId);
         localStorage.removeItem("resume_draft");
-        navigate(`/resumes/${createdId}`, { replace: true });
+        // ▼ 목록 페이지로 이동
+        navigate("/resumes", { replace: true });
         alert("이력서 작성이 완료되었습니다!");
       } else {
         await axios.put(`${API}/resumes/${resumeId}`, buildResumePayload());
         alert("이력서가 저장되었습니다.");
+        // ▼ 목록 페이지로 이동 (기존 이력서도)
+        navigate("/resumes", { replace: true });
       }
     } catch (err) {
       console.error("[FinalSave] error:", err);
@@ -1093,13 +1104,16 @@ function ResumeEditorPage() {
               >
                 <Eye size={16} /> 미리보기
               </button>
-              <button
+
+              {/* 임시저장 */}
+
+              {/* <button
                 className="action-btn"
                 onClick={handleTemporarySave}
                 disabled={isSaving}
               >
                 <Save size={16} /> 임시저장
-              </button>
+              </button> */}
               <button
                 className="action-btn primary"
                 onClick={handleFinalSave}

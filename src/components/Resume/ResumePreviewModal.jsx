@@ -5,7 +5,9 @@ import "../css/ResumePreviewModal.css";
 const SectionView = ({ section }) => {
   // 데이터가 배열 형태이므로, 각 항목을 순회하며 렌더링
   if (!section.data || section.data.length === 0) {
-    return <div className="preview-data-item empty">작성된 내용이 없습니다.</div>;
+    return (
+      <div className="preview-data-item empty">작성된 내용이 없습니다.</div>
+    );
   }
 
   return section.data.map((item, index) => (
@@ -40,7 +42,7 @@ const renderItem = (type, data) => {
             {data.major || "전공 미입력"} ({data.degree || "학위 미입력"})
           </p>
           <p className="period">
-            {data.startDate || "입학일"} ~ {data.endDate || "졸업일"}
+            {data.admissionDate || "입학일"} ~ {data.graduationDate || "졸업일"}
           </p>
           {data.gpa && (
             <p>
@@ -50,76 +52,125 @@ const renderItem = (type, data) => {
         </>
       );
     case "skills":
-        if (!Array.isArray(data.skills) || data.skills.every(skill => !skill.name)) {
-            return <div className="preview-data-item empty">작성된 스킬이 없습니다.</div>;
-        }
+      if (
+        !Array.isArray(data.skills) ||
+        data.skills.every((skill) => !skill.name)
+      ) {
         return (
-            <div className="skills-preview-container">
-            {data.skills.map((skill, index) => (
-                skill.name && (
-                <span key={index} className="skill-preview-tag">
-                    {skill.name}
-                    {skill.category && ` (${skill.category})`}
-                </span>
-                )
-            ))}
-            </div>
+          <div className="preview-data-item empty">작성된 스킬이 없습니다.</div>
         );
+      }
+      return (
+        <div className="skills-preview-container">
+          {data.skills.map(
+            (skill, index) =>
+              skill.name && (
+                <span key={index} className="skill-preview-tag">
+                  {skill.name}
+                  {skill.category && ` (${skill.category})`}
+                </span>
+              )
+          )}
+        </div>
+      );
     case "projects":
       return (
         <>
-          <p><strong>{data.projectName || '프로젝트명 미입력'}</strong> ({data.projectOrg || '수행기관 미입력'})</p>
-          <p className="period">{data.startDate || '시작일'} ~ {data.endDate || '종료일'}</p>
-          {data.url && <p><strong>링크:</strong> <a href={data.url} target="_blank" rel="noopener noreferrer">{data.url}</a></p>}
-          {data.techStack && <p><strong>사용 기술:</strong> {data.techStack}</p>}
-          {data.description && <p className="description">{data.description}</p>}
+          <p>
+            <strong>{data.projectName || "프로젝트명 미입력"}</strong> (
+            {data.projectOrg || "수행기관 미입력"})
+          </p>
+          <p className="period">
+            {data.startDate || "시작일"} ~ {data.endDate || "종료일"}
+          </p>
+          {data.url && (
+            <p>
+              <strong>링크:</strong>{" "}
+              <a href={data.url} target="_blank" rel="noopener noreferrer">
+                {data.url}
+              </a>
+            </p>
+          )}
+          {data.techStack && (
+            <p>
+              <strong>사용 기술:</strong> {data.techStack}
+            </p>
+          )}
+          {data.description && (
+            <p className="description">{data.description}</p>
+          )}
         </>
       );
     case "activities":
       return (
         <>
-          <p><strong>{data.activityName || '활동명 미입력'}</strong> ({data.organization || '기관/단체 미입력'})</p>
-          <p className="period">{data.startDate || '시작일'} ~ {data.endDate || '종료일'}</p>
-          {data.description && <p className="description">{data.description}</p>}
+          <p>
+            <strong>{data.activityName || "활동명 미입력"}</strong> (
+            {data.organization || "기관/단체 미입력"})
+          </p>
+          <p className="period">
+            {data.startDate || "시작일"} ~ {data.endDate || "종료일"}
+          </p>
+          {data.description && (
+            <p className="description">{data.description}</p>
+          )}
         </>
       );
     case "awards":
       return (
         <>
-          <p><strong>{data.awardTitle || '수상명 미입력'}</strong></p>
-          <p>{data.awardingInstitution || '수여기관 미입력'}</p>
-          <p className="period">{data.awardDate || '수상일 미입력'}</p>
-          {data.description && <p className="description">{data.description}</p>}
+          <p>
+            <strong>{data.awardTitle || "수상명 미입력"}</strong>
+          </p>
+          <p>{data.awardingInstitution || "수여기관 미입력"}</p>
+          <p className="period">{data.awardDate || "수상일 미입력"}</p>
+          {data.description && (
+            <p className="description">{data.description}</p>
+          )}
         </>
       );
     case "certifications":
       return (
         <>
-          <p><strong>{data.certName || '자격증명 미입력'}</strong></p>
-          <p>발급기관: {data.certIssuer || '미입력'}</p>
-          <p className="period">취득일: {data.certDate || '미입력'}</p>
+          <p>
+            <strong>{data.certName || "자격증명 미입력"}</strong>
+          </p>
+          <p>발급기관: {data.certIssuer || "미입력"}</p>
+          <p className="period">취득일: {data.certDate || "미입력"}</p>
         </>
       );
     case "languages":
       return (
         <>
-          <p><strong>{data.language || '언어명 미입력'}</strong></p>
-          <p>수준: {data.fluency || '미입력'}</p>
-          {data.testName && <p>시험: {data.testName} ({data.testScore || '점수 미입력'})</p>}
+          <p>
+            <strong>{data.language || "언어명 미입력"}</strong>
+          </p>
+          <p>수준: {data.fluency || "미입력"}</p>
+          {data.testName && (
+            <p>
+              시험: {data.testName} ({data.testScore || "점수 미입력"})
+            </p>
+          )}
         </>
       );
     case "portfolios":
       return (
         <>
-          <p><strong>링크:</strong> <a href={data.url} target="_blank" rel="noopener noreferrer">{data.url || 'URL 미입력'}</a></p>
-          {data.description && <p className="description">{data.description}</p>}
+          <p>
+            <strong>링크:</strong>{" "}
+            <a href={data.url} target="_blank" rel="noopener noreferrer">
+              {data.url || "URL 미입력"}
+            </a>
+          </p>
+          {data.description && (
+            <p className="description">{data.description}</p>
+          )}
         </>
       );
     default:
       return <div className="preview-data-item">표시할 내용이 없습니다.</div>;
   }
 };
-
 
 function ResumePreviewModal({
   isOpen,
