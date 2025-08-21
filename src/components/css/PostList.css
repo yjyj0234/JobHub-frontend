@@ -42,6 +42,7 @@ background: linear-gradient(135deg, #4e86da 0%, #8692c2 100%);
 }
 
 .pl-popular-head button:hover {
+  background: linear-gradient(135deg, #3074d9 0%, #5b6eba 100%);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
