@@ -16,7 +16,9 @@ import { ResumeListPage, ResumeEditorPage } from "../Resume";
 // 4. Companies 관련 페이지 그룹
 import { Jobposting, ApplicantsList, CompanyProfile } from "../Companies";
 
-import AdminPage from "../Admin/AdminPage";
+import { AdminPage } from "../Admin";
+
+import { AboutUs, TermsOfService, PrivacyPolicy } from "../pages";
 
 // 6. job-posting-list 관련 페이지 그룹
 import { PostList, AddPost, PostDetail, UpdatePost, GroupChat, GroupChatRoom } from "../Community";
@@ -100,8 +102,12 @@ function AppRouter() {
         <Route path="/group-chat" element={<GroupChat />} />
         <Route path="/group-chat/rooms/:roomId" element={<GroupChatRoom />} />
         <Route path="/service" element={<Service />} />
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/admin" element={<AdminPage />} />
-        {/* 공고 디테일 */}
+        
+        {/* 관리자 페이지 */}
         <Route path="/jobpostinglist/:id" element={<JobPostingDetail />} />
       </Route>
     </Routes>

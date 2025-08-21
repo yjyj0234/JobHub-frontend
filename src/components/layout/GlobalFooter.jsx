@@ -1,7 +1,7 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "../css/GlobalFooter.css";
 import logo from "../../assets/img/logo4.png";
-
 
 function GlobalFooter() {
   return (
@@ -15,10 +15,10 @@ function GlobalFooter() {
         </div>
         <div className="footer-right">
           <div className="footer-links">
-            <a href="#">회사소개</a>
-            <a href="#">이용약관</a>
-            <a href="#">개인정보처리방침</a>
-            <a href="/service">고객센터</a>
+            <Link to="/about">회사소개</Link>
+            <Link to="/terms">이용약관</Link>
+            <Link to="/privacy">개인정보처리방침</Link>
+            <Link to="/service">고객센터</Link>
           </div>
           <p className="footer-copyright">
             © 2025 JobHub. All rights reserved.

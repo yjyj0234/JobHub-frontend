@@ -1,3 +1,4 @@
+/* src/App.css */
 :root {
   --font-main: 'Pretendard', sans-serif;
   --c-accent: #4e86da;
@@ -46,9 +47,9 @@ body.body-no-scroll {
 .app-container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh; /* 최소 높이를 뷰포트 높이와 같게 설정 */
+  min-height: 100vh;
 }
 
 .main-content {
-  flex: 1; /* 헤더와 푸터를 제외한 모든 남는 공간을 차지 */
+  flex: 1;
 }

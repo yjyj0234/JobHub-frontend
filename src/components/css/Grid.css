@@ -1,3 +1,5 @@
+/* src/components/css/Grid.css */
+
 .grid-title {
   text-align: center;
   font-size: 2rem;
@@ -5,15 +7,18 @@
   margin-bottom: 40px;
 }
 
-/* 기존 */
+/* --- 수정된 부분 --- */
 .grid-section {
+  /* max-width를 없애고, 좌우 패딩으로 너비를 조절합니다. */
   width: 100%;
-  max-width: 1280px;
   margin: 0 auto;
-  padding: 60px 20px 100px 20px;
-  position: relative; /* 배경 장식용 */
-  overflow: hidden; /* 장식이 튀어나오지 않도록 */
+  padding: 60px 40px 100px 40px; /* 상하좌우 여백 */
+  box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+  position: relative; 
+  overflow: hidden; 
 }
+/* --- 여기까지 수정 --- */
+
 
 /* 은은한 배경 하이라이트(Top banner와 톤 맞춤) */
 .grid-section::before {
@@ -38,10 +43,12 @@
   gap: 20px;
 }
 
-/* 카드가 화면을 적당히 채우도록 최소/최대 폭 보정(선택) */
+/* 카드가 화면을 적당히 채우도록 최대 너비를 내부에서 다시 설정 */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 300px));
   gap: 25px;
   justify-content: center;
+  max-width: 1280px; /* 카드들이 실제 배치될 최대 너비 */
+  margin: 0 auto;
 }

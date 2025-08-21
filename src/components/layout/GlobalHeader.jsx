@@ -222,7 +222,7 @@ function GlobalHeader({ onLoginClick }) {
     setRegionOpen(false);
   };
 
-  const isCompany = isAuthed && (user?.user_type ?? user?.userType ?? "").toLowerCase().includes("company");
+  
 
   const showSearchContainer = !isScrolled || scrolledSearchExpanded;
 
@@ -282,10 +282,7 @@ function GlobalHeader({ onLoginClick }) {
             {isScrolled && !scrolledSearchExpanded && (
               <div className="scrolled-triggers">
                 <button className="scrolled-trigger-btn" onClick={() => setScrolledSearchExpanded(true)}>
-                  <MapPin size={16} /> 지역
-                </button>
-                <button className="scrolled-trigger-btn" onClick={() => setScrolledSearchExpanded(true)}>
-                  <Briefcase size={16} /> 직무
+                  <MapPin size={15} /> 검색
                 </button>
               </div>
             )}
