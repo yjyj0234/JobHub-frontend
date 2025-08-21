@@ -99,7 +99,7 @@ export default function GroupChat() {
               게시판 목록
             </button>
             <button type="button" className="my-room-btn" onClick={handleToggleRooms}>
-              {showMyRooms ? "모든 채팅방" : "내가 참여하고 있는 채팅방"}
+              {showMyRooms ? "모든 채팅방" : "나의 채팅방"}
             </button>
           </div>
         </header>
@@ -130,7 +130,7 @@ export default function GroupChat() {
         {!loading && !error && (
           <section className="gc-rooms-section">
             <h2 className="gc-rooms-title">
-              {showMyRooms ? "내가 참여한 채팅방" : "전체 채팅방"}
+              {showMyRooms ? "내가 참여하고 있는 채팅방" : "전체 채팅방"}
             </h2>
             {rooms.length === 0 ? (
               <div className="gc-empty">생성된 채팅방이 없습니다</div>

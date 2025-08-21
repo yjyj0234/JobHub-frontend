@@ -329,7 +329,11 @@ useEffect(() => {
                     <div key={p.userId} className="gcr-participant-item">
                       <div className="gcr-participant-avatar">👤</div>
                       <div className="gcr-participant-info">
-                        <span className="gcr-participant-name">{p.name}</span>
+                        <span className="gcr-participant-name">{p.name}
+                           {String(p.userId) === String(myUid) && (
+                              <span className="gcr-self-badge"> (나)</span>
+                            )}
+                        </span>
                       </div>
                     </div>
                   ))}

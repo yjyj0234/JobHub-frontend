@@ -344,8 +344,9 @@
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-  float: right;
+  float: left;
   margin-right: 80px;
+  margin-top: 10px;
 }
 
 /* 빈 상태 */

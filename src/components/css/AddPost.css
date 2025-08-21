@@ -178,7 +178,7 @@
 }
 
 .submit-btn {
-  background-color: #4e86da;
+   background: linear-gradient(135deg, #685fca 0%, #7e44da 100%);
   color: white;
   border: none;
   border-radius: 6px;
@@ -191,7 +191,7 @@
 }
 
 .submit-btn:hover {
-  background-color: #0056b3;
+   background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
 }
@@ -206,6 +206,19 @@
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+.backBtn {
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  border: none;
+  border-radius: 25px;
+  padding: 10px 20px;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 /* 반응형 디자인 */

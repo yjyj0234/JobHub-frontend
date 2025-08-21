@@ -61,7 +61,7 @@ const PostList = () => {
     setErrMsg('');
 
     axios.get('http://localhost:8080/community/list', {
-      withCredentials: false,                        // 쿠키 미전송
+      withCredentials: true,                        // 쿠키 미전송
       headers: { Authorization: undefined },         // 인터셉터 무력화
       signal: controller.signal                      // 언마운트 시 취소
     })
@@ -192,7 +192,10 @@ const PostList = () => {
                   <p className="pl-card-preview">{stripHtml(post.content)}</p>
                   <div className="pl-card-footer">
                     <div className="pl-card-meta">
-                      <span className="pl-meta-author">{post.userName ?? '탈퇴회원'}</span>
+                      <span className="pl-meta-author">{post.userName ?? '탈퇴회원'}
+                        <span style={{color:'blue'}}>{post.owner ? '(본인) ' : ''}</span>
+                      </span>
+                      
                       <span className="pl-meta-sep" aria-hidden="true">·</span>
                       <time className="pl-meta-date" dateTime={toDateTimeAttr(post.createdAt)}>
                         {formatDate(post.createdAt)}
