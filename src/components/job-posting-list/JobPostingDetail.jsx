@@ -166,9 +166,9 @@ const JobPostingDetail = ({ onLoginClick }) => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`http://localhost:8080/api/jobs/${id}`, {
+        const res = await fetch(`http://localhost:8080/api/jobs/${id}?_=${Date.now()}`, {
           credentials: "include",
-          headers: { Accept: "application/json" },
+          headers: { Accept: "application/json", "Cache-Control": "no-cache"},
         });
         if (!res.ok) {
           const text = await res.text();

@@ -373,3 +373,90 @@
     justify-content: center;
   }
 }
+
+/* 공고 정보 */
+.jobinfo-card { padding: 16px 18px; border-radius: 12px; background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.06); margin-bottom: 16px; }
+.jobinfo-company { font-size: 14px; color: #777; margin-bottom: 4px; }
+.jobinfo-title { font-size: 22px; font-weight: 800; color: #2563eb; margin: 0 0 8px; }
+.jobinfo-meta { font-size: 14px; color: #444; }
+.jobinfo-meta .pipe { color: #bbb; margin: 0 8px; }
+
+/* 내 정보 표시 */
+.myinfo-card .myinfo-grid { display: grid; grid-template-columns: 110px 1fr; gap: 8px 12px; }
+.myinfo-row strong { color: #555; width: 100px;}
+
+/* 이력서 목록 */
+.resume-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.resume-item { border: 1px solid #eee; background: #fafafa; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+.resume-item.disabled { opacity: 0.5; pointer-events: none; }
+.resume-radio { display: flex; flex-direction: column; gap: 4px; cursor: pointer; }
+.resume-radio input[type="radio"] { margin-right: 8px; }
+.resume-file .name { font-weight: 600; }
+.resume-file .size { color: #777; margin-left: 6px; font-size: 12px; }
+.resume-sub { font-size: 12px; color: #666; }
+
+.myinfo-card .myinfo-grid.myinfo-inline {
+  display: flex !important;
+  flex-direction: column;
+  gap: 8px;
+}
+/* 값이 라벨 바로 옆에 오도록 */
+.myinfo-inline .myinfo-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;              /* 라벨-값 간격을 작게 */
+  line-height: 1.4;
+}
+
+/* 혹시 기존 grid가 간격을 크게 만들면 덮어쓰기 */
+.myinfo-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;              /* 행 간 간격 */
+}
+
+/* 라벨 폭을 자동, 폰트만 살짝 진하게 */
+.myinfo-inline .label {
+  font-weight: 600;
+  min-width: auto;       /* 고정폭이 있었다면 무력화 */
+  margin: 0;             /* 여백 초기화 */
+}
+
+/* 값은 한 줄 유지 */
+.nowrap { white-space: nowrap; }
+
+.link-btn {
+  margin-left: 20px;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--c-accent, #FF7D61);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* 선택형 이력서 카드 */
+.resume-item.selectable {
+  cursor: pointer;
+  border: 1.5px solid #e6efff;              /* 기본 연한 테두리 */
+  background: #fafcff;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.resume-item.selectable:hover {
+  border-color: #bcd1ff;
+  background: #f6f9ff;
+}
+.resume-item.is-selected {
+  border-color: #8bb0ff;                     /* 선택 시 연한 파랑 */
+  background: #f2f7ff;
+  box-shadow: 0 0 0 3px rgba(139,176,255,.22);
+}
+
+/* 리스트 안의 한 줄 정렬 */
+.resume-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}

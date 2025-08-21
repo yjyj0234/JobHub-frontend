@@ -1,32 +1,108 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
-  MapPin, Briefcase, Building2, CalendarDays, DollarSign, Star, Users, CheckCircle2, Upload as UploadIcon, Eye
+  MapPin, Briefcase, Building2, CalendarDays, DollarSign, Star, Users, CheckCircle2, Eye
 } from "lucide-react";
 import "../css/JobApplication.css";
+import PolicyModal from "./PolicyModal";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_TYPES = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-];
 
-function prettyDate(s) {
-  if (!s) return "";
-  try {
-    const d = new Date(s);
-    if (Number.isNaN(d.getTime())) return s;
-    return d.toISOString().slice(0,10);
-  } catch { return s; }
+function prettySize(bytes) {
+  if (typeof bytes !== "number") return "";
+  const mb = bytes / (1024 * 1024);
+  if (mb >= 1) return `${mb.toFixed(1)}MB`;
+  const kb = bytes / 1024;
+  return `${kb.toFixed(0)}KB`;
 }
 
+function prettyDate(s) {
+  if (!s) return "-";
+  try {
+    const d = new Date(s);
+    if (Number.isNaN(d.getTime())) return "-";
+    return d.toISOString().slice(0, 10); // YYYY-MM-DD
+  } catch {
+    return "-";
+  }
+}
 function ddays(closeType, closeDate) {
   if (!closeDate || closeType === "UNTIL_FILLED" || closeType === "CONTINUOUS") return null;
   const end = new Date(closeDate);
   const diff = Math.ceil((end.getTime() - Date.now()) / (1000*60*60*24));
   return diff;
 }
+
+// 첫 번째로 "정의되어 있고 빈문자 아님" 값을 선택
+const _pickFirst = (...vals) => vals.find(v => v !== undefined && v !== null && v !== "");
+
+// undefined/null → "" 로
+const _asStr = (v) => (v === undefined || v === null) ? "" : String(v);
+
+// 응답이 { data: {...} } 또는 { profile: {...} } 형태여도 꺼내기
+const _unwrapProfile = (raw) => {
+  if (!raw || typeof raw !== "object") return {};
+  if (raw.data && typeof raw.data === "object") return raw.data;
+  if (raw.profile && typeof raw.profile === "object") return raw.profile;
+  return raw; // 평면 구조
+};
+
+// 다양한 키 케이스를 커버해서 name/email/phone을 뽑아냄
+function normalizeProfileFields(rawProfile, meFallback) {
+  const p = _unwrapProfile(rawProfile) || {};
+
+  const name = _pickFirst(
+    p.name, p.fullName, p.username, p.displayName, p.nickName, p.nickname,
+    meFallback?.name
+  );
+  const email = _pickFirst(
+    p.email, p.mail, p.primaryEmail,
+    meFallback?.email
+  );
+  const phone = _pickFirst(
+    p.phone, p.phoneNumber, p.mobile, p.mobilePhone, p.tel, p.contact, p.cell, p.cellphone
+  );
+
+  return {
+    name: _asStr(name),
+    email: _asStr(email),
+    phone: _asStr(phone),
+  };
+}
+//지역표시
+// ✅ getLocationText 버그 수정 버전
+function getLocationText(job) {
+  const remote = job?.isRemote === true || job?.is_remote === 1;
+
+  const regionFromArray = Array.isArray(job?.regions) ? job.regions[0] : null;
+
+  let fromLocations = null;
+  if (Array.isArray(job?.locations) && job.locations.length > 0) {
+    const first = job.locations[0];
+    fromLocations =
+      first?.name ??
+      first?.fullName ??
+      first?.regionName ??
+      first?.city ??
+      null;
+  }
+
+  const single =
+    job?.location ??
+    job?.region ??
+    job?.locationName ??
+    job?.regionName ??
+    null;
+
+  let base =
+    (typeof regionFromArray === "string" && regionFromArray.trim()) ? regionFromArray.trim() :
+    (typeof fromLocations === "string" && fromLocations.trim()) ? fromLocations.trim() :
+    (typeof single === "string" && single.trim()) ? single.trim() :
+    "-";
+
+  if (remote && base !== "-") base = `${base} (재택근무 가능)`;
+  return base;
+}
+
 
 export default function JobApplication() {
   const { jobId } = useParams();
@@ -50,54 +126,176 @@ export default function JobApplication() {
     agree: false,
   });
   // 저장된 이력서(서버) 관련
-  const [savedResume, setSavedResume] = useState(null);   // { id, fileName, size, url, updatedAt } 가정
-  const [useSavedResume, setUseSavedResume] = useState(false);
-  const [resumeFile, setResumeFile] = useState(null);
-  const [resumeError, setResumeError] = useState("");
+
+//내 프로필 관련
+  const [profile, setProfile] = useState(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [preview, setPreview] = useState(false);
 
+// 내 이력서 목록
+const [resumes, setResumes] = useState([]); // [{id, fileName, size, url, updatedAt}, ...]
+const [resumesLoading, setResumesLoading] = useState(false);
+const [selectedResumeId, setSelectedResumeId] = useState(null); // 라디오 선택용
+
+const [auth, setAuth] = useState(null);
+const [profileLoading, setProfileLoading] = useState(false);
+
+// 내 정보 표시/수정 토글 (원하면 유지)
+const [editContact, setEditContact] = useState(false);
+
+// 하이픈을 '비분리 하이픈(-)'으로 바꿔 줄바꿈을 막음
+const inlinePhone = (s) => (s ? String(s).replace(/-/g, "\u2011") : "");
+
+// === 상단에 유틸 추가 ===
+const mapExperienceLevel = (x) => {
+  switch (x) {
+    case "ENTRY": return "신입";
+    case "JUNIOR": return "주니어";
+    case "MID": return "미들";
+    case "SENIOR": return "시니어";
+    case "LEAD": return "리드급";
+    case "EXECUTIVE": return "임원";
+    default: return x || "";
+  }
+};
+
+const mapEducationLevel = (e) => {
+  switch (e) {
+    case "ANY": return "학력무관";
+    case "HIGH_SCHOOL": return "고졸";
+    case "COLLEGE": return "전문대졸(2년제)";
+    case "UNIVERSITY": return "대졸(4년제)";
+    case "MASTER": return "석사";
+    case "PHD": return "박사";
+    default: return e || "";
+  }
+};
+const [policyOpen, setPolicyOpen] = useState(false);
+const [policyType, setPolicyType] = useState("COLLECTION");
+const openPolicy = (type) => { setPolicyType(type); setPolicyOpen(true); };
+
+const resumeName = (r) => r?.fileName ?? r?.title ?? `이력서 #${r?.id}`;
+const resumeUpdatedAt = (r) => r?.updatedAt ?? r?.updated_at ?? r?.modifiedAt ?? r?.modified_at;
+
+
   // 채용공고 및 유저간단정보 로드
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setError(null);
+useEffect(() => {
+  (async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // 1) 공고
+      const r1 = await fetch(`http://localhost:8080/api/jobs/${jobId}`, {
+        credentials: "include",
+        headers: { Accept: "application/json" },
+      });
+      if (!r1.ok) throw new Error(`HTTP ${r1.status}`);
+      const jobPayload = await r1.json();
+      setJob(jobPayload);
+
+      // 2) auth/me (id/email 등)
+      let me = null;
       try {
-        // 공고 요약
-        const r1 = await fetch(`http://localhost:8080/api/jobs/${jobId}`, {
+        const r2 = await fetch("http://localhost:8080/auth/me", {
           credentials: "include",
           headers: { Accept: "application/json" },
         });
-        if (!r1.ok) throw new Error(`HTTP ${r1.status}`);
-        const jobPayload = await r1.json();
+        if (r2.ok) me = await r2.json();
+      } catch {}
+      setAuth(me);
 
-        // (선택) 프로필 자동채움
-        let userPayload = {};
-        try {
-          const r2 = await fetch("http://localhost:8080/auth/me", {
-            credentials: "include",
-            headers: { Accept: "application/json" },
-          });
-          if (r2.ok) userPayload = await r2.json();
-        } catch {}
+      // 3) profile/me (이름/연락처/이메일)
+// 3) profile/me (이름/연락처/이메일)
+setProfileLoading(true);
+try {
+  let profileDto = null;
 
-        setJob(jobPayload);
-        setForm((prev) => ({
-          ...prev,
-          name: userPayload?.name ?? prev.name,
-          email: userPayload?.email ?? prev.email,
-          phone: userPayload?.phone ?? prev.phone,
-        }));
-      } catch (e) {
-        console.error(e);
-        setError("입사지원 페이지를 불러오지 못했습니다.");
+  const rP = await fetch("http://localhost:8080/api/profile/me", {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+
+  if (rP.ok) {
+    profileDto = await rP.json();
+  } else if (rP.status === 403 && me?.id) {
+    // 🔁 Fallback: me가 403이면 owner endpoint로 시도
+    const rP2 = await fetch(`http://localhost:8080/api/profile/${me.id}`, {
+      credentials: "include",
+      headers: { Accept: "application/json" },
+    });
+    if (rP2.ok) profileDto = await rP2.json();
+  }
+
+  if (profileDto) {
+    const normalized = normalizeProfileFields(profileDto, me);
+    setProfile(profileDto);
+    setForm(prev => ({
+      ...prev,
+      name: normalized.name || prev.name || "",
+      email: normalized.email || prev.email || "",
+      phone: normalized.phone || prev.phone || "",
+    }));
+  } else {
+    // 프로필 실패 시 최소한 이메일만 채움
+    setForm(prev => ({
+      ...prev,
+      email: me?.email ?? prev.email ?? "",
+    }));
+  }
+} finally {
+  setProfileLoading(false);
+}
+
+      // 4) 내 이력서 목록
+      try {
+        setResumesLoading(true);
+        const r3 = await fetch("http://localhost:8080/api/resumes", {
+          credentials: "include",
+          headers: { Accept: "application/json" },
+        });
+        if (r3.ok) {
+          const list = await r3.json();
+          const arr = Array.isArray(list) ? list : [];
+              // ✅ 공개 이력서만 노출 (서버 tinyint(1)→ 0/1 또는 boolean 모두 대응)
+          const visible = arr.filter(r =>
+            r.is_public === 1 || r.is_public === '1' || r.is_public === true || r.isPublic === true
+          );
+          setResumes(visible);
+          setSelectedResumeId(visible.length > 0 ? visible[0].id : null);
+        } else {
+          setResumes([]);
+          setSelectedResumeId(null);
+
+        }
       } finally {
-        setLoading(false);
+        setResumesLoading(false);
       }
-    })();
-  }, [jobId]);
+    } catch (e) {
+      console.error(e);
+      setError("입사지원 페이지를 불러오지 못했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  })();
+}, [jobId]);
 
+async function saveProfileIfNeeded() {
+  if (!auth?.id) return;
+  const dto = {
+    name: form.name?.trim() || "",
+    email: form.email?.trim() || "",
+    phone: form.phone?.trim() || "",
+  };
+  try {
+    await fetch(`http://localhost:8080/api/profile/${auth.id}`, {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(dto),
+    });
+  } catch {}
+}
   const dday = useMemo(() => ddays(job?.closeType, job?.closeDate), [job]);
 
   const handleChange = (e) => {
@@ -105,96 +303,95 @@ export default function JobApplication() {
     setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
   };
 
-  const onDrop = (fileList) => {
-    const file = fileList?.[0];
-    if (!file) return;
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setResumeError("PDF, DOC, DOCX만 업로드 가능합니다.");
-      setResumeFile(null);
+const isValid = useMemo(() => {
+  return (
+    form.name.trim() &&
+    form.email.trim() &&
+    form.phone.trim() &&
+    !!selectedResumeId &&
+    form.agree
+  );
+}, [form, selectedResumeId]);
+
+const handleSubmit = async () => {
+  await saveProfileIfNeeded();
+
+  if (!isValid) return;
+  setSubmitting(true);
+  try {
+    const fd = new FormData();
+    fd.append("jobId", jobId);
+    fd.append("name", form.name.trim());
+    fd.append("email", form.email.trim());
+    fd.append("phone", form.phone.trim());
+    fd.append("coverLetter", form.coverLetter ?? "");
+    fd.append("linkGithub", form.linkGithub ?? "");
+    fd.append("linkLinkedIn", form.linkLinkedIn ?? "");
+    fd.append("linkPortfolio", form.linkPortfolio ?? "");
+    fd.append("expectedSalary", form.expectedSalary ?? "");
+    fd.append("availableFrom", form.availableFrom ?? "");
+    fd.append("resumeId", String(selectedResumeId));  
+
+    const res = await fetch("http://localhost:8080/api/applications", {
+      method: "POST",
+      credentials: "include",
+      body: fd,
+    });
+       // ✅ 409는 사용자 안내만 하고 종료
+    if (res.status === 409) {
+      alert("이미 이 공고에 지원하셨습니다. 지원내역에서 확인해주세요.");
       return;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      setResumeError("최대 10MB까지 업로드 가능합니다.");
-      setResumeFile(null);
-      return;
-    }
-    setResumeError("");
-    setResumeFile(file);
-  };
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    await res.json();
 
-  const handleFileChange = (e) => onDrop(e.target.files);
+    alert("지원이 완료되었습니다.");
+    navigate(`/jobpostinglist/${jobId}`);
+  } catch (e) {
+    
+    console.error(e);
+    alert("지원 제출에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
-  const onDropZone = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.dataTransfer?.files?.length) onDrop(e.dataTransfer.files);
-  };
 
-  const isValid = useMemo(() => {
-    return (
-      form.name.trim() &&
-      form.email.trim() &&
-      form.phone.trim() &&
-      resumeFile &&
-      form.agree
-    );
-  }, [form, resumeFile]);
-
-  const handleSubmit = async () => {
-    if (!isValid) return;
-    setSubmitting(true);
-    try {
-      const fd = new FormData();
-      fd.append("jobId", jobId);
-      fd.append("name", form.name.trim());
-      fd.append("email", form.email.trim());
-      fd.append("phone", form.phone.trim());
-      fd.append("coverLetter", form.coverLetter ?? "");
-      fd.append("linkGithub", form.linkGithub ?? "");
-      fd.append("linkLinkedIn", form.linkLinkedIn ?? "");
-      fd.append("linkPortfolio", form.linkPortfolio ?? "");
-      fd.append("expectedSalary", form.expectedSalary ?? "");
-      fd.append("availableFrom", form.availableFrom ?? "");
-      fd.append("resume", resumeFile);
-
-      const res = await fetch("http://localhost:8080/api/applications", {
-        method: "POST",
-        credentials: "include",
-        body: fd,
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const saved = await res.json();
-      // 성공 후 완료 페이지/모달/토스트 처리
-      alert("지원이 완료되었습니다.");
-      navigate(`/jobpostinglist/${jobId}`); // 또는 /applications/complete?savedId=...
-    } catch (e) {
-      console.error(e);
-      alert("지원 제출에 실패했습니다. 잠시 후 다시 시도해 주세요.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleSaveDraft = async () => {
-    try {
-      const res = await fetch("http://localhost:8080/api/applications/draft", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobId, ...form, hasResume: !!resumeFile }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      alert("임시저장 했습니다.");
-    } catch (e) {
-      console.error(e);
-      alert("임시저장에 실패했습니다.");
-    }
-  };
+const handleSaveDraft = async () => {
+  try {
+    const res = await fetch("http://localhost:8080/api/applications/draft", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jobId, ...form, resumeId: selectedResumeId }), // ✅
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    alert("임시저장 했습니다.");
+  } catch (e) {
+    console.error(e);
+    alert("임시저장에 실패했습니다.");
+  }
+};
 
   if (loading) return <div className="apply-page-container"><p className="loading-text">불러오는 중...</p></div>;
   if (error) return <div className="apply-page-container"><p className="error-text">{error}</p></div>;
   if (!job) return null;
 
+  if (!auth) {
+  return (
+    <div className="apply-page-container">
+      <p className="error-text">로그인이 필요합니다.</p>
+      <Link className="btn outline" to="/">이전페이지</Link>
+    </div>
+  );
+}
+    if (auth && auth.role && auth.role !== "USER") {
+    return (
+      <div className="apply-page-container">
+        <p className="error-text">개인 사용자만 지원할 수 있습니다.</p>
+      </div>
+    );
+  }
   return (
     <div className="apply-page-container">
       <header className="apply-header">
@@ -208,193 +405,155 @@ export default function JobApplication() {
         {/* 좌측: 폼 */}
         <main className="apply-form">
           {/* 섹션: 지원자 정보 */}
-          <section className="apply-card">
-            <h2 className="apply-card-title">지원자 정보</h2>
-            <div className="form-grid">
-              <div className="form-field">
-                <label>이름 <span className="req">*</span></label>
-                <input name="name" value={form.name} onChange={handleChange} placeholder="홍길동" />
-              </div>
-              <div className="form-field">
-                <label>이메일 <span className="req">*</span></label>
-                <input name="email" value={form.email} onChange={handleChange} placeholder="email@example.com" />
-              </div>
-              <div className="form-field">
-                <label>연락처 <span className="req">*</span></label>
-                <input name="phone" value={form.phone} onChange={handleChange} placeholder="010-0000-0000" />
-              </div>
-            </div>
-          </section>
-
-          {/* 섹션: 이력서/파일 업로드 */}
-          <section className="apply-card">
-        <h2 className="apply-card-title">이력서 <span className="muted">(PDF, DOC, DOCX / 10MB)</span></h2>
-
-          {/* 저장된 이력서 선택 */}
-          <div className="resume-select">
-            <label className="resume-option">
-              <input
-                type="radio"
-                name="resumeSource"
-                checked={!!savedResume && useSavedResume}
-                onChange={() => savedResume && setUseSavedResume(true)}
-               disabled={!savedResume}
-              />
-              <div className="resume-existing">
-                <div className="resume-existing-title">저장된 이력서 사용</div>
-                {savedResume ? (
-                  <div className="resume-existing-meta">
-                    <span className="file-chip">
-                      {savedResume.fileName}
-                      {typeof savedResume.size === "number" && (
-                        <span className="file-size">({(savedResume.size/1024/1024).toFixed(1)}MB)</span>
-                      )}
-                    </span>
-                    <div className="resume-existing-sub">
-                      최근 업데이트: {prettyDate(savedResume.updatedAt) || "-"}
-                      {savedResume.url && (
-                        <> · <a className="link" href={savedResume.url} target="_blank" rel="noreferrer">미리보기</a></>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="resume-existing-empty muted">저장된 이력서가 없습니다.</div>
-                )}
-              </div>
-            </label>
-
-            {/* 새 파일 업로드 */}
-            <label className="resume-option">
-              <input
-                type="radio"
-                name="resumeSource"
-                checked={!useSavedResume}
-                onChange={() => setUseSavedResume(false)}
-              />
-              <div className="resume-upload">
-                <div
-                  className={`dropzone ${useSavedResume ? "disabled" : ""}`}
-                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                  onDrop={(e)=>{ if(!useSavedResume) onDropZone(e); }}
-                  aria-disabled={useSavedResume ? "true" : "false"}
-                >
-                  <UploadIcon size={24} />
-                  <p className="dz-title">파일을 드래그하여 업로드</p>
-                  <p className="dz-sub">또는 <label className="dz-browse">찾아보기<input type="file" onChange={handleFileChange} accept=".pdf,.doc,.docx" hidden/></label></p>
-                  {!useSavedResume && resumeFile && (
-                    <div className="file-chip">{resumeFile.name} <span className="file-size">({(resumeFile.size/1024/1024).toFixed(1)}MB)</span></div>
-                  )}
-                  {!useSavedResume && resumeError && <p className="error-text small">{resumeError}</p>}
-                 {useSavedResume && <p className="muted" style={{marginTop:8}}>상단 “저장된 이력서 사용”이 선택되어 있습니다.</p>}
-                </div>
-              </div>
-            </label>
+    {/* === 공고 정보 카드 === */}
+        <section className="apply-card jobinfo-card">
+          <div className="jobinfo-company">{job?.companyName ?? "-"}</div>
+          <h2 className="jobinfo-title">{job?.title ?? "-"}</h2>
+          <div className="jobinfo-meta">
+            {mapExperienceLevel(job?.conditions?.experience_level) || "경력 정보 없음"}
+            <span className="pipe">|</span>
+            {mapEducationLevel(job?.conditions?.education_level) || "학력 정보 없음"}
+            <span className="pipe">|</span>
+              {getLocationText(job)}
           </div>
-          </section>
+           <ul className="job-meta">
 
-          {/* 섹션: 링크/추가 정보 */}
-          <section className="apply-card">
-            <h2 className="apply-card-title">링크 & 추가정보</h2>
-            <div className="form-grid">
-              <div className="form-field">
-                <label>GitHub</label>
-                <input name="linkGithub" value={form.linkGithub} onChange={handleChange} placeholder="https://github.com/username" />
-              </div>
-              <div className="form-field">
-                <label>LinkedIn</label>
-                <input name="linkLinkedIn" value={form.linkLinkedIn} onChange={handleChange} placeholder="https://linkedin.com/in/username" />
-              </div>
-              <div className="form-field">
-                <label>포트폴리오</label>
-                <input name="linkPortfolio" value={form.linkPortfolio} onChange={handleChange} placeholder="https://your.site" />
-              </div>
-              <div className="form-field">
-                <label>희망연봉</label>
-                <input name="expectedSalary" value={form.expectedSalary} onChange={handleChange} placeholder="예: 4,500만원" />
-              </div>
-              <div className="form-field">
-                <label>입사 가능일</label>
-                <input type="date" name="availableFrom" value={form.availableFrom} onChange={handleChange} />
-              </div>
-            </div>
-          </section>
+              <li><CalendarDays size={16}/>시작일 {prettyDate(job?.openDate) || "-"}</li>
+              {job?.closeType !== "CONTINUOUS" && (
+                <li><CalendarDays size={16}/>마감일 {prettyDate(job?.closeDate) || "미정"}</li>
+              )}
+            </ul>
+        </section>
 
+   {/* === 내 정보 카드(표시만) === */}
+<section className="apply-card myinfo-card">
+  <h2 className="apply-card-title">내 정보</h2>
+  <div className="myinfo-grid myinfo-inline"> {/* ← inline 레이아웃용 클래스 */}
+    <div className="myinfo-row">
+      <strong className="label">이름</strong>
+      <span className="value nowrap">{form.name || "-"}</span>
+    </div>
+    <div className="myinfo-row">
+      <strong className="label">이메일</strong>
+      <span className="value nowrap">{form.email || "-"}</span>
+    </div>
+    <div className="myinfo-row">
+      <strong className="label">연락처</strong>
+      <span className="value nowrap">{form.phone || "-"}</span>
+    </div>
+  </div>
+  {/* 필요하면 “정보 수정” 버튼을 두고, 클릭 시 입력창으로 토글하는 로직 추가 가능 */}
+</section>
+
+ <section className="apply-card">
+  <h2 className="apply-card-title">
+    이력서 선택
+  </h2>
+
+    {resumesLoading ? (
+    <p className="muted">이력서를 불러오는 중…</p>
+  ) : resumes.length === 0 ? (
+    <div className="empty-resume">
+      <p className="muted">등록된 이력서가 없습니다.</p>
+      {/* 👉 실제 이력서 관리 경로로 바꿔줘 */}
+      <Link className="btn outline" to="/resumes">이력서 관리로 가기</Link>
+    </div>
+  ) : (
+    <ul className="resume-list">
+      {resumes.map((r) => {
+      const selected = selectedResumeId === r.id;
+      return (
+        <li
+          key={r.id}
+          className={`resume-item selectable ${selected ? "is-selected" : ""}`}
+          onClick={() => setSelectedResumeId(r.id)}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedResumeId(r.id); } }}
+          tabIndex={0}
+          role="button"
+          aria-pressed={selected ? "true" : "false"}
+        >
+          <div className="resume-line">
+            <span className="resume-file">
+              <span className="name">{resumeName(r)}</span>
+              {typeof r.completion_rate === "number" && (
+                <span className="size"> · 완성도 {r.completion_rate}%</span>
+              )}
+              {r.status && <span className="size"> · {r.status}</span>}
+            </span>
+          </div>
+          <div className="resume-sub">
+            업데이트: {prettyDate(resumeUpdatedAt(r))}
+            {r.url && (
+              <> · <a className="link" href={r.url} target="_blank" rel="noreferrer">미리보기</a></>
+            )}
+          </div>
+        </li>
+      );
+    })}
+  </ul>
+)}
+  <div className="resume-actions">
+    {/* 👉 실제 이력서 관리 경로로 바꿔줘 */}
+    <Link className="btn tiny" to="/resumes">이력서 관리</Link>
+  </div>
+</section>
           {/* 동의 */}
           <section className="apply-card">
             <label className="agree-line">
               <input type="checkbox" name="agree" checked={form.agree} onChange={handleChange} />
-              <span>개인정보 수집 및 이용에 동의합니다. <Link to="#" onClick={(e)=>e.preventDefault()} className="link">전문 보기</Link></span>
+              <span>개인정보 수집 및 이용에 동의합니다.     
+                  <button type="button" className="link-btn" onClick={() => openPolicy('COLLECTION')}>전문 보기</button>
+              </span>
             </label>
           </section>
 
           
 
-          {preview && (
-            <section className="apply-card preview">
-              <h2 className="apply-card-title">미리보기</h2>
-              <div className="preview-grid">
-                <div>
-                  <h3>지원자</h3>
-                  <p>{form.name} · {form.email} · {form.phone}</p>
-                  {(form.linkGithub || form.linkLinkedIn || form.linkPortfolio) && (
-                    <ul className="link-list">
-                      {form.linkGithub && <li>GitHub: {form.linkGithub}</li>}
-                      {form.linkLinkedIn && <li>LinkedIn: {form.linkLinkedIn}</li>}
-                      {form.linkPortfolio && <li>Portfolio: {form.linkPortfolio}</li>}
-                    </ul>
-                  )}
-                  {(form.expectedSalary || form.availableFrom) && (
-                    <p className="muted">희망연봉: {form.expectedSalary || "-"} / 입사 가능일: {form.availableFrom || "-"}</p>
-                  )}
-                </div>
-              <div>
-                  <h3>이력서</h3>
-                  {useSavedResume && savedResume?.id ? (
-                    <div className="preview-cl">
-                      저장된 이력서 사용: <strong>{savedResume.fileName}</strong>
-                      {savedResume.url && <> · <a className="link" href={savedResume.url} target="_blank" rel="noreferrer">미리보기</a></>}
-                    </div>
-                  ) : resumeFile ? (
-                    <div className="preview-cl">
-                      새 파일: <strong>{resumeFile.name}</strong> <span className="file-size">({(resumeFile.size/1024/1024).toFixed(1)}MB)</span>
-                    </div>
-                  ) : (
-                    <div className="preview-cl muted">선택된 이력서가 없습니다.</div>
-                  )}
-                </div>
-              </div>
-            </section>
-          )}
+        {preview && (
+  <section className="apply-card preview">
+    <h2 className="apply-card-title">미리보기</h2>
+    <div className="preview-grid">
+      <div>
+        <h3>지원자</h3>
+        <p className="nowrap">{form.name} · {form.email} · {inlinePhone(form.phone)}</p>
+        {(form.linkGithub || form.linkLinkedIn || form.linkPortfolio) && (
+          <ul className="link-list">
+            {form.linkGithub && <li>GitHub: {form.linkGithub}</li>}
+            {form.linkLinkedIn && <li>LinkedIn: {form.linkLinkedIn}</li>}
+            {form.linkPortfolio && <li>Portfolio: {form.linkPortfolio}</li>}
+          </ul>
+        )}
+        {(form.expectedSalary || form.availableFrom) && (
+          <p className="muted">희망연봉: {form.expectedSalary || "-"} / 입사 가능일: {form.availableFrom || "-"}</p>
+        )}
+      </div>
+      <div>
+        <h3>이력서</h3>
+        {selectedResumeId ? (
+          <div className="preview-cl">
+            선택한 이력서: <strong>
+              {resumes.find(r => r.id === selectedResumeId)?.fileName ?? `이력서 #${selectedResumeId}`}
+            </strong>
+            {resumes.find(r => r.id === selectedResumeId)?.url && (
+              <> · <a className="link" href={resumes.find(r => r.id === selectedResumeId)?.url} target="_blank" rel="noreferrer">미리보기</a></>
+            )}
+          </div>
+        ) : (
+          <div className="preview-cl muted">선택된 이력서가 없습니다.</div>
+        )}
+      </div>
+    </div>
+  </section>
+)}
+                 <PolicyModal
+                  open={policyOpen}
+                  type={policyType}
+                  onClose={() => setPolicyOpen(false)}/>
         </main>
 
         {/* 우측: 공고 요약(스티키) */}
         <aside className="apply-sidebar">
-          <div className="job-summary-card">
-            <div className="job-summary-header">
-              <div className="logo-fallback">{(job?.companyName ?? "C")[0]}</div>
-              <div>
-                <div className="company-name">{job?.companyName}</div>
-                <div className="job-title">{job?.title}</div>
-              </div>
-            </div>
-            <ul className="job-meta">
-              <li><MapPin size={16}/>{(job?.regions ?? [])[0] ?? "-"}</li>
-              <li><Briefcase size={16}/>{job?.employmentType ?? "-"}</li>
-              <li><CalendarDays size={16}/>시작일 {prettyDate(job?.openDate) || "-"}</li>
-              {job?.closeType !== "CONTINUOUS" && (
-                <li><CalendarDays size={16}/>마감일 {prettyDate(job?.closeDate) || "미정"}</li>
-              )}
-              <li><DollarSign size={16}/>{job?.salaryLabel ?? "급여 협의"}</li>
-              <li><Users size={16}/>지원자 {job?.applicationCount ?? 0}명</li>
-            </ul>
-            {dday != null && (
-              <div className={`dday ${dday <= 3 ? "urgent" : ""}`}>
-                D-{dday}
-              </div>
-            )}
-            <Link className="back-link" to={`/jobpostinglist/${jobId}`}>← 공고 상세로 돌아가기</Link>
-          </div>
-
+   
           <div className="tip-card">
             <h4>지원 팁</h4>
             <ul>
@@ -405,7 +564,6 @@ export default function JobApplication() {
           </div>
                {/* ✅ 큰 화면에서 버튼을 지원팁 아래로 */}
      <div className="action-stack">
-       <button type="button" className="btn ghost" onClick={handleSaveDraft} disabled={submitting}>임시저장</button>
        <button type="button" className="btn outline" onClick={()=>setPreview((v)=>!v)} disabled={submitting}>
          <Eye size={16} /> 미리보기
        </button>
