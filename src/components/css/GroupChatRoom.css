@@ -333,6 +333,21 @@
   transform: none;
 }
 
+.gcr-leave-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 25px;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+  float: right;
+  margin-right: 80px;
+}
+
 /* 빈 상태 */
 .gcr-empty {
   flex: 1;
