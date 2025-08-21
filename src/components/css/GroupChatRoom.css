@@ -21,7 +21,8 @@
   gap: 12px;
   margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #ebe5e5;
+  width: 870px;
 }
 
 .gcr-header-left {
@@ -47,7 +48,7 @@
 }
 
 .gcr-back-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
   color: #fff;
   border: none;
   border-radius: 25px;
@@ -104,7 +105,7 @@
 
 /* 참여자 사이드바 */
 .gcr-participants-sidebar {
-  width: 280px;
+  width: 185px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
@@ -276,6 +277,7 @@
   align-items: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease;
+  width: 845px;
 }
 
 .gcr-input-container:focus-within {

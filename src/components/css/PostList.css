@@ -56,6 +56,10 @@ background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
   align-items: center;
 }
 
+.pl-addbtn {
+  margin-left: -320px;
+}
+
 .group-chat-btn {
   background: linear-gradient(135deg, #f7f3d7 0%, #f0e6b3 100%) !important;
   color: #8b7355 !important;

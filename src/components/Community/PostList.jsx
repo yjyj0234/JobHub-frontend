@@ -134,8 +134,8 @@ const PostList = () => {
         <section className="pl-popular" aria-label="인기글 추천">
           <div className="pl-popular-head">
             <h2 className="pl-popular-title">조회수가 많은 글이에요</h2>
-            <p><button type="button" onClick={addPost}>글 등록하기</button></p>
-            <p><button type="button" onClick={goGroupChat}>그룹 채팅방</button></p>
+            <p><button type="button" className='pl-addbtn' onClick={addPost}>글 등록하기</button></p>
+            <p><button type="button" className='group-chat-btn' onClick={goGroupChat}>그룹 채팅방</button></p>
           </div>
 
           <div className="pl-popular-grid">
