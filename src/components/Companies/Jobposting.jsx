@@ -339,9 +339,13 @@ const Jobposting = () => {
   };
 
   // 제출
-  // ✅ 교체용: handleSubmit (companyId/createdBy 전혀 사용 안 함)
+  // 교체용: handleSubmit (companyId/createdBy 전혀 사용 안 함)
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (user?.role !== "COMPANY") {
+    alert("기업 계정만 채용공고를 등록할 수 있습니다.");
+    return;
+  }
 
     //현재 사용자(owner) id 확보
     let ownerId = null;
@@ -458,7 +462,7 @@ const Jobposting = () => {
 
     // 6) 서버로 보낼 payload (companyId/createdBy 없음!)
     const payload = {
-      ownerId,
+      
       title,
       status,
       closeType,
