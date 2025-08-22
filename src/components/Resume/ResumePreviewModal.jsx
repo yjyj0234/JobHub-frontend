@@ -1,5 +1,61 @@
 import React from "react";
+import { User, Phone, MapPin, Calendar } from "lucide-react";
 import "../css/ResumePreviewModal.css";
+
+// 프로필 헤더 (읽기 전용)
+const ProfileHeaderPreview = ({ profile }) => {
+  if (!profile) return null;
+
+  return (
+    <div className="profile-header preview-mode">
+      <ProfileHeaderPreview profile={profile} />
+      <div className="profile-main-info">
+        <div className="profile-photo-wrapper">
+          {profile.profileImageUrl ? (
+            <img
+              src={profile.profileImageUrl}
+              alt={profile.name || "프로필"}
+              className="profile-photo"
+            />
+          ) : (
+            <div className="profile-photo-placeholder">
+              <User size={40} />
+            </div>
+          )}
+        </div>
+
+        <div className="profile-details">
+          <h2 className="profile-name-display">{profile.name || "이름"}</h2>
+          <p className="profile-headline-display">
+            {profile.headline || "한 줄 소개"}
+          </p>
+
+          <div className="profile-info-grid">
+            <div className="profile-info-item">
+              <Phone size={14} />
+              <span>{profile.phone || "-"}</span>
+            </div>
+            <div className="profile-info-item">
+              <MapPin size={14} />
+              <span>{profile.regionName || "-"}</span>
+            </div>
+            <div className="profile-info-item">
+              <Calendar size={14} />
+              <span>{profile.birthDate || "-"}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {profile.summary && (
+        <div className="profile-info-wide">
+          <label>자기소개</label>
+          <div className="summary-display">{profile.summary}</div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // 각 섹션 타입에 맞는 뷰 컴포넌트
 const SectionView = ({ section }) => {
@@ -25,7 +81,7 @@ const renderItem = (type, data) => {
         <>
           <p>
             <strong>{data.companyName || "회사명 미입력"}</strong> |{" "}
-            {data.role || "직책 미입력"}
+            {data.position || "직책 미입력"}
           </p>
           <p className="period">
             {data.startDate || "시작일"} ~ {data.endDate || "종료일"}
@@ -51,28 +107,39 @@ const renderItem = (type, data) => {
           )}
         </>
       );
-    case "skills":
-      if (
-        !Array.isArray(data.skills) ||
-        data.skills.every((skill) => !skill.name)
-      ) {
+    case "skills": {
+      // data가 (1) 단일 스킬 객체 { name, category ... } 이거나
+      //       (2) 옛 형태인 { skills: [...] } 일 수 있으니 둘 다 처리
+      const items = Array.isArray(data?.skills) ? data.skills : [data];
+
+      const visible = items
+        .map((s) => ({
+          name: (s?.name || "").trim(),
+          category:
+            (typeof s?.category === "string" && s.category.trim()) ||
+            (typeof s?.categoryId === "number" ? `#${s.categoryId}` : ""),
+          id: s?.id ?? s?.resumeSkillId ?? s?.skillId,
+        }))
+        .filter((s) => s.name.length > 0);
+
+      if (visible.length === 0) {
         return (
           <div className="preview-data-item empty">작성된 스킬이 없습니다.</div>
         );
       }
+
       return (
         <div className="skills-preview-container">
-          {data.skills.map(
-            (skill, index) =>
-              skill.name && (
-                <span key={index} className="skill-preview-tag">
-                  {skill.name}
-                  {skill.category && ` (${skill.category})`}
-                </span>
-              )
-          )}
+          {visible.map((s, idx) => (
+            <span key={s.id ?? idx} className="skill-preview-tag">
+              {s.name}
+              {s.category ? ` (${s.category})` : ""}
+            </span>
+          ))}
         </div>
       );
+    }
+
     case "projects":
       return (
         <>
@@ -176,6 +243,7 @@ function ResumePreviewModal({
   isOpen,
   onClose,
   title,
+  profile,
   sections,
   sectionComponents,
 }) {
@@ -194,6 +262,8 @@ function ResumePreviewModal({
           </button>
         </div>
         <div className="preview-body">
+          {/* 프로필 헤더 추가 */}
+
           {sections.length > 0 ? (
             sections.map((section) => {
               const sectionInfo = sectionComponents[section.type];
