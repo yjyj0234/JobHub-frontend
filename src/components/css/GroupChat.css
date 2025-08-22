@@ -52,7 +52,7 @@
 }
 
 .gc-back-btn {
-  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, #4e86da 0%, #8692c2 100%);
   color: #ffffff;
   border: none;
   border-radius: 25px;
@@ -65,7 +65,7 @@
 }
 
 .gc-back-btn:hover {
-  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, #3074d9 0%, #5b6eba 100%);
   color: #ffffff;
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(212, 192, 138, 0.4);
@@ -242,7 +242,7 @@
 
 .gc-owner-badge {
   display: inline-block;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background: linear-gradient(135deg, #ffba43, #f3962b);
   color: #ffffff;
   border-radius: 20px;
   padding: 4px 10px;
@@ -281,7 +281,7 @@
 }
 
 .gc-delete-btn {
-  background: linear-gradient(135deg, #f35a5a 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #ff7c7c 0%, #fb4646 100%);
   color: #ffffff;
   border: none;
   border-radius: 20px;

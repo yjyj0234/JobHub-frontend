@@ -115,6 +115,7 @@ export default function Comments({ postId }) {
                     &nbsp;&nbsp;&nbsp;
                   <span className="time">{fmt(c.createdAt)}</span>
                 </div>
+                <br /><br />
                 <div className={`content ${!c.content ? 'deleted' : ''}`}>
                   {c.content && c.content.trim().length > 0 ? c.content : '(삭제된 댓글)'}
                 </div>

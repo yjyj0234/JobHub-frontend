@@ -97,7 +97,7 @@
   border-radius: 12px; /* 사각형에 어울리게 원형 -> 사각 라운드 */
   overflow: hidden;
   border: 4px solid #fff;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -141,17 +141,35 @@
   border-bottom: 1px solid #f0f3f8;
   margin-bottom: 20px;
 }
-.profile-name-display { font-size: 1.8rem; font-weight: 700; color: #1c3d5a; margin: 0; }
-.profile-headline-display { font-size: 1.1rem; color: #4a69bd; margin: 0; }
-.profile-name-input, .profile-headline-input {
+.profile-name-display {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1c3d5a;
+  margin: 0;
+}
+.profile-headline-display {
+  font-size: 1.1rem;
+  color: #4a69bd;
+  margin: 0;
+}
+.profile-name-input,
+.profile-headline-input {
   border: 1px solid #dbe4f5;
   background: white;
   padding: 8px 12px;
   border-radius: 6px;
   width: 100%;
 }
-.profile-name-input { font-size: 1.6rem; font-weight: 700; max-width: 250px; }
-.profile-headline-input { font-size: 1rem; color: #555; max-width: 400px; }
+.profile-name-input {
+  font-size: 1.6rem;
+  font-weight: 700;
+  max-width: 250px;
+}
+.profile-headline-input {
+  font-size: 1rem;
+  color: #555;
+  max-width: 400px;
+}
 
 /* 연락처 등 정보 */
 .profile-info-grid {
@@ -174,8 +192,13 @@
   border-radius: 6px;
   width: 140px;
 }
-.profile-info-item svg { color: #64748b; flex-shrink: 0; }
-.profile-info-item span { font-weight: 500; }
+.profile-info-item svg {
+  color: #64748b;
+  flex-shrink: 0;
+}
+.profile-info-item span {
+  font-weight: 500;
+}
 
 /* 자기소개 (하단) */
 .profile-info-wide {
@@ -301,12 +324,18 @@
   font-size: 1.2rem;
   font-weight: bold;
 }
-.required-text { /* 필수 텍스트 스타일 추가 */
-  color: #ff4d4f;
+
+.required-text {
+  color: #d90429;
   font-size: 0.8rem;
-  font-weight: normal;
+  font-weight: 900;
   margin-left: 4px;
+  transition: all 0.2s;
 }
+.required-text.active {
+  color: #ff7b7b;
+}
+
 .section-header-actions {
   display: flex;
   gap: 10px;
@@ -359,6 +388,7 @@
   background-color: #f8f9fa;
   transition: all 0.2s ease;
 }
+
 .add-item-btn:hover {
   border-color: var(--c-accent);
   color: var(--c-accent);
@@ -366,7 +396,8 @@
 }
 
 /* 오른쪽 사이드바 (팔레트) */
-.editor-palette, .resume-status-palette {
+.editor-palette,
+.resume-status-palette {
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -402,6 +433,12 @@
     color: #adb5bd;
     cursor: not-allowed;
     opacity: 0.7;
+}
+
+.palette-required-text {
+  color: rgb(212, 20, 20);
+  font-size: 12px;
+  font-weight: normal;
 }
 
 /* 완성도 및 토글 스위치 */
