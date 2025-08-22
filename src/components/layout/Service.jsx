@@ -35,6 +35,7 @@ function Service() {
         setLoading(true);
         setError(null);
         
+        // 백엔드 API 호출하여 실제 데이터 가져오기
         const response = await axios.get('http://localhost:8080/api/service/faqs');
         
         setFaqs(response.data);
@@ -111,7 +112,7 @@ function Service() {
              <h2 className="service-section-title">JobHub 정보</h2>
              <ul>
                  <li><strong>대표자:</strong> 손현정</li>
-                 <li><strong>사업자 등록번호:</strong> 010-7777-7777</li>
+                 <li><strong>사업자 등록번호:</strong> 777-7777-7777</li>
                  <li><strong>주소:</strong> 서울특별시 강남구 역삼동 테헤란로 132 한독약품빌딩 8층</li>
                  <li><strong>이메일:</strong> SonKing@jobhub.com</li>
              </ul>

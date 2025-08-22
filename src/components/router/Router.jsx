@@ -10,20 +10,21 @@ import { GlobalHeader, SideNav, GlobalFooter, Service } from "../layout";
 import { Modal } from "../UI";
 import { AuthPage, Hero, Grid, TopGrid } from "../UX";
 
-// 3. resume 관련 페이지 그룹 (수정: resume -> Resume)
+// 3. resume 관련 페이지 그룹
 import { ResumeListPage, ResumeEditorPage } from "../Resume";
 
 // 4. Companies 관련 페이지 그룹
 import { Jobposting, ApplicantsList, CompanyProfile } from "../Companies";
 
-import { AdminPage } from "../Admin";
+// 5. Admin 관련 페이지 그룹
+import { AdminPage, FaqAdminPage } from "../Admin";
 
+// 6. pages (회사소개 등)
 import { AboutUs, TermsOfService, PrivacyPolicy } from "../pages";
 
-// 6. job-posting-list 관련 페이지 그룹
+// 7. job-posting-list 관련 페이지 그룹
 import { PostList, AddPost, PostDetail, UpdatePost, GroupChat, GroupChatRoom } from "../Community";
 import { JobPostingList, JobPostingDetail } from "../job-posting-list";
-
 
 function MainLayout() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,9 +47,7 @@ function MainLayout() {
     <div className="app-container">
       <GlobalHeader onLoginClick={openModal} />
       <main className="main-content">
-        <div className="container">
-          <Outlet />
-        </div>
+        <Outlet />
       </main>
       <Modal isOpen={isModalOpen} onClose={closeModal}>
         <AuthPage onSuccess={closeModal} />
@@ -85,17 +84,17 @@ function AppRouter() {
   return (
     <Routes>
       <Route element={<MainLayout />}>
-        {/* 홈/리스트 */}
+        {/* --- 공개 경로 --- */}
         <Route path="/" element={<HomePage />} />
         <Route path="/resumes" element={<ResumeListPage />} />
         <Route path="/resumes/new" element={<ResumeEditorPage />} />
         <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
         <Route path="/company/profile" element={<CompanyProfile />} />
-        <Route path="/resumes/:id" element={<ResumeEditorPage />} />
         <Route path="/jobposting" element={<Jobposting />} />
         <Route path="/companies/applicants" element={<ApplicantsList />} />
         <Route path="/postlist" element={<PostList />} />
         <Route path="/jobpostinglist" element={<JobPostingList />} />
+        <Route path="/jobpostinglist/:id" element={<JobPostingDetail />} />
         <Route path="/postlist/addpost" element={<AddPost />} />
         <Route path="/postlist/detail/:id" element={<PostDetail />} />
         <Route path="/postlist/edit/:id" element={<UpdatePost />} />
@@ -106,9 +105,7 @@ function AppRouter() {
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/admin" element={<AdminPage />} />
-        
-        {/* 관리자 페이지 */}
-        <Route path="/jobpostinglist/:id" element={<JobPostingDetail />} />
+        <Route path="/admin/faq" element={<FaqAdminPage />} />
       </Route>
     </Routes>
   );

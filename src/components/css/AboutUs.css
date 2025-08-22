@@ -9,8 +9,10 @@
 
 .about-us-page .about-hero {
   position: relative;
-  height: 60vh;
+  height: 40vh;
   display: flex;
+  width: 1140px;
+  margin: 0 auto;
   align-items: center;
   justify-content: center;
   text-align: center;
@@ -43,6 +45,8 @@
 .about-us-page .about-content {
   padding: 80px 20px;
   background-color: var(--bg-color);
+  width: 1100px;
+  margin: 0 auto;
 }
 
 .about-us-page .about-section { 
