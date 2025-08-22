@@ -107,7 +107,9 @@ const textLen = useMemo(() => htmlToText(content).length, [content]);
         <form onSubmit={handleUpdate}>
       <div className="header-section">
         <h1 className="main-title">글 수정</h1>
-        <p className="subtitle"></p>
+        <p className="subtitle">
+             <button type='button' className='backBtn' style={{float: 'right',marginBottom: '12px'}} onClick={() => navigate(-1)}>뒤로가기</button>
+        </p>
       </div>
       
       {/* 제목 입력 필드 */}

@@ -44,7 +44,7 @@ export default function PostDetail() {
     })();
   }, [id, navigate]);
 
-  // 글 삭제 및 수정 핸들러
+  // 글 삭제 
   const handleDelete = async () => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
 
@@ -136,7 +136,10 @@ export default function PostDetail() {
           </div>
 
           <div className="stats">
-            <span className="meta-item">{post.createdAt}</span>
+            <span className="meta-item">
+              {post.updatedAt && post.updatedAt !== post.createdAt
+                ? `${post.updatedAt} (수정)`
+                : post.createdAt}</span>
             <span className="dot">•</span>
             <span className="meta-item">조회 {post.viewCount ?? 0}</span>
           </div>
