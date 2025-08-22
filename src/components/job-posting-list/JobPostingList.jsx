@@ -731,6 +731,12 @@ const JobPosting = () => {
     bookmarked: false,
   });
 
+  const filterDraftPostings = (jobList) => {
+  return jobList.filter(job => 
+    job.status !== 'DRAFT' && 
+    job.status !== 'draft'
+  );
+};
   // 초기 로드 함수
   const handleInitialLoad = async () => {
     const body = {
@@ -758,6 +764,10 @@ const JobPosting = () => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const page = await res.json();
       const list = (page.content ?? []).map(mapApiJobToUi);
+
+      //draft 상태 필터링
+      filterDraftPostings(list);
+
       setJobs(list);
       setFilteredJobs(list);
     } catch (e) {
@@ -866,6 +876,8 @@ const JobPosting = () => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const page = await res.json();
       const list = (page.content ?? []).map(mapApiJobToUi);
+
+      const filterDraftPostings= filterDraftPostings(list);
       setJobs(list);
       setFilteredJobs(list);
     } catch (e) {
