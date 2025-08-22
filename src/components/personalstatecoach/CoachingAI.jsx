@@ -1,295 +1,226 @@
-import React, { useState } from 'react';
-import '../css/Form.css';
-import '../css/Card.css';
-import '../css/Modal.css';
-import '../css/CoachingAI.css';
+import React, { useMemo, useState } from "react";
 
-const CoachingAI = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    targetCompany: '',
-    targetPosition: '',
-    experience: '',
-    strengths: '',
-    weaknesses: '',
-    motivation: ''
+/**
+ * 백엔드 응답 포맷 가정:
+ * POST /api/proofread  { text: string }
+ * -> { corrected: string, issues: [{ start: number, end: number, original: string, suggestion: string, message: string, type: 'SPELL'|'SPACING'|'STYLE' }]}
+ */
+
+const MAX_LEN = 10000;
+
+function escapeHtml(s = "") {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function buildHighlightedHtml(text, issues) {
+  if (!text) return "";
+  if (!Array.isArray(issues) || issues.length === 0) return escapeHtml(text);
+
+  // 겹치는 구간 최소 가정(일반적으로 API는 겹치지 않게 내려줌)
+  const ranges = issues
+    .filter(it => Number.isFinite(it.start) && Number.isFinite(it.end) && it.end > it.start)
+    .sort((a, b) => a.start - b.start);
+
+  let html = "";
+  let cursor = 0;
+
+  ranges.forEach((r) => {
+    const { start, end, message, type, suggestion } = r;
+    // 앞쪽 평문
+    if (cursor < start) {
+      html += escapeHtml(text.slice(cursor, start));
+    }
+    // 문제 구간
+    const bad = text.slice(start, end);
+    const title = escapeHtml(
+      [type || "ISSUE", message ? `: ${message}` : "", suggestion ? ` → ${suggestion}` : ""]
+        .join("")
+        .trim()
+    );
+    html += `<mark class="hl-bad" title="${title}">${escapeHtml(bad)}</mark>`;
+    cursor = end;
   });
-  const [coachingResult, setCoachingResult] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  // 남은 꼬리
+  if (cursor < text.length) {
+    html += escapeHtml(text.slice(cursor));
+  }
+  return html;
+}
+
+export default function CoachingAI() {
+  const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null); // { corrected, issues: [] }
+  const [error, setError] = useState("");
+
+  const chars = text.length;
+  const over = chars > MAX_LEN;
+
+  const canSubmit = !loading && !over && text.trim().length > 0;
+
+  const highlightedOriginal = useMemo(() => {
+    return buildHighlightedHtml(text, result?.issues || []);
+  }, [text, result]);
+
+  const handleCheck = async () => {
+    if (!canSubmit) return;
+    setLoading(true);
+    setError("");
+    setResult(null);
+
+    try {
+      const res = await fetch("/api/proofread", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        throw new Error(`HTTP ${res.status} ${res.statusText} ${t ? `- ${t}` : ""}`);
+      }
+
+      const data = await res.json();
+      // 안전망
+      setResult({
+        corrected: typeof data.corrected === "string" ? data.corrected : "",
+        issues: Array.isArray(data.issues) ? data.issues : [],
+      });
+    } catch (e) {
+      console.error(e);
+      setError("검사 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    // AI 코칭 시뮬레이션 (실제로는 API 호출)
-    setTimeout(() => {
-      const mockResult = {
-        analysis: {
-          strengths: ['강력한 문제 해결 능력', '팀워크와 협업 능력', '지속적인 학습 의지'],
-          improvements: ['구체적인 성과 수치 추가', '리더십 경험 강화', '기술적 전문성 부각'],
-          keywords: ['문제해결', '협업', '혁신', '성과지향', '학습능력']
-        },
-        suggestions: [
-          '각 경험에 구체적인 수치와 성과를 포함하세요 (예: 매출 20% 증가, 프로젝트 완료율 95%)',
-          '리더십 경험을 더 구체적으로 기술하고, 팀 규모와 성과를 명시하세요',
-          '기술적 전문성을 보여주는 구체적인 프로젝트나 기술 스택을 추가하세요',
-          '지원 회사의 문화와 가치관에 맞는 경험을 강조하세요',
-          '자기소개서 전체적인 흐름을 개선하여 일관성 있는 스토리를 만들어보세요'
-        ],
-        sampleAnswer: `저는 [회사명]에서 [직무]로 일하면서 [구체적인 성과]를 달성했습니다. 특히 [프로젝트명]에서 [구체적인 역할과 성과]를 통해 [기술/역량]을 향상시켰습니다. 이러한 경험을 바탕으로 [지원동기]를 가지고 귀사에 기여하고 싶습니다.`
-      };
-      
-      setCoachingResult(mockResult);
-      setIsLoading(false);
-      setIsModalOpen(true);
-    }, 2000);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(result?.corrected || "");
+      alert("교정된 문장이 복사되었습니다.");
+    } catch {
+      alert("복사에 실패했습니다. 수동으로 복사해 주세요.");
+    }
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      targetCompany: '',
-      targetPosition: '',
-      experience: '',
-      strengths: '',
-      weaknesses: '',
-      motivation: ''
-    });
-    setCoachingResult(null);
+  const handleClear = () => {
+    setText("");
+    setResult(null);
+    setError("");
   };
 
   return (
-    <div className="coaching-ai-container">
-      <div className="coaching-header">
-        <div className="coaching-icon-wrapper">
-          <i className="coaching-icon">🤖</i>
-        </div>
-        <h1>AI 자소서 코칭</h1>
-        <p>인공지능이 당신의 자소서를 분석하고 개선 방향을 제시합니다</p>
-      </div>
-
-      <div className="coaching-content">
-        <div className="coaching-form-section">
-          <div className="form-card">
-            <h2>자소서 정보 입력</h2>
-            <form onSubmit={handleSubmit} className="item-form">
-              <div className="grid-layout">
-                <div className="form-field">
-                  <label htmlFor="name">이름</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="홍길동"
-                    required
-                  />
-                </div>
-
-                <div className="form-field">
-                  <label htmlFor="targetCompany">지원 회사</label>
-                  <input
-                    type="text"
-                    id="targetCompany"
-                    name="targetCompany"
-                    value={formData.targetCompany}
-                    onChange={handleInputChange}
-                    placeholder="예: 삼성전자"
-                    required
-                  />
-                </div>
-
-                <div className="form-field">
-                  <label htmlFor="targetPosition">지원 직무</label>
-                  <input
-                    type="text"
-                    id="targetPosition"
-                    name="targetPosition"
-                    value={formData.targetPosition}
-                    onChange={handleInputChange}
-                    placeholder="예: 프론트엔드 개발자"
-                    required
-                  />
-                </div>
-
-                <div className="form-field full-width">
-                  <label htmlFor="experience">주요 경험 및 성과</label>
-                  <textarea
-                    id="experience"
-                    name="experience"
-                    value={formData.experience}
-                    onChange={handleInputChange}
-                    placeholder="지원 직무와 관련된 주요 경험, 프로젝트, 성과를 구체적으로 작성해주세요."
-                    required
-                  />
-                  <div className="form-guide">
-                    💡 구체적인 수치와 성과를 포함하면 더 좋은 분석 결과를 얻을 수 있습니다.
-                  </div>
-                </div>
-
-                <div className="form-field">
-                  <label htmlFor="strengths">강점</label>
-                  <textarea
-                    id="strengths"
-                    name="strengths"
-                    value={formData.strengths}
-                    onChange={handleInputChange}
-                    placeholder="자신의 주요 강점을 작성해주세요."
-                    required
-                  />
-                </div>
-
-                <div className="form-field">
-                  <label htmlFor="weaknesses">개선하고 싶은 부분</label>
-                  <textarea
-                    id="weaknesses"
-                    name="weaknesses"
-                    value={formData.weaknesses}
-                    onChange={handleInputChange}
-                    placeholder="개선하고 싶은 부분이나 보완하고 싶은 역량을 작성해주세요."
-                  />
-                </div>
-
-                <div className="form-field full-width">
-                  <label htmlFor="motivation">지원 동기</label>
-                  <textarea
-                    id="motivation"
-                    name="motivation"
-                    value={formData.motivation}
-                    onChange={handleInputChange}
-                    placeholder="해당 회사와 직무에 지원하게 된 동기를 작성해주세요."
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="form-actions">
-                <button type="button" onClick={resetForm} className="reset-btn">
-                  초기화
-                </button>
-                <button type="submit" className="submit-btn" disabled={isLoading}>
-                  {isLoading ? 'AI 분석 중...' : 'AI 코칭 시작'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <div className="coaching-info-section">
-          <div className="info-card">
-            <h3>AI 코칭이 도와드릴 수 있는 것</h3>
-            <ul>
-              <li>✅ 자소서 내용 분석 및 강점 파악</li>
-              <li>✅ 개선이 필요한 부분 식별</li>
-              <li>✅ 효과적인 키워드 추천</li>
-              <li>✅ 구체적인 개선 방향 제시</li>
-              <li>✅ 지원 직무에 맞는 맞춤형 조언</li>
-            </ul>
-          </div>
-
-          <div className="info-card">
-            <h3>좋은 자소서 작성 팁</h3>
-            <div className="tip-item">
-              <strong>구체적인 성과</strong>
-              <p>수치와 결과를 포함하여 구체적으로 작성하세요</p>
-            </div>
-            <div className="tip-item">
-              <strong>일관성 있는 스토리</strong>
-              <p>전체적인 흐름이 자연스럽게 연결되도록 구성하세요</p>
-            </div>
-            <div className="tip-item">
-              <strong>회사 맞춤형</strong>
-              <p>지원 회사의 문화와 가치관을 반영하세요</p>
-            </div>
-          </div>
+    <div className="prf-container">
+      <div className="prf-header">
+        <div className="prf-icon">✍️</div>
+        <div>
+          <h1 className="prf-title">맞춤법 · 띄어쓰기 검사</h1>
+          <p className="prf-sub">자소서·이메일을 붙여넣고 한 번에 교정해 보세요.</p>
         </div>
       </div>
 
-      {/* AI 코칭 결과 모달 */}
-      {isModalOpen && coachingResult && (
-        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content coaching-result-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close-button" onClick={() => setIsModalOpen(false)}>
-              ×
+      <div className="prf-grid">
+        {/* 입력 카드 */}
+        <section className="prf-card">
+          <div className="prf-card-head">
+            <h2>입력</h2>
+            <div className={`prf-counter ${over ? "over" : ""}`}>
+              {chars.toLocaleString()} / {MAX_LEN.toLocaleString()}자
+            </div>
+          </div>
+
+          <textarea
+            className="prf-textarea"
+            placeholder="여기에 글을 붙여넣으세요. (최대 10,000자)"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            maxLength={MAX_LEN + 2000} // UX: 살짝 초과 입력되도 카운터 경고로 안내
+          />
+
+          <div className="prf-actions">
+            <button className="btn ghost" type="button" onClick={handleClear} disabled={!text}>
+              비우기
             </button>
-            
-            <div className="result-header">
-              <h2>AI 코칭 결과</h2>
-              <p>{formData.name}님의 자소서 분석 결과입니다</p>
-            </div>
-
-            <div className="result-content">
-              <div className="analysis-section">
-                <h3>📊 분석 결과</h3>
-                <div className="analysis-grid">
-                  <div className="analysis-item">
-                    <h4>강점</h4>
-                    <div className="skill-tags">
-                      {coachingResult.analysis.strengths.map((strength, index) => (
-                        <span key={index} className="skill-tag strength-tag">{strength}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="analysis-item">
-                    <h4>개선점</h4>
-                    <div className="skill-tags">
-                      {coachingResult.analysis.improvements.map((improvement, index) => (
-                        <span key={index} className="skill-tag improvement-tag">{improvement}</span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="suggestions-section">
-                <h3>💡 개선 제안</h3>
-                <ol className="suggestions-list">
-                  {coachingResult.suggestions.map((suggestion, index) => (
-                    <li key={index}>{suggestion}</li>
-                  ))}
-                </ol>
-              </div>
-
-              <div className="keywords-section">
-                <h3>🔑 추천 키워드</h3>
-                <div className="skill-tags">
-                  {coachingResult.analysis.keywords.map((keyword, index) => (
-                    <span key={index} className="skill-tag keyword-tag">{keyword}</span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="sample-section">
-                <h3>📝 예시 답안</h3>
-                <div className="sample-answer">
-                  {coachingResult.sampleAnswer}
-                </div>
-              </div>
-            </div>
-
-            <div className="result-actions">
-              <button onClick={() => setIsModalOpen(false)} className="close-btn">
-                닫기
-              </button>
-              <button onClick={resetForm} className="new-analysis-btn">
-                새로운 분석 시작
-              </button>
-            </div>
+            <button className="btn primary" type="button" onClick={handleCheck} disabled={!canSubmit}>
+              {loading ? "검사 중..." : "검사하기"}
+            </button>
           </div>
-        </div>
-      )}
+
+          {error && <div className="prf-error">{error}</div>}
+        </section>
+
+        {/* 결과 카드 */}
+        <section className="prf-card">
+          <div className="prf-card-head">
+            <h2>결과</h2>
+            {result?.corrected && (
+              <button className="btn outline sm" onClick={handleCopy}>교정문 복사</button>
+            )}
+          </div>
+
+          {!result && !loading && (
+            <div className="prf-placeholder">검사 결과가 여기에 표시됩니다.</div>
+          )}
+
+          {/* 교정문 */}
+          {result?.corrected && (
+            <>
+              <div className="prf-block">
+                <div className="prf-label">교정된 문장</div>
+                <textarea
+                  className="prf-textarea small"
+                  value={result.corrected}
+                  readOnly
+                />
+              </div>
+
+              <div className="prf-block">
+                <div className="prf-label">문제 구간(원문 기준 하이라이트)</div>
+                <div
+                  className="prf-preview"
+                  dangerouslySetInnerHTML={{ __html: highlightedOriginal }}
+                />
+              </div>
+            </>
+          )}
+
+          {/* 이슈 리스트 */}
+          {result?.issues?.length > 0 && (
+            <div className="prf-issues">
+              <div className="prf-issues-head">
+                발견된 항목 <strong>{result.issues.length}</strong>건
+              </div>
+              <ul className="prf-issue-list">
+                {result.issues.map((it, idx) => (
+                  <li key={idx} className="prf-issue">
+                    <span className={`tag tag-${(it.type || "OTHER").toLowerCase()}`}>
+                      {it.type || "기타"}
+                    </span>
+                    <div className="issue-text">
+                      <div className="from">{it.original}</div>
+                      <div className="arrow">→</div>
+                      <div className="to">{it.suggestion || "제안 없음"}</div>
+                    </div>
+                    {it.message && <div className="issue-msg">{it.message}</div>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* 로딩 상태 */}
+          {loading && (
+            <div className="prf-loading">AI가 문장을 분석 중입니다...</div>
+          )}
+        </section>
+      </div>
     </div>
   );
-};
-
-export default CoachingAI;
+}

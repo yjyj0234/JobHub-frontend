@@ -415,16 +415,186 @@
   cursor: not-allowed;
 }
 
-.deadline-callout { padding-top: 0; }
-.deadline-pill {
+.cta-box { display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
+.apply-button.half-left { width:50%; margin-top:8px; }
+
+/* CTA 하단 줄: 버튼(좌) + 지원자수(우) */
+/* CTA 하단 줄: 버튼 박스(좌) + 지원자수 박스(우) */
+.cta-row {
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+/* 공통 타일(카드) 스타일 */
+.cta-tile {
+  flex: 1 1 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  /* 💡 부드러운 그림자 */
+  box-shadow: 0 8px 22px rgba(17, 24, 39, 0.08);
+  transition: transform .12s ease, box-shadow .2s ease, filter .2s ease;
+}
+
+.cta-tile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.12);
+}
+
+/* 버튼이 카드 안에서 꽉 차도록 */
+.cta-tile .apply-button {
+  width: 100%;
+}
+
+/* 지원자수 카드 내부 타이포 */
+.cta-tile-stats {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  text-align: left;
+}
+
+.cta-tile-stats .stats-title {
+  font-size: 13px;
+  color: #6b7280; /* 회색 */
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+.cta-tile-stats .stats-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--c-text, #111);
+  line-height: 1.1;
+}
+
+/* 모바일에선 세로 스택 */
+@media (max-width: 640px) {
+  .cta-row {
+    flex-direction: column;
+  }
+}
+
+/* 라벨+값 한 줄 */
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+}
+
+/* 칩(Chip) 라벨: 페이지 톤에 맞춘 하얀 배경 + 테두리 + 라운드 */
+.field-chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 600;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--c-text, #111);
+  background: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 999px;
-  padding: 8px 12px;
-  border: 1px solid #eee;
+  white-space: nowrap;
+  letter-spacing: .2px;
 }
-.deadline-pill.soon { background: #fff8e7; border-color: #ffd79a; } /* D-14~8 */
-.deadline-pill.urgent { background: #fff5f5; border-color: #ff9aa2; } /* D-7~0 */
-.deadline-pill .close-date { opacity: 0.8; font-weight: 500; }
+
+.field-chip-info {
+  border-color: #bfdbfe;   /* 연한 파랑 테두리 */
+  background: #eff6ff;     /* 아주 옅은 파랑 배경 */
+  color: #1d4ed8;          /* 파랑 텍스트 */
+}
+
+/* 빨간 칩 (마감일) — 기존 .field-chip-danger가 있다면 이걸로 덮어쓰기 */
+.field-chip-danger {
+  border-color: #fca5a5;   /* 연한 빨강 테두리 */
+  background: #fef2f2;     /* 아주 옅은 빨강 배경 */
+  color: #b91c1c;          /* 빨강 텍스트 */
+}
+/* 값 텍스트 */
+.field-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-text, #111);
+}
+
+/* 마감된 경우 값 색상만 붉게 */
+.field-value.time-left[data-closed="1"] {
+  color: #e23b3b;
+}
+
+/* 모바일 간격 다듬기 */
+@media (max-width: 640px) {
+  .field-row { margin: 4px 0; }
+}
+/* 남은시간 전용: 가운데 정렬 + 간격 조금 띄우기 */
+.field-row.time-left-row {
+  flex-direction: column;   /* 라벨 위, 값 아래 */
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* 남은시간 숫자 강조 */
+.field-row.time-left-row .field-value.time-left {
+  font-size: 22px;          /* 더 크게 */
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  margin-top: 2px;          /* 라벨과 숫자 간격 살짝 */
+  color: #1d4ed8;
+}
+
+/* (선택) 마감 상태면 흐리게 */
+.field-row.time-left-row .field-value.time-left[data-closed="1"] {
+  color: #9ca3af;
+}
+
+/* (선택) 모바일에서 살짝만 줄이기 */
+@media (max-width: 640px) {
+  .field-row.time-left-row .field-value.time-left {
+    font-size: 20px;
+  }
+}
+
+/* 지원자 수 카드 전체 가운데 정렬 */
+.cta-tile.cta-tile-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;     /* 가로 가운데 */
+  justify-content: center; /* 세로 가운데 */
+  text-align: center;
+  min-height: 160px;       /* 필요한 만큼 높이 확보 (원하는 값으로 조절) */
+}
+
+/* 제목과 숫자 간 간격 */
+.cta-tile-stats .stats-title {
+  margin-bottom: 8px;
+}
+
+/* 숫자/단위 한 줄 정렬 + 가운데 정렬 */
+.cta-tile-stats .stats-line {
+  display: flex;
+  align-items: baseline;   /* 숫자와 '명' 기준선 맞추기 */
+  justify-content: center; /* 가로 가운데 */
+  gap: 6px;                /* 숫자와 단위 간격 */
+}
+
+/* 숫자 크게 */
+.cta-tile-stats .stats-number {
+  font-size: 32px;         /* 더 키우고 싶으면 36~48px 등으로 조절 */
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* 단위는 약간 작게 */
+.cta-tile-stats .stats-unit {
+  font-size: 16px;
+  font-weight: 700;
+  opacity: 0.85;
+}
