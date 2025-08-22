@@ -157,8 +157,24 @@ function ResumeListPage() {
   };
 
   const handleCreateResume = () => {
-    if (!isAuthed) return alert("로그인이 필요해요.");
-    navigate("/resumes/new"); // 빈 편집 화면 → 저장 시 서버 생성
+    if (!isAuthed) {
+      alert("로그인이 필요해요.");
+      return;
+    }
+
+    // 에디터에 "학력" 섹션 1개를 기본으로 넘겨주고, 포커스도 학력으로 지정
+    navigate("/resumes/new", {
+      state: {
+        presetSections: [
+          {
+            id: `educations-${Date.now()}`,
+            type: "educations",
+            data: [{ subId: `educations-item-${Date.now()}` }],
+          },
+        ],
+        presetFocusSectionType: "educations",
+      },
+    });
   };
 
   /* ---------------------- 카드 ---------------------- */
