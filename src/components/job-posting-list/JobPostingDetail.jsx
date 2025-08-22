@@ -131,7 +131,8 @@ function rewriteDescriptionHtml(rawHtml) {
       const original = img.getAttribute("src") || "";
       const fixed = toViewerUrlFromAny(original);
       if (fixed) img.setAttribute("src", fixed);
-      img.setAttribute("loading", "lazy");
+      //img.setAttribute("loading", "lazy");
+      img.setAttribute("decoding", "async");   // 추가하면 렌더 안정화에 도움
       img.setAttribute("referrerpolicy", "no-referrer");
       img.removeAttribute("onerror");
       img.removeAttribute("onload");
