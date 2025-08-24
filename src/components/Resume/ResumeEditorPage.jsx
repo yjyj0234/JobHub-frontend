@@ -217,7 +217,31 @@ const SECTION_API = {
     create: (rid) => `${API}/resumes/${rid}/projects`,
     update: (id) => `${API}/resumes/projects/${id}`,
     remove: (id) => `${API}/resumes/projects/${id}`,
-    toPayload: (it) => stripMeta(it),
+    toPayload: (it) => {
+      // 기존 폼에서 projectOrg / url 을 쓰고 있었다면 안전하게 매핑
+      const organization = it.organization ?? it.projectOrg;
+      const projectUrl = it.projectUrl ?? it.url;
+
+      // techStack: 문자열이면 쉼표로 쪼개서 배열로, 배열이면 trim
+      const tech = Array.isArray(it.techStack)
+        ? it.techStack.map((s) => String(s).trim()).filter(Boolean)
+        : String(it.techStack ?? "")
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+
+      return {
+        projectName: (it.projectName ?? "").trim() || null, // 필수
+        organization: organization ? organization.trim() : null,
+        role: it.role ? it.role.trim() : null,
+        startDate: it.startDate || null,
+        endDate: it.ongoing ? null : it.endDate || null, // 진행중이면 endDate 무시
+        ongoing: Boolean(it.ongoing),
+        projectUrl: projectUrl ? projectUrl.trim() : null,
+        description: it.description ? it.description.trim() : null,
+        techStack: tech, // List<String>
+      };
+    },
   },
   awards: {
     list: (rid) => `${API}/resumes/${rid}/awards`,
@@ -229,9 +253,23 @@ const SECTION_API = {
   certifications: {
     list: (rid) => `${API}/resumes/${rid}/certifications`,
     create: (rid) => `${API}/resumes/${rid}/certifications`,
-    update: (id) => `${API}/resumes/certifications/${id}`,
-    remove: (id) => `${API}/resumes/certifications/${id}`,
-    toPayload: (it) => stripMeta(it),
+    update: (rid, id) => `${API}/resumes/${rid}/certifications/${id}`,
+    remove: (rid, id) => `${API}/resumes/${rid}/certifications/${id}`,
+    toPayload: (it) => ({
+      certificationName: (it.certificationName ?? "").trim() || null,
+      issuingOrganization: (it.issuingOrganization ?? "").trim() || null,
+      issueDate: it.issueDate || null, // "YYYY-MM-DD" or null
+      expiryDate: it.expiryDate || null, // "YYYY-MM-DD" or null
+      certificationNumber: (it.certificationNumber ?? "").trim() || null,
+    }),
+    normalize: (row) => ({
+      id: row.id,
+      certificationName: row.certificationName ?? null,
+      issuingOrganization: row.issuingOrganization ?? null,
+      issueDate: row.issueDate ?? null,
+      expiryDate: row.expiryDate ?? null,
+      certificationNumber: row.certificationNumber ?? null,
+    }),
   },
   languages: {
     list: (rid) => `${API}/resumes/${rid}/languages`,
@@ -558,6 +596,14 @@ function ResumeEditorPage() {
   };
   const validateEducationPayload = (p, idx = 0) => {
     if (!p.schoolName) return `학력 #${idx + 1}: 학교명은 필수입니다.`;
+    return null;
+  };
+  const validateCertificationPayload = (p, idx = 0) => {
+    if (!p.certificationName)
+      return `자격증 #${idx + 1}: 자격증명은 필수입니다.`;
+    if (!p.issuingOrganization)
+      return `자격증 #${idx + 1}: 발급기관은 필수입니다.`;
+    if (!p.issueDate) return `자격증 #${idx + 1}: 취득일은 필수입니다.`;
     return null;
   };
   const buildSectionsFromResponse = (dto) => {
@@ -1099,7 +1145,7 @@ function ResumeEditorPage() {
       return;
     }
 
-    // 섹션별 프론트 밸리데이션 (경력/학력은 기존 그대로)
+    // 섹션별 프론트 밸리데이션
     if (sec.type === "experiences") {
       const items = sec.data || [];
       for (let i = 0; i < items.length; i++) {
@@ -1109,6 +1155,7 @@ function ResumeEditorPage() {
         if (msg) return alert(msg);
       }
     }
+
     if (sec.type === "educations") {
       const items = sec.data || [];
       for (let i = 0; i < items.length; i++) {
@@ -1119,38 +1166,65 @@ function ResumeEditorPage() {
       }
     }
 
+    if (sec.type === "projects") {
+      const items = sec.data || [];
+      for (let i = 0; i < items.length; i++) {
+        if (!items[i]?.projectName?.trim())
+          return alert(`프로젝트 #${i + 1}: 프로젝트명은 필수입니다.`);
+      }
+    }
+
+    if (sec.type === "certifications") {
+      const items = sec.data || [];
+      for (let i = 0; i < items.length; i++) {
+        const p = cfg.toPayload(items[i]);
+        if (!hasAnyValue(p)) continue;
+        const msg = validateCertificationPayload(p, i);
+        if (msg) return alert(msg);
+      }
+    }
+
     try {
       await Promise.all(
         (sec.data || []).map(async (it) => {
+          // ---------- UPDATE ----------
           if (it.id) {
-            // UPDATE (스킬 링크엔 보통 없음)
             if (!cfg.update) return;
+
             const urlForUpdate =
               cfg.update.length === 2
                 ? cfg.update(rid, it.id)
                 : cfg.update(it.id);
+
             const up = cfg.toPayload ? cfg.toPayload(it) : stripMeta(it);
-            if (!hasAnyValue(up)) return;
+
+            // ✅ 자격증은 비우기(null) 등도 서버에 반드시 반영되도록 무조건 PUT
+            if (sec.type === "certifications") {
+              const msg = validateCertificationPayload(up);
+              if (msg) throw new Error(msg);
+            } else {
+              // 다른 섹션은 기존 로직 유지
+              if (!hasAnyValue(up)) return;
+            }
+
             await axios.put(urlForUpdate, up);
             return;
           }
 
-          // CREATE
+          // ---------- CREATE ----------
           if (!cfg.create) return;
-          const reqPayload = cfg.toPayload ? cfg.toPayload(it) : stripMeta(it);
-          if (!hasAnyValue(reqPayload)) return; // 값 없으면 생성 스킵
 
-          let res;
+          const reqPayload = cfg.toPayload ? cfg.toPayload(it) : stripMeta(it);
+
           if (sec.type === "skills") {
-            // ✅ 스킬만 예외 처리: (1) 기존 스킬 연결 or (2) 새 스킬 생성+연결
+            // (스킬) 기존 연결 or 신규 생성 후 연결
+            let res;
             if (reqPayload.skillId) {
-              // (1) 기존 스킬 연결 — skillId를 쿼리스트링으로
               res = await axios.post(cfg.create(rid), null, {
                 params: { skillId: reqPayload.skillId },
                 validateStatus: () => true,
               });
             } else if (reqPayload.name) {
-              // (2) 새 스킬 생성 → skillId로 연결
               const created = await axios.post(
                 `${API}/skills`,
                 {
@@ -1173,10 +1247,10 @@ function ResumeEditorPage() {
                 validateStatus: () => true,
               });
             } else {
-              return; // 안전망
+              return;
             }
 
-            // 🔁 409(이미 연결됨)도 성공으로 간주하여 계속 진행
+            // 409(이미 연결됨)도 성공 처리
             if (
               !((res.status >= 200 && res.status < 300) || res.status === 409)
             ) {
@@ -1203,34 +1277,46 @@ function ResumeEditorPage() {
                 )
               );
             }
+            return;
+          }
+
+          // (자격증) 필수 검증을 생성 직전에도 한 번 더
+          if (sec.type === "certifications") {
+            const msg = validateCertificationPayload(reqPayload);
+            if (msg) throw new Error(msg);
           } else {
-            // 다른 섹션은 바디로 그대로
-            res = await axios.post(cfg.create(rid), reqPayload, {
-              validateStatus: () => true,
-            });
+            // 다른 섹션은 기존 로직 유지: 값 없으면 생성 스킵
+            if (!hasAnyValue(reqPayload)) return;
+          }
 
-            if (res.status < 200 || res.status >= 300) throw res;
+          const res = await axios.post(cfg.create(rid), reqPayload, {
+            validateStatus: () => true,
+          });
+          if (res.status < 200 || res.status >= 300) throw res;
 
-            const body = res.data;
-            const newId =
-              typeof body === "number"
-                ? body
-                : body?.id ?? body?.activityId ?? null;
+          const body = res.data;
+          const newId =
+            typeof body === "number"
+              ? body
+              : body?.id ??
+                // ✅ 자격증 응답 키까지 모두 커버
+                body?.resumeCertificationId ??
+                body?.activityId ??
+                null;
 
-            if (newId) {
-              setSections((prev) =>
-                prev.map((s) =>
-                  s.id === sectionIdParam
-                    ? {
-                        ...s,
-                        data: s.data.map((d) =>
-                          d.subId === it.subId ? { ...d, id: newId } : d
-                        ),
-                      }
-                    : s
-                )
-              );
-            }
+          if (newId) {
+            setSections((prev) =>
+              prev.map((s) =>
+                s.id === sectionIdParam
+                  ? {
+                      ...s,
+                      data: s.data.map((d) =>
+                        d.subId === it.subId ? { ...d, id: newId } : d
+                      ),
+                    }
+                  : s
+              )
+            );
           }
         })
       );

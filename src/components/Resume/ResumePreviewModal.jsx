@@ -8,7 +8,6 @@ const ProfileHeaderPreview = ({ profile }) => {
 
   return (
     <div className="profile-header preview-mode">
-      <ProfileHeaderPreview profile={profile} />
       <div className="profile-main-info">
         <div className="profile-photo-wrapper">
           {profile.profileImageUrl ? (
@@ -145,29 +144,38 @@ const renderItem = (type, data) => {
         <>
           <p>
             <strong>{data.projectName || "프로젝트명 미입력"}</strong> (
-            {data.projectOrg || "수행기관 미입력"})
+            {data.organization || "수행기관 미입력"})
           </p>
           <p className="period">
-            {data.startDate || "시작일"} ~ {data.endDate || "종료일"}
+            {data.startDate || "시작일"} ~{" "}
+            {data.ongoing ? "진행중" : data.endDate || "종료일"}
           </p>
-          {data.url && (
+
+          {data.projectUrl && (
             <p>
               <strong>링크:</strong>{" "}
-              <a href={data.url} target="_blank" rel="noopener noreferrer">
-                {data.url}
+              <a
+                href={data.projectUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {data.projectUrl}
               </a>
             </p>
           )}
-          {data.techStack && (
+
+          {Array.isArray(data.techStack) && data.techStack.length > 0 && (
             <p>
-              <strong>사용 기술:</strong> {data.techStack}
+              <strong>사용 기술:</strong> {data.techStack.join(", ")}
             </p>
           )}
+
           {data.description && (
             <p className="description">{data.description}</p>
           )}
         </>
       );
+
     case "activities":
       return (
         <>
@@ -200,10 +208,16 @@ const renderItem = (type, data) => {
       return (
         <>
           <p>
-            <strong>{data.certName || "자격증명 미입력"}</strong>
+            <strong>{data.certificationName || "자격증명 미입력"}</strong>
           </p>
-          <p>발급기관: {data.certIssuer || "미입력"}</p>
-          <p className="period">취득일: {data.certDate || "미입력"}</p>
+          <p>발급기관: {data.issuingOrganization || "미입력"}</p>
+          <p className="period">취득일: {data.issueDate || "미입력"}</p>
+          {data.expiryDate && (
+            <p className="period">만료일: {data.expiryDate}</p>
+          )}
+          {data.certificationNumber && (
+            <p>자격번호: {data.certificationNumber}</p>
+          )}
         </>
       );
     case "languages":
