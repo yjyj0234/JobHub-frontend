@@ -1,8 +1,11 @@
-import React from "react";
-import { User, Phone, MapPin, Calendar } from "lucide-react";
+// src/components/resume/ResumePreviewModal.jsx
+import React, { useRef } from "react";
+import { User, Phone, MapPin, Calendar, Printer, FileDown } from "lucide-react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import "../css/ResumePreviewModal.css";
 
-// 프로필 헤더 (읽기 전용)
+/* -------------------- 프로필 헤더 (읽기 전용) -------------------- */
 const ProfileHeaderPreview = ({ profile }) => {
   if (!profile) return null;
 
@@ -56,15 +59,13 @@ const ProfileHeaderPreview = ({ profile }) => {
   );
 };
 
-// 각 섹션 타입에 맞는 뷰 컴포넌트
+/* -------------------- 섹션 뷰 -------------------- */
 const SectionView = ({ section }) => {
-  // 데이터가 배열 형태이므로, 각 항목을 순회하며 렌더링
   if (!section.data || section.data.length === 0) {
     return (
       <div className="preview-data-item empty">작성된 내용이 없습니다.</div>
     );
   }
-
   return section.data.map((item, index) => (
     <div key={item.subId || index} className="preview-data-item">
       {renderItem(section.type, item)}
@@ -72,7 +73,7 @@ const SectionView = ({ section }) => {
   ));
 };
 
-// 항목 타입에 따라 렌더링하는 헬퍼 함수
+/* -------------------- 타입별 렌더 -------------------- */
 const renderItem = (type, data) => {
   switch (type) {
     case "experiences":
@@ -85,8 +86,12 @@ const renderItem = (type, data) => {
           <p className="period">
             {data.startDate || "시작일"} ~ {data.endDate || "종료일"}
           </p>
+          {data.description && (
+            <p className="description">{data.description}</p>
+          )}
         </>
       );
+
     case "educations":
       return (
         <>
@@ -106,11 +111,9 @@ const renderItem = (type, data) => {
           )}
         </>
       );
-    case "skills": {
-      // data가 (1) 단일 스킬 객체 { name, category ... } 이거나
-      //       (2) 옛 형태인 { skills: [...] } 일 수 있으니 둘 다 처리
-      const items = Array.isArray(data?.skills) ? data.skills : [data];
 
+    case "skills": {
+      const items = Array.isArray(data?.skills) ? data.skills : [data];
       const visible = items
         .map((s) => ({
           name: (s?.name || "").trim(),
@@ -150,7 +153,6 @@ const renderItem = (type, data) => {
             {data.startDate || "시작일"} ~{" "}
             {data.ongoing ? "진행중" : data.endDate || "종료일"}
           </p>
-
           {data.projectUrl && (
             <p>
               <strong>링크:</strong>{" "}
@@ -163,13 +165,11 @@ const renderItem = (type, data) => {
               </a>
             </p>
           )}
-
           {Array.isArray(data.techStack) && data.techStack.length > 0 && (
             <p>
               <strong>사용 기술:</strong> {data.techStack.join(", ")}
             </p>
           )}
-
           {data.description && (
             <p className="description">{data.description}</p>
           )}
@@ -191,19 +191,25 @@ const renderItem = (type, data) => {
           )}
         </>
       );
+
     case "awards":
       return (
         <>
           <p>
-            <strong>{data.awardTitle || "수상명 미입력"}</strong>
+            <strong>
+              {data.awardTitle || data.awardName || "수상명 미입력"}
+            </strong>
           </p>
-          <p>{data.awardingInstitution || "수여기관 미입력"}</p>
+          <p>
+            {data.awardingInstitution || data.organization || "수여기관 미입력"}
+          </p>
           <p className="period">{data.awardDate || "수상일 미입력"}</p>
           {data.description && (
             <p className="description">{data.description}</p>
           )}
         </>
       );
+
     case "certifications":
       return (
         <>
@@ -220,48 +226,152 @@ const renderItem = (type, data) => {
           )}
         </>
       );
-    case "languages":
+
+    case "languages": {
+      const level = data.proficiencyLevel || data.fluency || "미입력";
       return (
         <>
           <p>
             <strong>{data.language || "언어명 미입력"}</strong>
           </p>
-          <p>수준: {data.fluency || "미입력"}</p>
-          {data.testName && (
+          <p>수준: {level}</p>
+          {(data.testName || data.testScore) && (
             <p>
-              시험: {data.testName} ({data.testScore || "점수 미입력"})
+              시험: {data.testName || "시험명 미입력"} (
+              {data.testScore || "점수 미입력"})
             </p>
           )}
+          {data.testDate && <p className="period">시험일: {data.testDate}</p>}
         </>
       );
+    }
+
     case "portfolios":
       return (
         <>
+          {data.title && (
+            <p>
+              <strong>{data.title}</strong>
+            </p>
+          )}
           <p>
             <strong>링크:</strong>{" "}
             <a href={data.url} target="_blank" rel="noopener noreferrer">
               {data.url || "URL 미입력"}
             </a>
           </p>
+          {data.portfolioType && <p>유형: {data.portfolioType}</p>}
           {data.description && (
             <p className="description">{data.description}</p>
           )}
         </>
       );
+
     default:
       return <div className="preview-data-item">표시할 내용이 없습니다.</div>;
   }
 };
 
+/* -------------------- 모달 -------------------- */
 function ResumePreviewModal({
   isOpen,
   onClose,
   title,
-  profile,
+  profile, // 있으면 프로필 헤더를 보여줌(없으면 생략)
   sections,
   sectionComponents,
 }) {
+  const contentRef = useRef(null);
+
   if (!isOpen) return null;
+
+  // 인쇄: 미리보기 DOM을 캡처 → 새 창에 A4 한 장짜리 문서로 띄워 인쇄
+  const handlePrint = async () => {
+    const el = contentRef.current;
+    if (!el) return;
+
+    const canvas = await html2canvas(el, {
+      scale: 3, // 선명도(2~3 권장)
+      useCORS: true,
+      backgroundColor: "#ffffff",
+    });
+    const dataUrl = canvas.toDataURL("image/png");
+
+    const marginMm = 12; // A4 여백(인쇄/PDF 동일)
+    const win = window.open("", "_blank");
+    if (!win) {
+      alert("팝업이 차단되었어요. 브라우저 팝업 허용 후 다시 시도해주세요.");
+      return;
+    }
+
+    const html = `
+      <html>
+        <head>
+          <meta charset="utf-8"/>
+          <title>${(title || "resume").replace(/\s+/g, "_")}</title>
+          <style>
+            @page { size: A4; margin: ${marginMm}mm; }
+            html, body { margin: 0; padding: 0; background: #fff; }
+            .page {
+              width: ${210 - marginMm * 2}mm;
+              height: ${297 - marginMm * 2}mm;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: ${marginMm}mm;
+            }
+            img { max-width: 100%; max-height: 100%; display: block; }
+            @media print {
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="page"><img id="shot" src="${dataUrl}" /></div>
+          <script>
+            const go = () => { window.focus(); window.print(); };
+            const img = document.getElementById('shot');
+            if (img.complete) go(); else img.onload = go;
+          </script>
+        </body>
+      </html>`;
+
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  };
+
+  // PDF 저장: 미리보기 DOM을 캡처 → A4 한 장에 비율 유지해 맞춤
+  const handleSavePdf = async () => {
+    const el = contentRef.current;
+    if (!el) return;
+
+    const canvas = await html2canvas(el, {
+      scale: 3,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+    });
+
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pdfW = pdf.internal.pageSize.getWidth(); // 210
+    const pdfH = pdf.internal.pageSize.getHeight(); // 297
+    const margin = 12;
+    const maxW = pdfW - margin * 2;
+    const maxH = pdfH - margin * 2;
+
+    const pxToMm = (px) => px * 0.264583; // px → mm
+    const imgWmm = pxToMm(canvas.width);
+    const imgHmm = pxToMm(canvas.height);
+
+    const k = Math.min(maxW / imgWmm, maxH / imgHmm);
+    const drawW = imgWmm * k;
+    const drawH = imgHmm * k;
+    const dx = (pdfW - drawW) / 2;
+    const dy = (pdfH - drawH) / 2;
+
+    pdf.addImage(canvas.toDataURL("image/png"), "PNG", dx, dy, drawW, drawH);
+    pdf.save(`${(title || "resume").replace(/\s+/g, "_")}.pdf`);
+  };
 
   return (
     <div className="preview-modal-overlay" onClick={onClose}>
@@ -271,12 +381,31 @@ function ResumePreviewModal({
       >
         <div className="preview-header">
           <h1>{title || "이력서 미리보기"}</h1>
-          <button className="close-btn" onClick={onClose}>
-            &times;
-          </button>
+          <div className="export-actions">
+            <button
+              className="export-btn"
+              onClick={handlePrint}
+              title="한 장으로 인쇄"
+            >
+              <Printer size={16} /> 인쇄(한 장)
+            </button>
+            <button
+              className="export-btn"
+              onClick={handleSavePdf}
+              title="한 장 PDF 저장"
+            >
+              <FileDown size={16} /> PDF 저장(한 장)
+            </button>
+            <button className="close-btn" onClick={onClose} aria-label="닫기">
+              &times;
+            </button>
+          </div>
         </div>
-        <div className="preview-body">
-          {/* 프로필 헤더 추가 */}
+
+        {/* ⬇ 인쇄/캡처 대상 */}
+        <div className="preview-body print-root" ref={contentRef}>
+          {/* profile prop을 넘기면 프로필 헤더 출력 (넘기지 않으면 생략) */}
+          <ProfileHeaderPreview profile={profile} />
 
           {sections.length > 0 ? (
             sections.map((section) => {

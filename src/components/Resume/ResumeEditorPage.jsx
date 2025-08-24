@@ -91,7 +91,22 @@ const hasAnyValue = (obj = {}) =>
     if (typeof v === "string") return v.trim() !== "";
     return true;
   });
+// URL 스킴 자동 보정(미입력 시 https:// 붙임)
+const normalizeUrl = (u) => {
+  if (!u) return null;
+  const t = String(u).trim();
+  if (!t) return null;
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+};
 
+// 포트폴리오 정규화
+const normalizePortfolio = (it = {}) => ({
+  id: it.id ?? it.portfolioId ?? null,
+  title: it.title ?? it.name ?? "",
+  url: it.url ?? it.link ?? "",
+  description: it.description ?? it.desc ?? "",
+  portfolioType: it.portfolioType ?? it.type ?? "",
+});
 /* ---------------------- 섹션별 API/정규화 ---------------------- */
 const normalizeActivity = (it = {}) => ({
   id: it.id ?? it.activityId ?? it.resumeActivityId ?? it.seq ?? null,
@@ -246,9 +261,25 @@ const SECTION_API = {
   awards: {
     list: (rid) => `${API}/resumes/${rid}/awards`,
     create: (rid) => `${API}/resumes/${rid}/awards`,
-    update: (id) => `${API}/resumes/awards/${id}`,
-    remove: (id) => `${API}/resumes/awards/${id}`,
-    toPayload: (it) => stripMeta(it),
+    update: (rid, awardId) => `${API}/resumes/${rid}/awards/${awardId}`,
+    remove: (rid, awardId) => `${API}/resumes/${rid}/awards/${awardId}`,
+
+    // 프론트 아이템 -> 백엔드 DTO 매핑
+    toPayload: (it) => ({
+      awardName: it.awardName ?? it.awardTitle ?? "",
+      organization: it.organization ?? it.awardingInstitution ?? "",
+      awardDate: it.awardDate ?? null,
+      description: it.description ?? null,
+    }),
+
+    // 백엔드 응답 -> 프론트 표시용(선택)
+    normalize: (r) => ({
+      id: r.id,
+      awardName: r.awardName,
+      organization: r.organization,
+      awardDate: r.awardDate, // "YYYY-MM-DD"
+      description: r.description,
+    }),
   },
   certifications: {
     list: (rid) => `${API}/resumes/${rid}/certifications`,
@@ -271,19 +302,43 @@ const SECTION_API = {
       certificationNumber: row.certificationNumber ?? null,
     }),
   },
+
   languages: {
     list: (rid) => `${API}/resumes/${rid}/languages`,
     create: (rid) => `${API}/resumes/${rid}/languages`,
-    update: (id) => `${API}/resumes/languages/${id}`,
-    remove: (id) => `${API}/resumes/languages/${id}`,
-    toPayload: (it) => stripMeta(it),
+    update: (rid, id) => `${API}/resumes/${rid}/languages/${id}`,
+    remove: (rid, id) => `${API}/resumes/${rid}/languages/${id}`,
+    toPayload: (it) => ({
+      language: (it.language ?? "").trim() || null,
+      // 예전 키(fluency)도 흡수해 표준키로 보냄
+      proficiencyLevel:
+        (it.proficiencyLevel ?? it.fluency ?? "").trim() || null,
+      testName: (it.testName ?? "").trim() || null,
+      testScore: (it.testScore ?? "").trim() || null,
+      testDate: it.testDate || null, // "" -> null 처리
+    }),
+    normalize: (r) => ({
+      id: r.id ?? r.languageId ?? null,
+      language: r.language ?? "",
+      proficiencyLevel: r.proficiencyLevel ?? r.fluency ?? "",
+      testName: r.testName ?? "",
+      testScore: r.testScore ?? "",
+      testDate: r.testDate ?? null,
+    }),
   },
+
   portfolios: {
     list: (rid) => `${API}/resumes/${rid}/portfolios`,
     create: (rid) => `${API}/resumes/${rid}/portfolios`,
     update: (id) => `${API}/resumes/portfolios/${id}`,
     remove: (id) => `${API}/resumes/portfolios/${id}`,
-    toPayload: (it) => stripMeta(it),
+    toPayload: (it) => ({
+      title: (it.title ?? "").trim() || null,
+      url: normalizeUrl(it.url),
+      description: (it.description ?? "").trim() || null,
+      portfolioType: (it.portfolioType ?? "").trim() || null,
+    }),
+    normalize: normalizePortfolio,
   },
 };
 
@@ -1183,6 +1238,26 @@ function ResumeEditorPage() {
         if (msg) return alert(msg);
       }
     }
+    if (sec.type === "languages") {
+      const items = sec.data || [];
+      for (let i = 0; i < items.length; i++) {
+        const p = cfg.toPayload(items[i]);
+        if (!hasAnyValue(p)) continue; // 완전 빈 행이면 스킵
+        if (!p.language) return alert(`외국어 #${i + 1}: 언어는 필수입니다.`);
+      }
+    }
+    if (sec.type === "portfolios") {
+      const items = sec.data || [];
+      for (let i = 0; i < items.length; i++) {
+        const p = cfg.toPayload(items[i]);
+        if (!hasAnyValue(p)) continue; // 완전 빈 행은 스킵
+        if (!p.title) return alert(`포트폴리오 #${i + 1}: 제목은 필수입니다.`);
+        if (!p.url) return alert(`포트폴리오 #${i + 1}: URL은 필수입니다.`);
+        if (p.url && !/^https?:\/\/[\w.-]/i.test(p.url)) {
+          return alert(`포트폴리오 #${i + 1}: URL 형식이 올바르지 않습니다.`);
+        }
+      }
+    }
 
     try {
       await Promise.all(
@@ -1440,6 +1515,7 @@ function ResumeEditorPage() {
         onClose={() => setIsPreviewOpen(false)}
         title={resumeTitle}
         user={user}
+        profile={userProfile}
         sections={sections}
         sectionComponents={sectionComponents}
       />
