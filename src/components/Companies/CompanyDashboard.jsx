@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import CompanyProfile from "./CompanyProfile"; // 기업정보 관리 컴포넌트
 import "../css/CompanyDashboard.css";
-
+import ApplicantsList from "./ApplicantsList";
 const CompanyDashboard = () => {
   const navigate = useNavigate();
   const { user, isAuthed } = useAuth();
@@ -155,15 +155,13 @@ const CompanyDashboard = () => {
           </div>
         );
       case "applicants":
-        return (
-          <div className="applicants-section">
-            <h1>지원자 관리</h1>
-            <p>지원자 관리 기능은 준비중입니다</p>
-          </div>
-        );
 
-      default:
-        return null;
+     return (
+        <div className="applicants-seciont">
+            <h1>지원자 관리</h1>
+            <ApplicantsList/>
+        </div>
+     );
     }
   };
 
