@@ -730,10 +730,17 @@ const JobPosting = () => {
     logo: j.companyLogo,
     position: j.title,
     location: (j.regions ?? [])[0] ?? "",
-    experience: mapExperienceLevel(j.experienceLevel), // 경력 레벨 변환
-    education: mapEducationLevel(j.educationLevel), // 학력 변환
-    employment: mapEmploymentType(j.employmentType), // 고용형태 변환
-    salary: formatSalary(j.minSalary, j.maxSalary, j.salaryType), // 급여 포맷
+    // ✅ DB에서 받은 실제 데이터 사용
+    experience: j.experienceLevel
+      ? mapExperienceLevel(j.experienceLevel)
+      : "경력무관",
+    education: j.educationLevel
+      ? mapEducationLevel(j.educationLevel)
+      : "학력무관",
+    employment: j.employmentType
+      ? mapEmploymentType(j.employmentType)
+      : "정규직",
+    salary: formatSalary(j.minSalary, j.maxSalary, j.salaryType),
     skills: j.skills ?? [],
     status: j.status ?? "OPEN", // 상태 추가
     closeDate: j.closeDate, // 마감일 추가
@@ -805,16 +812,16 @@ const JobPosting = () => {
       keyword: null,
       regionIds: [],
       categoryIds: [],
-      employmentType: undefined,
-      experienceLevel: undefined,
-      minSalary: undefined,
-      maxSalary: undefined,
-      isRemote: undefined,
+      employmentType: null, // ✅ undefined → null
+      experienceLevel: null, // ✅ undefined → null
+      minSalary: null, // ✅ undefined → null
+      maxSalary: null, // ✅ undefined → null
+      isRemote: null, // ✅ undefined → null
       sortBy: "latest",
       page: 0,
       size: 20,
     };
-
+    console.log("요청 보내기:", JSON.stringify(body, null, 2));
     setLoading(true);
     setError(null);
     try {
@@ -915,10 +922,11 @@ const JobPosting = () => {
           : null,
       regionIds: regionIds.length > 0 ? regionIds : null,
       categoryIds: categoryIds.length > 0 ? categoryIds : null,
-      employmentType: undefined,
-      experienceLevel: undefined,
-      minSalary: undefined,
-      maxSalary: undefined,
+      employmentType: null, // ✅ 필터 값이 있으면 추가
+      experienceLevel: null, // ✅ 필터 값이 있으면 추가
+      minSalary: null, // ✅ null로 초기화
+      maxSalary: null, // ✅ null로 초기화
+      isRemote: null, // ✅ null로 초기화
       isRemote: searchParams.quickFilters?.includes("재택근무") ? true : null,
       sortBy: "latest",
       page: 0,
