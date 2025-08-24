@@ -812,16 +812,18 @@ const JobPosting = () => {
       keyword: null,
       regionIds: [],
       categoryIds: [],
-      employmentType: null, // ✅ undefined → null
-      experienceLevel: null, // ✅ undefined → null
-      minSalary: null, // ✅ undefined → null
-      maxSalary: null, // ✅ undefined → null
-      isRemote: null, // ✅ undefined → null
+      employmentType: null,
+      experienceLevel: null,
+      minSalary: null,
+      maxSalary: null,
+      isRemote: null,
       sortBy: "latest",
       page: 0,
       size: 20,
     };
+
     console.log("요청 보내기:", JSON.stringify(body, null, 2));
+
     setLoading(true);
     setError(null);
     try {
@@ -834,11 +836,13 @@ const JobPosting = () => {
       const page = await res.json();
       const list = (page.content ?? []).map(mapApiJobToUi);
 
-      //draft 상태 필터링
-      filterDraftPostings(list);
+      // ✅ 방법 1: 필터링 결과를 변수에 저장
+      const filteredList = list.filter(
+        (job) => job.status !== "DRAFT" && job.status !== "draft"
+      );
 
-      setJobs(list);
-      setFilteredJobs(list);
+      setJobs(filteredList); // ✅ 필터링된 리스트 사용
+      setFilteredJobs(filteredList); // ✅ 필터링된 리스트 사용
     } catch (e) {
       console.error("초기 데이터 로드 실패:", e);
       setJobs([]);
@@ -848,7 +852,6 @@ const JobPosting = () => {
       setLoading(false);
     }
   };
-
   // GlobalHeader에서 전달받은 검색 조건으로 검색
   const handleGlobalHeaderSearch = async (searchData) => {
     console.log("GlobalHeader 검색 데이터:", searchData);
