@@ -565,27 +565,26 @@ const JobFilters = ({ onFilterChange }) => {
 
 const getJobStatusDisplay = (job) => {
   // DEADLINE 타입이면서 마감일이 지난 경우
-  if (job.closeType === 'DEADLINE' && job.closeDate) {
+  if (job.closeType === "DEADLINE" && job.closeDate) {
     const closeDate = new Date(job.closeDate);
     if (closeDate < new Date()) {
-      return { text: '마감', className: 'status-closed' };
+      return { text: "마감", className: "status-closed" };
     }
   }
-  
+
   // 정상 상태 체크
-  switch(job.status) {
-    case 'OPEN': 
-      return { text: '채용중', className: 'status-open' };
-    case 'CLOSED': 
-    case 'EXPIRED':
-      return { text: '마감', className: 'status-closed' };
-    case 'DRAFT': 
-      return { text: '임시저장', className: 'status-draft' };
-    default: 
-      return { text: job.status, className: '' };
+  switch (job.status) {
+    case "OPEN":
+      return { text: "채용중", className: "status-open" };
+    case "CLOSED":
+    case "EXPIRED":
+      return { text: "마감", className: "status-closed" };
+    case "DRAFT":
+      return { text: "임시저장", className: "status-draft" };
+    default:
+      return { text: job.status, className: "" };
   }
 };
-
 
 // ==================== 채용공고 아이템 ====================
 const JobItem = ({ job, onBookmark, onOpen }) => {
@@ -598,23 +597,44 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
       <div className="job-item-header">
         <div className="company-section">
           <div className="company-logo-box">
-            {job.logo ?? job.companyName?.[0] ?? ""}
+            {job.logo ? (
+              <img
+                src={
+                  job.logo.startsWith("http")
+                    ? job.logo
+                    : `http://localhost:8080/api/files/view?key=${encodeURIComponent(
+                        job.logo
+                      )}`
+                }
+                alt={`${job.company} 로고`}
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                onError={(e) => {
+                  e.target.style.display = "none";
+                  e.target.parentElement.innerHTML = job.company?.[0] ?? "";
+                }}
+              />
+            ) : (
+              <span>{job.company?.[0] ?? ""}</span>
+            )}
           </div>
           <div className="company-info">
             <div className="company-name">{job.company}</div>
             <div className="job-position">
               {job.position}
-              {statusInfo.text !== '채용중' && (
-                <span className={`status-badge ${statusInfo.className}`} 
-                      style={{ 
-                        marginLeft: '8px',
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        backgroundColor: statusInfo.text === '마감' ? '#ef4444' : '#6b7280',
-                        color: 'white'
-                      }}>
+              {statusInfo.text !== "채용중" && (
+                <span
+                  className={`status-badge ${statusInfo.className}`}
+                  style={{
+                    marginLeft: "8px",
+                    padding: "2px 8px",
+                    borderRadius: "4px",
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    backgroundColor:
+                      statusInfo.text === "마감" ? "#ef4444" : "#6b7280",
+                    color: "white",
+                  }}
+                >
                   {statusInfo.text}
                 </span>
               )}
@@ -678,7 +698,7 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
       </div>
     </div>
   );
-};  
+};
 
 // ==================== 메인 페이지 ====================
 const JobPosting = () => {
@@ -710,19 +730,14 @@ const JobPosting = () => {
     logo: j.companyLogo,
     position: j.title,
     location: (j.regions ?? [])[0] ?? "",
-    experience: j.experienceLevel ?? "",
-    education: j.education ?? "",
-    employment: j.employmentType ?? "",
-    salary: j.salaryLabel ?? "",
+    experience: mapExperienceLevel(j.experienceLevel), // 경력 레벨 변환
+    education: mapEducationLevel(j.educationLevel), // 학력 변환
+    employment: mapEmploymentType(j.employmentType), // 고용형태 변환
+    salary: formatSalary(j.minSalary, j.maxSalary, j.salaryType), // 급여 포맷
     skills: j.skills ?? [],
-    status: j.status ?? "OPEN",           // 상태 추가
-  closeType: j.closeType ?? "DEADLINE", // 마감 타입 추가
-    deadline:
-      j.closeType === "상시"
-        ? "상시채용"
-        : j.closeDate
-        ? `~ ${j.closeDate.substring(0, 10)}`
-        : "",
+    status: j.status ?? "OPEN", // 상태 추가
+    closeDate: j.closeDate, // 마감일 추가
+    deadline: formatDeadline(j.closeType, j.closeDate), // 마감 표시 포맷
     views: j.viewCount ?? 0,
     applications: j.applicationCount ?? 0,
     isNew:
@@ -731,12 +746,59 @@ const JobPosting = () => {
     bookmarked: false,
   });
 
-  const filterDraftPostings = (jobList) => {
-  return jobList.filter(job => 
-    job.status !== 'DRAFT' && 
-    job.status !== 'draft'
-  );
-};
+  const mapExperienceLevel = (level) => {
+    const map = {
+      ENTRY: "신입",
+      JUNIOR: "주니어",
+      MID: "미들",
+      SENIOR: "시니어",
+      LEAD: "리드",
+      EXECUTIVE: "임원",
+    };
+    return map[level] || level || "경력무관";
+  };
+
+  const mapEducationLevel = (level) => {
+    const map = {
+      ANY: "학력무관",
+      HIGH_SCHOOL: "고졸",
+      COLLEGE: "전문대졸",
+      UNIVERSITY: "대졸",
+      MASTER: "석사",
+      PHD: "박사",
+    };
+    return map[level] || level || "학력무관";
+  };
+
+  const mapEmploymentType = (type) => {
+    const map = {
+      FULLTIME: "정규직",
+      CONTRACT: "계약직",
+      INTERN: "인턴",
+      PARTTIME: "파트타임",
+      FREELANCE: "프리랜서",
+    };
+    return map[type] || type || "정규직";
+  };
+
+  const formatSalary = (min, max, type) => {
+    if (!min && !max) return "회사내규";
+    if (type === "NEGOTIABLE") return "면접 후 협의";
+
+    const formatNum = (n) => Math.floor(n / 10000);
+    if (min && max) return `${formatNum(min)}~${formatNum(max)}만원`;
+    if (min) return `${formatNum(min)}만원 이상`;
+    if (max) return `~${formatNum(max)}만원`;
+    return "회사내규";
+  };
+
+  const formatDeadline = (closeType, closeDate) => {
+    if (closeType === "CONTINUOUS") return "상시채용";
+    if (closeType === "UNTIL_FILLED") return "충원시까지";
+    if (closeDate) return `~ ${closeDate.substring(0, 10)}`;
+    return "";
+  };
+
   // 초기 로드 함수
   const handleInitialLoad = async () => {
     const body = {
@@ -877,7 +939,7 @@ const JobPosting = () => {
       const page = await res.json();
       const list = (page.content ?? []).map(mapApiJobToUi);
 
-      const filterDraftPostings= filterDraftPostings(list);
+      const filterDraftPostings = filterDraftPostings(list);
       setJobs(list);
       setFilteredJobs(list);
     } catch (e) {
