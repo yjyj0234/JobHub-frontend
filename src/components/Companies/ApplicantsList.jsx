@@ -106,47 +106,71 @@ const ApplicantsList = () => {
     };
   }, [companyId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (!selectedPostingId) {
-      setApplicants([]);
-      return;
-    }
-    let alive = true;
-    setError("");
-    setLoading(true);
-    (async () => {
-      try {
-        // 특정 공고의 지원자 목록
-        const res = await axios.get("/api/applications", {
-          params: { postingId: selectedPostingId },
-          withCredentials: true,
-          validateStatus: (s) => s >= 200 && s < 300,
-        });
-        const list = res.data?.items ?? res.data?.applications ?? res.data ?? [];
-        const normalized = list.map((a) => ({
-          id: String(a.id ?? a.applicationId ?? ""),
-          applicantName: a.applicantName ?? a.userName ?? a.name ?? "이름 없음",
-          applicantEmail: a.applicantEmail ?? a.email ?? "-",
-          resumeTitle: a.resumeTitle ?? a.resume?.title ?? "-",
-          resumeUrl: a.resumeUrl ?? a.resume?.fileUrl ?? null,
+useEffect(() => {
+  if (!selectedPostingId) {
+    setApplicants([]);
+    return;
+  }
+  let alive = true;
+  setError("");
+  setLoading(true);
+  (async () => {
+    try {
+      const res = await axios.get("/api/applications", {
+        params: { postingId: selectedPostingId },
+        withCredentials: true,
+        validateStatus: (s) => s >= 200 && s < 300,
+      });
+
+      // 구조 파악용 — 개발 중 잠깐 켜두면 좋아요
+      console.log("[applications] raw response:", res.data);
+
+      const list = res.data?.items ?? res.data?.applications ?? res.data ?? [];
+
+      const normalized = list.map((a) => {
+        const user = a.user ?? a.applicant ?? {};
+        const resume = a.resume ?? {};
+
+        // snake_case 대응
+        const snake = (k) =>
+          a[k] ??
+          a[k.replace(/[A-Z]/g, (m) => "_" + m.toLowerCase())] ??
+          resume[k] ??
+          resume[k?.replace?.(/[A-Z]/g, (m) => "_" + m.toLowerCase())] ??
+          user[k] ??
+          user[k?.replace?.(/[A-Z]/g, (m) => "_" + m.toLowerCase())];
+
+        return {
+          id: String(a.id ?? a.applicationId ?? snake("applicationId") ?? snake("application_id") ?? ""),
+          applicantName:
+            a.applicantName ?? a.userName ?? a.name ?? user.name ?? snake("applicantName") ?? snake("applicant_name") ?? "이름 없음",
+          applicantEmail:
+            a.applicantEmail ?? a.email ?? user.email ?? snake("applicantEmail") ?? snake("applicant_email") ?? "-",
+          resumeId: a.resumeId ?? resume.id ?? snake("resumeId") ?? snake("resume_id") ?? null,
+          resumeTitle: a.resumeTitle ?? resume.title ?? snake("resumeTitle") ?? snake("resume_title") ?? "-",
+          resumeFileKey: a.resumeFileKey ?? resume.fileKey ?? snake("resumeFileKey") ?? snake("resume_file_key") ?? null,
+          resumeUrl: a.resumeUrl ?? resume.fileUrl ?? resume.url ?? snake("resumeUrl") ?? snake("resume_url") ?? null,
           status: a.status ?? "APPLIED",
-          appliedAt: a.appliedAt ?? a.createdAt ?? null,
-          viewedAt: a.viewedAt ?? null,
-        }));
-        if (!alive) return;
-        setApplicants(normalized);
-      } catch (e) {
-        console.error(e);
-        if (!alive) return;
-        setError("지원자 목록을 불러오는 중 오류가 발생했습니다.");
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [selectedPostingId]);
+          appliedAt: a.appliedAt ?? a.createdAt ?? snake("appliedAt") ?? snake("applied_at") ?? null,
+          viewedAt: a.viewedAt ?? a.viewdAt ?? null,
+        };
+      });
+
+      if (!alive) return;
+      setApplicants(normalized);
+    } catch (e) {
+      console.error(e);
+      if (!alive) return;
+      setError("지원자 목록을 불러오는 중 오류가 발생했습니다.");
+    } finally {
+      if (alive) setLoading(false);
+    }
+  })();
+
+  return () => {
+    alive = false;
+  };
+}, [selectedPostingId]);
 
   const handleOpenResume = async (application) => {
     try {
@@ -230,10 +254,9 @@ const ApplicantsList = () => {
                   <th style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid #eee" }}>이름</th>
                   <th style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid #eee" }}>이메일</th>
                   <th style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid #eee" }}>이력서</th>
-                  <th style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid #eee" }}>상태</th>
                   <th style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid #eee" }}>지원일</th>
                   <th style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid #eee" }}>열람일</th>
-                  <th style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid #eee" }}>액션</th>
+                  <th style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid #eee" }}>상태</th>
                 </tr>
               </thead>
               <tbody>
@@ -242,36 +265,38 @@ const ApplicantsList = () => {
                     <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3" }}>{a.applicantName}</td>
                     <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3" }}>{a.applicantEmail}</td>
                     <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3" }}>
-                      {a.resumeUrl ? (
-                        <button
-                          type="button"
-                          onClick={() => handleOpenResume(a)}
-                          style={{ all: "unset", cursor: "pointer", color: "#2563eb", textDecoration: "underline" }}
-                          title="이력서 보기 (열람 처리됨)"
-                        >
-                          {a.resumeTitle || "이력서 보기"}
-                        </button>
+                                {a.resumeTitle ? (
+                        <>
+                          {/* 제목 자체를 클릭해서 열람 */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenResume(a)}
+                            style={{ all: "unset", cursor: "pointer", color: "#2563eb", textDecoration: "underline" }}
+                            title="이력서 미리보기 (열람 처리됨)"
+                          >
+                            {a.resumeTitle}
+                          </button>
+                        </>
                       ) : (
-                        <span style={{ color: "#777" }}>이력서 없음</span>
+                        <span style={{ color: "#777" }}>제목 없음</span>
                       )}
                     </td>
                     <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3" }}>
-                      <select value={a.status} onChange={(e) => handleStatusChange(a, e.target.value)}>
-                        {STATUS_OPTIONS.map((s) => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                      </select>
+                                          {formatDate(a.appliedAt)}
+
                     </td>
                     <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3" }}>
-                      {formatDate(a.appliedAt)}
+                      {/* 열람일 */}
                     </td>
                     <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3" }}>
                       {a.viewedAt ? formatDate(a.viewedAt) : "-"}
                     </td>
                     <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3" }}>
-                      {/* 확장용 액션 자리 */}
+                      <select value={a.status} onChange={(e) => handleStatusChange(a, e.target.value)}>
+                        {STATUS_OPTIONS.map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
                     </td>
                   </tr>
                 ))}
