@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../css/Service.css'; 
 import { Search, ChevronDown, ChevronUp, Phone, MessageSquare, Building } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 
@@ -104,7 +105,7 @@ function Service() {
                 <Building size={32} />
                 <h3>공지사항</h3>
                 <p>JobHub의 새로운 소식과 업데이트를 확인하세요.</p>
-                <button className="service-button secondary">바로가기</button>
+                <Link to="/notices" className="service-button secondary">바로가기</Link>
               </div>
             </div>
           </div>

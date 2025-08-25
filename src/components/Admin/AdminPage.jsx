@@ -24,18 +24,20 @@ const AdminPage = () => {
           </div>
         </Link>
 
+        <Link to="/admin/notices" className="admin-menu-item-link">
+          <div className="admin-menu-item">
+            <Megaphone size={32} />
+            <h3>공지사항 관리</h3>
+            <p>서비스 공지사항을 작성하고 관리합니다.</p>
+            <div className="admin-button">관리하기</div>
+          </div>
+        </Link>
+
         {/* 나머지 항목들은 그대로 둡니다. */}
         <div className="admin-menu-item">
           <MessageSquare size={32} />
           <h3>1:1 문의 관리</h3>
           <p>사용자들의 1:1 문의에 답변합니다.</p>
-          <button className="admin-button">관리하기</button>
-        </div>
-
-        <div className="admin-menu-item">
-          <Megaphone size={32} />
-          <h3>공지사항 관리</h3>
-          <p>서비스 공지사항을 작성하고 관리합니다.</p>
           <button className="admin-button">관리하기</button>
         </div>
       </div>

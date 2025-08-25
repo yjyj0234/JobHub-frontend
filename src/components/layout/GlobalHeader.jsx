@@ -1,12 +1,12 @@
-// src/components/layout/GlobalHeader.jsx
-
 import React, { useState, useEffect, useRef } from "react";
 import "../css/GlobalHeader.css";
 import logo from "../../assets/img/logo4.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { Search, MapPin, Briefcase, ChevronDown, Info } from "lucide-react";
+import { Search, MapPin, Briefcase, ChevronDown, Info, Bell } from "lucide-react";
 import axios from "axios";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client/dist/sockjs.js";
 
 const API_BASE_URL = "http://localhost:8080/api";
 axios.defaults.withCredentials = true;
@@ -133,13 +133,112 @@ const DropdownPanel = ({
   );
 };
 
+// ## 최종 수정된 공지사항 컴포넌트 ##
+const AnnouncementFeature = () => {
+  const navigate = useNavigate();
+  const [announcements, setAnnouncements] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hasNew, setHasNew] = useState(false);
+  const stompRef = useRef(null);
+  const containerRef = useRef(null);
+  
+  const latestAnnouncement = announcements?.[0];
+
+  useEffect(() => {
+    const fetchInitialAnnouncements = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/announcements/latest`);
+        setAnnouncements(response.data || []);
+      } catch (error) {
+        console.error("초기 공지사항 로드 실패:", error);
+      }
+    };
+    fetchInitialAnnouncements();
+
+    const client = new Client({
+      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      reconnectDelay: 5000,
+      onConnect: () => {
+        client.subscribe("/topic/announcements", (message) => {
+          try {
+            const newAnnouncement = JSON.parse(message.body);
+            setAnnouncements(prev => [newAnnouncement, ...prev].slice(0, 10));
+            if (!isModalOpen) setHasNew(true);
+          } catch (e) {
+            console.error("공지 메시지 파싱 오류:", e);
+          }
+        });
+      },
+    });
+
+    client.activate();
+    stompRef.current = client;
+
+    return () => {
+      if (stompRef.current) stompRef.current.deactivate();
+    };
+  }, [isModalOpen]);
+  
+  useOnClickOutside(containerRef, () => setIsModalOpen(false));
+
+  const toggleModal = () => {
+    setIsModalOpen(prev => !prev);
+    if (!isModalOpen) setHasNew(false);
+  };
+  
+  const handleNoticeClick = () => {
+      navigate('/notices');
+      setIsModalOpen(false);
+  };
+
+  return (
+    <div className="announcement-container" ref={containerRef}>
+      <button onClick={toggleModal} className="announcement-button" aria-label="공지사항">
+        <Bell size={20} />
+        {hasNew && <span className="new-badge"></span>}
+        {latestAnnouncement && (
+            <div className="announcement-text-wrapper">
+                <p key={latestAnnouncement.id}>{latestAnnouncement.title}</p>
+            </div>
+        )}
+      </button>
+
+      {isModalOpen && (
+        <div className="announcement-modal">
+          <div className="modal-header">
+            <h3>새로운 소식</h3>
+          </div>
+          <div className="modal-body">
+            {announcements.length > 0 ? (
+              <ul>
+                {announcements.map((item) => (
+                  <li key={item.id} onClick={handleNoticeClick}>
+                    <span className="announcement-title">{item.title}</span>
+                    <span className="announcement-date">{new Date(item.createdAt).toLocaleDateString()}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="no-announcements">새로운 공지사항이 없습니다.</p>
+            )}
+          </div>
+          <div className="modal-footer">
+            <button onClick={handleNoticeClick}>전체 공지 보기</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 function GlobalHeader({ onLoginClick }) {
   const { isAuthed, user, logout } = useAuth();
   const navigate = useNavigate();
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [scrolledSearchExpanded, setScrolledSearchExpanded] = useState(false); // 스크롤 시 검색창 확장 상태
+  const [scrolledSearchExpanded, setScrolledSearchExpanded] = useState(false);
   const [isRegionOpen, setRegionOpen] = useState(false);
   const [isJobOpen, setJobOpen] = useState(false);
 
@@ -148,7 +247,6 @@ function GlobalHeader({ onLoginClick }) {
   const [selectedJobs, setSelectedJobs] = useState([]);
   const [regionTree, setRegionTree] = useState([]);
   const [jobCategoryTree, setJobCategoryTree] = useState([]);
-  const [loading, setLoading] = useState(false);
 
   const searchContainerRef = useRef(null);
   const isAdmin = isAuthed && user?.role === "ADMIN";
@@ -156,16 +254,16 @@ function GlobalHeader({ onLoginClick }) {
   useOnClickOutside(searchContainerRef, () => {
     setRegionOpen(false);
     setJobOpen(false);
-    setScrolledSearchExpanded(false); // 외부 클릭 시 스크롤 검색창 닫기
+    setScrolledSearchExpanded(false);
   });
 
   useEffect(() => {
     const handleScroll = () => {
       const shouldBeScrolled = window.scrollY > 0;
       if (!shouldBeScrolled) {
-        setScrolledSearchExpanded(false); // 스크롤 올리면 닫기
+        setScrolledSearchExpanded(false);
       }
-      setIsScrolled((prev) => (prev === shouldBeScrolled ? prev : shouldBeScrolled));
+      setIsScrolled(shouldBeScrolled);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
@@ -173,7 +271,6 @@ function GlobalHeader({ onLoginClick }) {
 
   useEffect(() => {
     const loadInitialData = async () => {
-      setLoading(true);
       try {
         const [regionsRes, jobsRes] = await Promise.all([
           axios.get(`${API_BASE_URL}/search/regions/tree`),
@@ -183,8 +280,6 @@ function GlobalHeader({ onLoginClick }) {
         setJobCategoryTree(jobsRes.data.categories || []);
       } catch (error) {
         console.error("데이터 로드 실패:", error);
-      } finally {
-        setLoading(false);
       }
     };
     loadInitialData();
@@ -193,8 +288,8 @@ function GlobalHeader({ onLoginClick }) {
   const handleSearch = () => {
     const searchData = {
       keyword: searchKeyword || null,
-      regionIds: selectedRegions?.length > 0 ? selectedRegions : null,
-      categoryIds: selectedJobs?.length > 0 ? selectedJobs : null,
+      regionIds: selectedRegions.length > 0 ? selectedRegions : null,
+      categoryIds: selectedJobs.length > 0 ? selectedJobs : null,
     };
     navigate("/jobpostinglist", { state: { searchData } });
     setIsExpanded(false);
@@ -222,42 +317,8 @@ function GlobalHeader({ onLoginClick }) {
     setRegionOpen(false);
   };
 
-  
-
   const showSearchContainer = !isScrolled || scrolledSearchExpanded;
-
-
-  const renderDropdownPanels = () => (
-    <>
-      {isRegionOpen && (
-        <DropdownPanel
-          dataTree={regionTree}
-          selectedIds={selectedRegions}
-          onSelect={setSelectedRegions}
-          onClose={() => setRegionOpen(false)}
-          type="region"
-        />
-      )}
-      {isJobOpen && (
-        <DropdownPanel
-          dataTree={jobCategoryTree}
-          selectedIds={selectedJobs}
-          onSelect={setSelectedJobs}
-          onClose={() => setJobOpen(false)}
-          type="job"
-        />
-      )}
-    </>
-  );
-
-  //회사 계정일 시 공고등록버튼만 보이고 이력서 버튼은 안보이게
-  const isCompanyUser = (u) => {
-    const t = (u?.user_type ?? u?.userType ?? "").toString().toLowerCase();
-    return (
-      t === "company" || t === "company_hr" || t === "employer" || t === "hr"
-    );
-  };
-  const isCompany = isAuthed && isCompanyUser(user);
+  const isCompany = isAuthed && user?.userType?.toUpperCase() === 'COMPANY';
 
   return (
     <header className={`global-header ${isScrolled ? "scrolled" : ""} ${scrolledSearchExpanded ? "search-expanded" : ""}`}>
@@ -275,9 +336,10 @@ function GlobalHeader({ onLoginClick }) {
               <button type="button" onClick={handleResumeClick}>이력서</button>
             )}
             <button type="button">취업툴</button>
-            <button type="button">이력서 코칭 AI</button>
+            <button type="button" onClick={() => navigate("/coaching-ai")}>이력서 코칭 AI</button>
             {isAdmin && (<button type="button" onClick={() => navigate("/admin")}>관리자</button>)}
           </nav>
+
           <div className="top-right-section">
             {isScrolled && !scrolledSearchExpanded && (
               <div className="scrolled-triggers">
@@ -286,6 +348,7 @@ function GlobalHeader({ onLoginClick }) {
                 </button>
               </div>
             )}
+            <AnnouncementFeature />
             <div className="auth-buttons">
               {isAuthed ? (
                 <button type="button" onClick={handleLogout} className="cta-button logout">로그아웃</button>
@@ -294,6 +357,7 @@ function GlobalHeader({ onLoginClick }) {
               )}
             </div>
           </div>
+
         </div>
 
         {showSearchContainer && (
