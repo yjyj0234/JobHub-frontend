@@ -47,7 +47,8 @@ const stripHtml = (html) => {
 };
 
 const PostList = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(''); //입력중인 값
+  const [committedSearchTerm, setCommittedSearchTerm] = useState(''); // 실제 검색어
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState('');
@@ -61,7 +62,7 @@ const PostList = () => {
     setErrMsg('');
 
     axios.get('http://localhost:8080/community/list', {
-      withCredentials: false,                        // 쿠키 미전송
+      withCredentials: true,                        // 쿠키 미전송
       headers: { Authorization: undefined },         // 인터셉터 무력화
       signal: controller.signal                      // 언마운트 시 취소
     })
@@ -80,22 +81,36 @@ const PostList = () => {
     return () => controller.abort();
   }, []);
 
-  // 검색어 바뀌면 목록을 다시 6개부터 보여주자
+  // 검색어 바뀌면 목록을 다시 6개부터 보여주기
   useEffect(() => {
     setVisibleCount(6);
   }, [searchTerm]);
 
-  const lower = (v) => (v ?? '').toString().toLowerCase();
+  
 
+  // 검색 실행 함수
+const handleSearch = (e) => {
+  if (e.key === 'Enter') {
+    setCommittedSearchTerm(searchTerm.trim());
+    setSearchTerm('');
+  }
+  else if (e.type === 'click') {
+    setCommittedSearchTerm(searchTerm.trim());
+    setSearchTerm('');
+  }
+  
+};
+
+//검색함수에 Enter 키 이벤트 추가
   const filteredPosts = useMemo(() => {
-    const q = lower(searchTerm.trim());
-    if (!q) return posts;
-    return posts.filter(p =>
-      lower(p.title).includes(q) ||
-      lower(p.content).includes(q) ||
-      lower(p.userName).includes(q)
-    );
-  }, [posts, searchTerm]);
+  const q = (committedSearchTerm ?? '').toLowerCase();
+  if (!q) return posts;
+  return posts.filter(p =>
+    (p.title ?? '').toLowerCase().includes(q) ||
+    (p.content ?? '').toLowerCase().includes(q) ||
+    (p.userName ?? '').toLowerCase().includes(q)
+  );
+}, [posts, committedSearchTerm]);
 
   // 목록 축소(검색 등)로 길이가 줄면 visibleCount도 보정
  useEffect(() => {
@@ -134,8 +149,8 @@ const PostList = () => {
         <section className="pl-popular" aria-label="인기글 추천">
           <div className="pl-popular-head">
             <h2 className="pl-popular-title">조회수가 많은 글이에요</h2>
-            <p><button type="button" onClick={addPost}>글 등록하기</button></p>
-            <p><button type="button" onClick={goGroupChat}>그룹 채팅방</button></p>
+            <p><button type="button" className='pl-addbtn' onClick={addPost}>글 등록하기</button></p>
+            <p><button type="button" className='group-chat-btn' onClick={goGroupChat}>그룹 채팅방</button></p>
           </div>
 
           <div className="pl-popular-grid">
@@ -168,8 +183,10 @@ const PostList = () => {
               placeholder="검색어를 입력하세요"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={handleSearch}
               aria-label="게시글 검색"
             />
+             <button type='button' className='pl-search-btn' onClick={handleSearch}>검색</button>
           </div>
         </header>
 
@@ -192,7 +209,10 @@ const PostList = () => {
                   <p className="pl-card-preview">{stripHtml(post.content)}</p>
                   <div className="pl-card-footer">
                     <div className="pl-card-meta">
-                      <span className="pl-meta-author">{post.userName ?? '탈퇴회원'}</span>
+                      <span className="pl-meta-author">{post.userName ?? '탈퇴회원'}
+                        <span style={{color:'blue'}}>{post.owner ? '(본인) ' : ''}</span>
+                      </span>
+                      
                       <span className="pl-meta-sep" aria-hidden="true">·</span>
                       <time className="pl-meta-date" dateTime={toDateTimeAttr(post.createdAt)}>
                         {formatDate(post.createdAt)}

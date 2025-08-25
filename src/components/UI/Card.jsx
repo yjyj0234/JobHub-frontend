@@ -1,5 +1,5 @@
-import React from 'react';
-import '../css/Card.css';
+import React from "react";
+import "../css/Card.css";
 
 function Card({ data }) {
   return (
@@ -17,7 +17,11 @@ function Card({ data }) {
           <div className="card-details">
             <h4>요구 기술</h4>
             <div className="skills">
-              {data.skills.map((skill) => (<span key={skill} className="skill-tag">{skill}</span>))}
+              {data.skills.map((skill) => (
+                <span key={skill} className="skill-tag">
+                  {skill}
+                </span>
+              ))}
             </div>
             <h4>원하는 인재상</h4>
             <p>{data.talent}</p>

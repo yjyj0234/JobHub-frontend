@@ -3,6 +3,8 @@
   background-color: var(--c-bg-light);
   min-height: 100vh;
   padding-bottom: 40px;
+  background-color: white;
+  border: 1px solid rgb(241, 236, 236);
 }
 
 .detail-header {
@@ -78,6 +80,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-top: 4px;
 }
 .company-line .company-name {
   font-size: 15px;
@@ -94,10 +97,11 @@
   font-weight: 700;
 }
 
-/* === Meta Row (라벨 포함, 연봉까지 5개 항목) === */
+
 .meta-row {
-  display: flex;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2칸 고정 */
+  gap: 12px;
   flex-wrap: wrap;
   opacity: .95;
   padding: 16px 20px;
@@ -109,24 +113,25 @@
 
 }
 .meta {
-  display: inline-flex;
+  box-sizing: border-box;
+  padding: 8px 10px;        /* 패딩 축소 */
+  font-size: 14px;          /* 폰트 축소 */
+  line-height: 1.3;
+  min-width: 0;             /* ← 기존 200px 최소폭 무력화 (핵심) */
+  max-width: 100%;
+  white-space: nowrap;      /* 한 줄로 */
+  overflow: hidden;         /* 넘치면 숨김 */
+  text-overflow: ellipsis;  /* … 처리 */
+  display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  font-weight: 700;
-  background: transparent;          /* 흰 배경 위에서 칩 배경 제거 */
-  border: 1px solid #e5e7eb;        /* 경계선만 가볍게 */
-  border-radius: 10px;
-  padding: 10px 14px;
-  color: var(--c-text, #111);       /* 글자 검정 */
-  flex: 1;
-  min-width: 200px;
-  justify-content: center;
+  gap: 6px;
+  float: left; /* ← 추가: 왼쪽 정렬 */
+
 }
 .meta svg { margin-right: 4px; }
 
 /* 항목별 라벨(연봉, 근무지역, 근무형태, 경력, 학력) */
-.meta-row .meta:nth-child(1)::before { content: "연봉  "; }
+.meta-row .meta:nth-child(1)::before { content: "급여  "; }
 .meta-row .meta:nth-child(2)::before { content: "근무지역  "; }
 .meta-row .meta:nth-child(3)::before { content: "근무형태  "; }
 .meta-row .meta:nth-child(4)::before { content: "경력  "; }
@@ -142,15 +147,15 @@
 
 .apply-button {
   background :#ff5656;
-  color: white;
-  border: 1px solid;
+  color: white;  
   border-radius: 2px;
   padding: 12px 18px;
   font-weight: 800;
   box-shadow: 0 8px 20px rgba(78, 134, 218, 0.30);
   transition: transform .12s ease, filter .2s ease, box-shadow .2s ease;
   width: 200px;
-  height: 60px;
+  height: 50px;
+  position: relative;
 }
 .apply-button:hover {
   transform: translateY(-1px);
@@ -159,6 +164,23 @@
 }
 .apply-button.wide { width: 100%; justify-content: center; display: inline-flex; }
 
+.apply-button[data-deadline]:not([data-deadline=""])::after {
+  content: attr(data-deadline);
+  position: absolute;
+  top: -10px;           /* 버튼 위로 살짝 */
+  right: -6px;          /* 오른쪽 모서리 겹치게 */
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  background: #e23b3b;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.18);
+  pointer-events: none;
+  z-index: 2;
+}
 .detail-body {
   max-width: 1200px;
   margin: 0 auto;
@@ -166,15 +188,16 @@
   display: grid;
   grid-template-columns: 1fr;   /* ← 여기만 1열로 */
   gap: 24px;
+  background-color: white;
 }
 .detail-body:has(.side-col) {
   grid-template-columns: 1fr 320px;
 }
 .card {
-  background: #fff;
-  border: 1px solid var(--c-border);
-  border-radius: 14px;
-  box-shadow: 0 6px 24px rgba(17, 24, 39, 0.06);
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 .section { padding: 22px 22px; }
 
@@ -299,4 +322,279 @@
    margin-left: auto;              /* 보조: space-between과 함께 쓰면 끝에 고정 */
   display: flex;
   align-items: center;
+}
+.detail-body .section hr {
+  border: 0;
+  height: 1px;
+  background: #eaecef;  /* 더 연하게는 #eff2f5 정도 */
+  margin: 12px 0 16px;
+}
+/* 제목 오른쪽에 붉은 문구 */
+.title-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.title-closed {
+  font-size: 14px;
+  font-weight: 800;
+  color: #e23b3b;           /* 붉은색 */
+  background: #fff;
+  border: 1px solid rgba(226, 59, 59, 0.35);
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+/* 비활성 버튼 스타일 */
+.apply-button:disabled {
+  background: #d1d5db !important;   /* 회색 */
+  border-color: #d1d5db !important;
+  color: #6b7280 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.apply-button:disabled:hover {
+  filter: none !important;
+  box-shadow: none !important;
+}
+
+/* 배지( D-n )는 비활성일 땐 숨김 */
+.apply-button:disabled::after {
+  content: none !important;
+}
+/* 상단/하단 CTA 컨테이너 간격 */
+.title-cta,
+.cta-area {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* 버튼과 별 사이 간격 */
+}
+
+/* 즐겨찾기 별 버튼 */
+.fav-toggle {
+  width: 80px;
+  height: 60px;
+  background: transparent !important;   /* ← 배경 원래대로(투명) */
+  border: 0 !important;                 /* ← 테두리 제거 */
+  box-shadow: none !important;
+  color: #ffffff;                        /* 기본 회색 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color .15s ease, transform .12s ease;
+}
+.fav-toggle svg {
+  width: 40px;
+  height: 40px;
+  stroke-width: 1.9;
+  fill: transparent;   /* 비활성/기본은 속이 비어있음 */
+}
+/* hover/focus 시 노란색 강조 */
+.fav-toggle:hover,
+.fav-toggle:focus-visible {
+  color: #fbbf24;      /* 밝은 노랑 */
+  outline: none;
+  transform: translateY(-1px);
+}
+/* 활성화(즐겨찾기됨): 진한 노란색 + 내부 채우기 */
+.fav-toggle[data-active="true"] {
+  color: #f59e0b;      /* 진한 노랑 */
+}
+.fav-toggle[data-active="true"] svg {
+  fill: currentColor;  /* 내부 채움 */
+  stroke: currentColor;
+}
+/* 하단의 넓은 CTA에서도 동일하게 보이도록 높이 조절(선택) */
+.cta-area .fav-toggle { height: 60px; }
+
+/* 공고 마감으로 apply-button 비활성이어도 별은 그대로 눌릴 수 있게 */
+.apply-button:disabled + .fav-toggle,
+.fav-toggle:disabled {
+  cursor: not-allowed;
+}
+
+.cta-box { display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
+.apply-button.half-left { width:50%; margin-top:8px; }
+
+/* CTA 하단 줄: 버튼(좌) + 지원자수(우) */
+/* CTA 하단 줄: 버튼 박스(좌) + 지원자수 박스(우) */
+.cta-row {
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+/* 공통 타일(카드) 스타일 */
+.cta-tile {
+  flex: 1 1 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  /* 💡 부드러운 그림자 */
+  box-shadow: 0 8px 22px rgba(17, 24, 39, 0.08);
+  transition: transform .12s ease, box-shadow .2s ease, filter .2s ease;
+}
+
+.cta-tile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.12);
+}
+
+/* 버튼이 카드 안에서 꽉 차도록 */
+.cta-tile .apply-button {
+  width: 100%;
+}
+
+/* 지원자수 카드 내부 타이포 */
+.cta-tile-stats {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  text-align: left;
+}
+
+.cta-tile-stats .stats-title {
+  font-size: 13px;
+  color: #6b7280; /* 회색 */
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+.cta-tile-stats .stats-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--c-text, #111);
+  line-height: 1.1;
+}
+
+/* 모바일에선 세로 스택 */
+@media (max-width: 640px) {
+  .cta-row {
+    flex-direction: column;
+  }
+}
+
+/* 라벨+값 한 줄 */
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+}
+
+/* 칩(Chip) 라벨: 페이지 톤에 맞춘 하얀 배경 + 테두리 + 라운드 */
+.field-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--c-text, #111);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  white-space: nowrap;
+  letter-spacing: .2px;
+}
+
+.field-chip-info {
+  border-color: #bfdbfe;   /* 연한 파랑 테두리 */
+  background: #eff6ff;     /* 아주 옅은 파랑 배경 */
+  color: #1d4ed8;          /* 파랑 텍스트 */
+}
+
+/* 빨간 칩 (마감일) — 기존 .field-chip-danger가 있다면 이걸로 덮어쓰기 */
+.field-chip-danger {
+  border-color: #fca5a5;   /* 연한 빨강 테두리 */
+  background: #fef2f2;     /* 아주 옅은 빨강 배경 */
+  color: #b91c1c;          /* 빨강 텍스트 */
+}
+/* 값 텍스트 */
+.field-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-text, #111);
+}
+
+/* 마감된 경우 값 색상만 붉게 */
+.field-value.time-left[data-closed="1"] {
+  color: #e23b3b;
+}
+
+/* 모바일 간격 다듬기 */
+@media (max-width: 640px) {
+  .field-row { margin: 4px 0; }
+}
+/* 남은시간 전용: 가운데 정렬 + 간격 조금 띄우기 */
+.field-row.time-left-row {
+  flex-direction: column;   /* 라벨 위, 값 아래 */
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* 남은시간 숫자 강조 */
+.field-row.time-left-row .field-value.time-left {
+  font-size: 22px;          /* 더 크게 */
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  margin-top: 2px;          /* 라벨과 숫자 간격 살짝 */
+  color: #1d4ed8;
+}
+
+/* (선택) 마감 상태면 흐리게 */
+.field-row.time-left-row .field-value.time-left[data-closed="1"] {
+  color: #9ca3af;
+}
+
+/* (선택) 모바일에서 살짝만 줄이기 */
+@media (max-width: 640px) {
+  .field-row.time-left-row .field-value.time-left {
+    font-size: 20px;
+  }
+}
+
+/* 지원자 수 카드 전체 가운데 정렬 */
+.cta-tile.cta-tile-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;     /* 가로 가운데 */
+  justify-content: center; /* 세로 가운데 */
+  text-align: center;
+  min-height: 160px;       /* 필요한 만큼 높이 확보 (원하는 값으로 조절) */
+}
+
+/* 제목과 숫자 간 간격 */
+.cta-tile-stats .stats-title {
+  margin-bottom: 8px;
+}
+
+/* 숫자/단위 한 줄 정렬 + 가운데 정렬 */
+.cta-tile-stats .stats-line {
+  display: flex;
+  align-items: baseline;   /* 숫자와 '명' 기준선 맞추기 */
+  justify-content: center; /* 가로 가운데 */
+  gap: 6px;                /* 숫자와 단위 간격 */
+}
+
+/* 숫자 크게 */
+.cta-tile-stats .stats-number {
+  font-size: 32px;         /* 더 키우고 싶으면 36~48px 등으로 조절 */
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* 단위는 약간 작게 */
+.cta-tile-stats .stats-unit {
+  font-size: 16px;
+  font-weight: 700;
+  opacity: 0.85;
 }

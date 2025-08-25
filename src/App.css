@@ -1,12 +1,12 @@
 /* src/App.css */
 :root {
-  --font-main: 'Pretendard', sans-serif;
+  --font-main: "Pretendard", sans-serif;
   --c-accent: #4e86da;
-  --c-accent-light: #FFE5E5;
-  --c-text: #4A4A4A;
+  --c-accent-light: #ffe5e5;
+  --c-text: #4a4a4a;
   --c-subtext: #888888;
-  --c-bg: #FFFFFF;
-  --c-border: #F0F0F0;
+  --c-bg: #ffffff;
+  --c-border: #f0f0f0;
   --c-bg-light: #f7f7f7;
 }
 
@@ -17,7 +17,8 @@ body {
   color: var(--c-text);
 }
 
-button, input {
+button,
+input {
   font-family: var(--font-main);
   border: none;
   outline: none;
@@ -25,15 +26,21 @@ button, input {
   color: inherit;
 }
 
-button { 
-  cursor: pointer; 
+button {
+  cursor: pointer;
 }
 
-a { 
-  text-decoration: none; 
-  color: inherit; 
+a {
+  text-decoration: none;
+  color: inherit;
 }
 
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
 
 
 body.body-no-scroll {
@@ -49,3 +56,4 @@ body.body-no-scroll {
 .main-content {
   flex: 1;
 }
+

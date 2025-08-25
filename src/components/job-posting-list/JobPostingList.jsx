@@ -563,78 +563,122 @@ const JobFilters = ({ onFilterChange }) => {
   );
 };
 
+const getJobStatusDisplay = (job) => {
+  // DEADLINE 타입이면서 마감일이 지난 경우
+  if (job.closeType === 'DEADLINE' && job.closeDate) {
+    const closeDate = new Date(job.closeDate);
+    if (closeDate < new Date()) {
+      return { text: '마감', className: 'status-closed' };
+    }
+  }
+  
+  // 정상 상태 체크
+  switch(job.status) {
+    case 'OPEN': 
+      return { text: '채용중', className: 'status-open' };
+    case 'CLOSED': 
+    case 'EXPIRED':
+      return { text: '마감', className: 'status-closed' };
+    case 'DRAFT': 
+      return { text: '임시저장', className: 'status-draft' };
+    default: 
+      return { text: job.status, className: '' };
+  }
+};
+
+
 // ==================== 채용공고 아이템 ====================
-const JobItem = ({ job, onBookmark, onOpen }) => (
-  <div className="job-item" onClick={onOpen}>
-    <div className="job-item-header">
-      <div className="company-section">
-        <div className="company-logo-box">
-          {job.logo ?? job.companyName?.[0] ?? ""}
-        </div>
-        <div className="company-info">
-          <div className="company-name">{job.company}</div>
-          <div className="job-position">
-            {job.position}
-            {job.isNew && <span className="new-label">NEW</span>}
+const JobItem = ({ job, onBookmark, onOpen }) => {
+  // ✅ 중괄호 사용하고 변수 선언
+  const statusInfo = getJobStatusDisplay(job);
+
+  // ✅ return 문 추가
+  return (
+    <div className="job-item" onClick={onOpen}>
+      <div className="job-item-header">
+        <div className="company-section">
+          <div className="company-logo-box">
+            {job.logo ?? job.companyName?.[0] ?? ""}
+          </div>
+          <div className="company-info">
+            <div className="company-name">{job.company}</div>
+            <div className="job-position">
+              {job.position}
+              {statusInfo.text !== '채용중' && (
+                <span className={`status-badge ${statusInfo.className}`} 
+                      style={{ 
+                        marginLeft: '8px',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        backgroundColor: statusInfo.text === '마감' ? '#ef4444' : '#6b7280',
+                        color: 'white'
+                      }}>
+                  {statusInfo.text}
+                </span>
+              )}
+              {job.isNew && <span className="new-label">NEW</span>}
+            </div>
           </div>
         </div>
+        <button
+          className={`bookmark-button ${job.bookmarked ? "active" : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onBookmark(job.id);
+          }}
+        >
+          <Star size={24} fill={job.bookmarked ? "currentColor" : "none"} />
+        </button>
       </div>
-      <button
-        className={`bookmark-button ${job.bookmarked ? "active" : ""}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          onBookmark(job.id);
-        }}
-      >
-        <Star size={24} fill={job.bookmarked ? "currentColor" : "none"} />
-      </button>
-    </div>
 
-    <div className="job-details">
-      <span className="job-detail-item">
-        <MapPin size={14} />
-        {job.location}
-      </span>
-      <span className="job-detail-item">
-        <Briefcase size={14} />
-        {job.experience ?? ""}
-      </span>
-      <span className="job-detail-item">
-        <BookOpen size={14} />
-        {job.education ?? ""}
-      </span>
-      <span className="job-detail-item">
-        <Building2 size={14} />
-        {job.employment ?? ""}
-      </span>
-    </div>
-
-    <div className="job-skills">
-      {(job.skills ?? []).map((skill) => (
-        <span key={skill} className="skill-tag">
-          {skill}
+      <div className="job-details">
+        <span className="job-detail-item">
+          <MapPin size={14} />
+          {job.location}
         </span>
-      ))}
-    </div>
-
-    <div className="job-item-footer">
-      <div className="job-meta-info">
-        <span className="meta-info-item">
-          <Eye size={14} />
-          {(job.views ?? 0).toLocaleString()}
+        <span className="job-detail-item">
+          <Briefcase size={14} />
+          {job.experience ?? ""}
         </span>
-        <span className="meta-info-item">
-          <User size={14} />
-          지원 {job.applications ?? 0}
+        <span className="job-detail-item">
+          <BookOpen size={14} />
+          {job.education ?? ""}
         </span>
-        {job.deadline && job.deadline !== "상시채용" && (
-          <span className="deadline-warning">{job.deadline}</span>
-        )}
+        <span className="job-detail-item">
+          <Building2 size={14} />
+          {job.employment ?? ""}
+        </span>
       </div>
-      <div className="salary-badge">{job.salary ?? ""}</div>
+
+      <div className="job-skills">
+        {(job.skills ?? []).map((skill) => (
+          <span key={skill} className="skill-tag">
+            {skill}
+          </span>
+        ))}
+      </div>
+
+      <div className="job-item-footer">
+        <div className="job-meta-info">
+          <span className="meta-info-item">
+            <Eye size={14} />
+            {(job.views ?? 0).toLocaleString()}
+          </span>
+          <span className="meta-info-item">
+            <User size={14} />
+            지원 {job.applications ?? 0}
+          </span>
+          {job.deadline && job.deadline !== "상시채용" && (
+            <span className="deadline-warning">{job.deadline}</span>
+          )}
+        </div>
+        <div className="salary-badge">{job.salary ?? ""}</div>
+      </div>
     </div>
-  </div>
-);
+  );
+};  
 
 // ==================== 메인 페이지 ====================
 const JobPosting = () => {
@@ -671,6 +715,8 @@ const JobPosting = () => {
     employment: j.employmentType ?? "",
     salary: j.salaryLabel ?? "",
     skills: j.skills ?? [],
+    status: j.status ?? "OPEN",           // 상태 추가
+  closeType: j.closeType ?? "DEADLINE", // 마감 타입 추가
     deadline:
       j.closeType === "상시"
         ? "상시채용"
@@ -685,6 +731,12 @@ const JobPosting = () => {
     bookmarked: false,
   });
 
+  const filterDraftPostings = (jobList) => {
+  return jobList.filter(job => 
+    job.status !== 'DRAFT' && 
+    job.status !== 'draft'
+  );
+};
   // 초기 로드 함수
   const handleInitialLoad = async () => {
     const body = {
@@ -712,6 +764,10 @@ const JobPosting = () => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const page = await res.json();
       const list = (page.content ?? []).map(mapApiJobToUi);
+
+      //draft 상태 필터링
+      filterDraftPostings(list);
+
       setJobs(list);
       setFilteredJobs(list);
     } catch (e) {
@@ -820,6 +876,8 @@ const JobPosting = () => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const page = await res.json();
       const list = (page.content ?? []).map(mapApiJobToUi);
+
+      const filterDraftPostings= filterDraftPostings(list);
       setJobs(list);
       setFilteredJobs(list);
     } catch (e) {
