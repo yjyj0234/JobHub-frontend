@@ -98,7 +98,6 @@ function stampS3KeysInHtml(rawHtml, attachments) {
   }
 }
 // ===== 커스텀 업로드 어댑터 =====
-// ===== 커스텀 업로드 어댑터 =====
 class UploadAdapter {
   constructor(loader, setAttachments) {
     this.loader = loader;
