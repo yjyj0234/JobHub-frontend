@@ -347,6 +347,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
   const fileInputRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(profile);
+  const [isUploading, setIsUploading] = useState(false); // 업로드 상태 추가
 
   useEffect(() => {
     setEditData(profile);
@@ -363,17 +364,88 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
   };
 
   const handlePhotoClick = () => {
-    if (!isEditing) return;
+    if (!isEditing || isUploading) return;
     fileInputRef.current?.click();
   };
 
-  const handlePhotoChange = (event) => {
+  // 🔥 S3 업로드로 변경 (미리보기 기능 추가)
+  const handlePhotoChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () =>
-      setEditData({ ...editData, profileImageUrl: reader.result });
-    reader.readAsDataURL(file);
+
+    // 파일 크기 체크 (예: 5MB 제한)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("파일 크기는 5MB 이하로 업로드해주세요.");
+      return;
+    }
+
+    // 파일 타입 체크
+    if (!file.type.startsWith('image/')) {
+      alert("이미지 파일만 업로드 가능합니다.");
+      return;
+    }
+
+    setIsUploading(true);
+    
+    // 🔥 즉시 미리보기를 위한 로컬 URL 생성
+    const localPreviewUrl = URL.createObjectURL(file);
+    setEditData({ ...editData, profileImageUrl: localPreviewUrl });
+    
+    try {
+      // FormData 생성
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('module', 'profiles'); // 프로필 이미지용 모듈
+      formData.append('public', 'false'); // 개인정보이므로 private
+
+      // S3 업로드 API 호출
+      const response = await fetch('http://localhost:8080/api/upload', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `업로드 실패: ${response.status}`);
+      }
+
+      const uploadResult = await response.json();
+      
+      // 🔥 백엔드 URL로 절대 경로 생성
+      let imageUrl = uploadResult.viewerUrl || uploadResult.url;
+      
+      // viewerUrl이 상대경로로 오는 경우 절대경로로 변환
+      if (imageUrl && imageUrl.startsWith('/api/')) {
+        imageUrl = `http://localhost:8080${imageUrl}`;
+      }
+      
+      console.log('업로드 결과:', uploadResult);
+      console.log('최종 이미지 URL:', imageUrl);
+      
+      // 로컬 미리보기 URL 정리
+      URL.revokeObjectURL(localPreviewUrl);
+      
+      // S3 URL로 업데이트
+      setEditData({ ...editData, profileImageUrl: imageUrl });
+      
+      console.log('프로필 이미지 업로드 성공:', uploadResult);
+
+    } catch (error) {
+      console.error('프로필 이미지 업로드 실패:', error);
+      
+      // 🔥 업로드 실패 시 미리보기 제거
+      URL.revokeObjectURL(localPreviewUrl);
+      setEditData({ ...editData, profileImageUrl: profile.profileImageUrl || "" });
+      
+      alert('이미지 업로드에 실패했습니다: ' + error.message);
+    } finally {
+      setIsUploading(false);
+      // 파일 input 초기화
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   const handleSaveClick = async () => {
@@ -426,7 +498,10 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
         <div
           className="profile-photo-edit-wrapper"
           onClick={handlePhotoClick}
-          style={{ cursor: isEditing ? "pointer" : "default" }}
+          style={{ 
+            cursor: (isEditing && !isUploading) ? "pointer" : "default",
+            opacity: isUploading ? 0.7 : 1
+          }}
         >
           <div className="profile-photo-wrapper">
             {(
@@ -434,19 +509,43 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
             ) ? (
               <img
                 src={
-                  isEditing ? editData.profileImageUrl : profile.profileImageUrl
+                  (() => {
+                    const url = isEditing ? editData.profileImageUrl : profile.profileImageUrl;
+                    // 상대경로면 백엔드 절대경로로 변환
+                    if (url && url.startsWith('/api/')) {
+                      return `http://localhost:8080${url}`;
+                    }
+                    return url;
+                  })()
                 }
                 alt={profile.name || "프로필"}
                 className="profile-photo"
+                onError={(e) => {
+                  console.error('이미지 로드 실패:', e.currentTarget.src);
+                  // 🔥 이미지 로드 실패 시 대체 처리
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.style.setProperty('display', 'flex');
+                }}
               />
             ) : (
               <div className="profile-photo-placeholder">
                 <User size={40} />
               </div>
             )}
+            {/* 🔥 이미지 로드 실패 시 표시될 대체 요소 */}
+            <div className="profile-photo-placeholder" style={{ display: 'none' }}>
+              <User size={40} />
+            </div>
             {isEditing && (
               <div className="photo-edit-icon">
-                <Camera size={16} />
+                {isUploading ? (
+                  <div className="upload-spinner">
+                    <div className="spinner-circle"></div>
+                    <span>업로드 중...</span>
+                  </div>
+                ) : (
+                  <Camera size={16} />
+                )}
               </div>
             )}
           </div>
@@ -456,7 +555,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
             style={{ display: "none" }}
             onChange={handlePhotoChange}
             accept="image/*"
-            disabled={!isEditing}
+            disabled={!isEditing || isUploading}
           />
         </div>
 

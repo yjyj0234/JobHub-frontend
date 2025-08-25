@@ -78,6 +78,7 @@ const AddPost = () => {
         <p className="subtitle">
           자유롭게 질문하고 답변을 받아보세요!
            </p>
+           <button type='button' className='backBtn' style={{float: 'right',marginBottom: '12px'}} onClick={() => navigate(-1)}>뒤로가기</button>
       </div>
       
       {/* 제목 입력 필드 */}

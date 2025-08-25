@@ -102,7 +102,7 @@
 }
 
 .btn.list{
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4e86da 0%, #8692c2 100%);
   color: #fff;
   border: none;
   border-radius: 25px;
@@ -124,14 +124,14 @@
 }
 
 .btn.edit {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #46997e 0%, #34b38b 100%);
   color: #ffffff;
   border: none;
   border-radius: 25px;
   padding: 12px 24px;
   font-weight: 600;
   font-size: 14px;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .btn.edit:hover {
@@ -140,7 +140,7 @@
 }
 
 .btn.delete {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #c56363 0%, #e83636 100%);
   color: #ffffff;
   border: none;
   border-radius: 25px;
@@ -251,7 +251,7 @@
 }
 
 .comment-form-actions .btn {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #4e86da 0%, #8692c2 100%);
   color: white;
   border: none;
   border-radius: 25px;

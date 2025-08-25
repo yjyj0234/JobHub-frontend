@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
   Eye,
@@ -24,6 +24,12 @@ const JobPostingManagement = ({ onEditClick, onNewClick }) => {
   const [activeTab, setActiveTab] = useState("OPEN");
   const [postings, setPostings] = useState([]);
   const [loading, setLoading] = useState(false);
+  const booted = useRef(false);
+  useEffect(() => {
+    if (booted.current) return; // React StrictMode로 2번 실행 방지(개발모드)
+    booted.current = true;
+    fetchPostings();
+  }, []);
   const [stats, setStats] = useState({
     open: 0,
     draft: 0,
@@ -32,14 +38,13 @@ const JobPostingManagement = ({ onEditClick, onNewClick }) => {
   });
 
   // 공고 목록 조회
+  // 공고 목록 조회
   const fetchPostings = async () => {
     setLoading(true);
     try {
-      // API 엔드포인트는 백엔드 구조에 맞게 수정 필요
       const response = await api.get("/api/company/postings");
       const data = response.data || [];
 
-      // 상태별로 카운트
       const counts = {
         open: data.filter((p) => p.status === "OPEN").length,
         draft: data.filter((p) => p.status === "DRAFT").length,
@@ -51,40 +56,17 @@ const JobPostingManagement = ({ onEditClick, onNewClick }) => {
       setPostings(data);
     } catch (error) {
       console.error("공고 목록 조회 실패:", error);
-      // 테스트용 더미 데이터
-      setPostings([
-        {
-          id: 1,
-          title: "프론트엔드 개발자 채용",
-          status: "OPEN",
-          viewCount: 120,
-          applicationCount: 5,
-          createdAt: "2025-01-15",
-          closeDate: "2025-02-15",
-          locations: ["서울 강남구"],
-          employmentType: "정규직",
-        },
-        {
-          id: 2,
-          title: "백엔드 개발자 (임시저장)",
-          status: "DRAFT",
-          viewCount: 0,
-          applicationCount: 0,
-          createdAt: "2025-01-10",
-          closeDate: null,
-          locations: ["서울 서초구"],
-          employmentType: "정규직",
-        },
-      ]);
-      setStats({ open: 1, draft: 1, closed: 0, expired: 0 });
+
+      // API 연결 실패 메시지 표시
+      alert("서버 연결에 실패했습니다. 백엔드를 확인해주세요.");
+
+      // 빈 데이터로 설정
+      setPostings([]);
+      setStats({ open: 0, draft: 0, closed: 0, expired: 0 });
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchPostings();
-  }, []);
 
   // 상태별 필터링
   const filteredPostings = postings.filter((p) => p.status === activeTab);

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   MapPin,
   Briefcase,
@@ -15,6 +15,7 @@ import {
 import "../css/JobPostingList.css";
 import "../css/JobPostingDetail.css";
 import DOMPurify from "dompurify";
+import { useAuth } from "../context/AuthContext";
 
 /** =========================
  *  ✅ D-day 계산 유틸 (컴포넌트 밖)
@@ -23,7 +24,6 @@ import DOMPurify from "dompurify";
  *  - 마감 '시각'을 지나면 즉시 마감
  *  ========================= */
 const COUNTDOWN_TYPES = new Set(["DEADLINE", "PERIODIC"]);
-
 function parseClose(v) {
   if (!v) return null;
   if (typeof v === "string" && v.indexOf("T") === -1) {
@@ -64,11 +64,19 @@ function getDeadlineInfo(j) {
   let deadlineBadge = "";
   if (daysLeft === 0) {
     deadlineBadge = "D-DAY";
-  } else if (daysLeft > 0 && daysLeft <= 14) {
-    deadlineBadge = `D-${daysLeft}`;
-  }
-
+  }  else if (daysLeft > 0 && daysLeft <= 14) deadlineBadge = `D-${daysLeft}`;
   return { daysLeft, deadlineBadge, isDeadlineClosed: false };
+}
+function formatDateTime(v) {
+  const d = parseClose(v);
+  if (!d) return "-";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  return `${y}-${m}-${day} ${hh}:${mm}:${ss}`;
 }
 
 /** 백엔드 Origin (프리사인/프록시 뷰어 등에서 사용) */
@@ -123,7 +131,8 @@ function rewriteDescriptionHtml(rawHtml) {
       const original = img.getAttribute("src") || "";
       const fixed = toViewerUrlFromAny(original);
       if (fixed) img.setAttribute("src", fixed);
-      img.setAttribute("loading", "lazy");
+      //img.setAttribute("loading", "lazy");
+      img.setAttribute("decoding", "async");   // 추가하면 렌더 안정화에 도움
       img.setAttribute("referrerpolicy", "no-referrer");
       img.removeAttribute("onerror");
       img.removeAttribute("onload");
@@ -135,14 +144,16 @@ function rewriteDescriptionHtml(rawHtml) {
   }
 }
 
-const JobPostingDetail = () => {
+const JobPostingDetail = ({ onLoginClick }) => {
   const { id } = useParams();
+  const { isAuthed, user } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isOwner, setIsOwner] = useState(false); // 회사 소유자 여부
   // 동일 id로 중복 fetch 방지
   const didFetchRef = useRef({ lastId: null, done: false });
-
+  const navigate = useNavigate();
   /** 상세 데이터 로드 */
   useEffect(() => {
     const fetchJobDetail = async () => {
@@ -156,16 +167,54 @@ const JobPostingDetail = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`http://localhost:8080/api/jobs/${id}`, {
+        const res = await fetch(`http://localhost:8080/api/jobs/${id}?_=${Date.now()}`, {
           credentials: "include",
-          headers: { Accept: "application/json" },
+          headers: { Accept: "application/json", "Cache-Control": "no-cache"},
         });
         if (!res.ok) {
           const text = await res.text();
           throw new Error(`HTTP ${res.status} ${res.statusText} - ${text}`);
         }
         const data = await res.json();
-        setJob(mapApiJobToUi(data));
+        
+        console.log("[DEBUG] API Response:", data);
+        
+        const mappedJob = mapApiJobToUi(data);
+        
+        console.log("[DEBUG] Mapped Job:", mappedJob);
+        console.log("[DEBUG] Company Owner ID:", mappedJob.companyOwnerId);
+        
+        setJob(mappedJob);
+        
+        // 🔥 더 자세한 디버깅 로그 추가
+        console.log("[DEBUG] User Info:", user);
+        console.log("[DEBUG] Is Authenticated:", isAuthed);
+        console.log("[DEBUG] User Role:", user?.role);
+        console.log("[DEBUG] User ID:", user?.id);
+        
+        // 회사 소유자 여부 확인
+        if (isAuthed && user?.role === "COMPANY" && mappedJob.companyOwnerId) {
+          // 🔥 타입 변환으로 비교 (숫자 vs 문자열 문제 해결)
+          const userId = Number(user.id);
+          const ownerId = Number(mappedJob.companyOwnerId);
+          const isOwnerCheck = userId === ownerId;
+          
+          console.log("[DEBUG] === 소유자 확인 ===");
+          console.log("[DEBUG] User ID (original):", user.id, "Type:", typeof user.id);
+          console.log("[DEBUG] User ID (converted):", userId, "Type:", typeof userId);
+          console.log("[DEBUG] Owner ID (original):", mappedJob.companyOwnerId, "Type:", typeof mappedJob.companyOwnerId);
+          console.log("[DEBUG] Owner ID (converted):", ownerId, "Type:", typeof ownerId);
+          console.log("[DEBUG] Is Owner Check:", isOwnerCheck);
+          console.log("[DEBUG] === 소유자 확인 끝 ===");
+          
+          setIsOwner(isOwnerCheck);
+        } else {
+          console.log("[DEBUG] 소유자 확인 조건 불만족:");
+          console.log("  - isAuthed:", isAuthed);
+          console.log("  - user.role === 'COMPANY':", user?.role === "COMPANY");
+          console.log("  - mappedJob.companyOwnerId exists:", !!mappedJob.companyOwnerId);
+          setIsOwner(false);
+        }
       } catch (e) {
         console.error("[JobDetail] fetch error:", e);
         setError("상세 정보를 불러오지 못했습니다.");
@@ -174,7 +223,7 @@ const JobPostingDetail = () => {
       }
     };
     if (id) fetchJobDetail();
-  }, [id]);
+  }, [id, isAuthed, user]);
 
   /** 즐겨찾기 */
   const [fav, setFav] = useState(false);
@@ -183,6 +232,13 @@ const JobPostingDetail = () => {
       setFav(localStorage.getItem(`fav_job_${id}`) === "1");
     } catch {}
   }, [id]);
+
+   /** ⏱️ 실시간 카운트다운을 위한 now 타임스탬프 (1초마다 갱신) */
+  const [nowTs, setNowTs] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNowTs(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
   /** 마감 타입 라벨 */
   const mapCloseType = (t) => {
@@ -340,31 +396,33 @@ const JobPostingDetail = () => {
 };
 
   /** API 응답 → UI 모델 매핑 */
-  const mapApiJobToUi = (j) => ({
-    id: j.id,
-    title: j.title,
-    company: j.companyName ?? j.company_name ?? j.company?.name ?? j.company,
-    logo: j.companyLogo ?? j.logo ?? j.company?.logo ?? j.company?.logoUrl,
-    locations: normalizeLocations(j), // ⬅️ 대표 1개만
-    categories: normalizeCategories(j),
-    conditions: normalizeConditions(j.conditions),
-    closeType: j.closeType ?? j.close_type,
-    closeDate: j.closeDate ?? j.close_date,
-    skills: j.skills ?? [],
-    views: j.viewCount ?? j.view_count ?? 0,
-    applications: j.applicationCount ?? j.application_count ?? 0,
-    description: j.description ?? j.desc ?? "",
-    responsibilities: j.responsibilities ?? [],
-    qualifications: j.qualifications ?? [],
-    preferences: j.preferences ?? [],
-    benefits: j.benefits ?? [],
-    homepage:
-      j.homepage ?? j.companyHomepage ?? j.company_homepage ?? j.company?.homepage ?? "",
-    // 재택 근무: boolean(true) 또는 tinyint(1) 1 → true
-    isRemote: j.isRemote === true || j.is_remote === 1,
-    // 상태 필드(마감 처리용)도 살짝 보정
-    status: j.status ?? j.jobStatus ?? j.state,
-  });
+  const mapApiJobToUi = (j) => {
+    return {
+      id: j.id,
+      title: j.title,
+      company: j.companyName ?? j.company_name ?? j.company?.name ?? j.company,
+      logo: j.companyLogo ?? j.logo ?? j.company?.logo ?? j.company?.logoUrl,
+      companyOwnerId: j.companyOwnerId, // 이제 백엔드에서 제대로 전달됨
+      locations: normalizeLocations(j),
+      categories: normalizeCategories(j),
+      conditions: normalizeConditions(j.conditions),
+      closeType: j.closeType ?? j.close_type,
+      closeDate: j.closeDate ?? j.close_date,
+      openDate: j.openDate ?? j.open_date,
+      skills: j.skills ?? [],
+      views: j.viewCount ?? j.view_count ?? 0,
+      applications: j.applicationCount ?? j.application_count ?? 0,
+      description: j.description ?? j.desc ?? "",
+      responsibilities: j.responsibilities ?? [],
+      qualifications: j.qualifications ?? [],
+      preferences: j.preferences ?? [],
+      benefits: j.benefits ?? [],
+      homepage:
+        j.homepage ?? j.companyHomepage ?? j.company_homepage ?? j.company?.homepage ?? "",
+      isRemote: j.isRemote === true || j.is_remote === 1,
+      status: j.status ?? j.jobStatus ?? j.state,
+    };
+  };
 
   /** 마감 라벨 계산 */
   const closeLabel = useMemo(() => {
@@ -454,10 +512,30 @@ const closeDateStr = useMemo(() => {
     });
   }, [job?.description]);
 // ⬇️ 기존 computeDaysLeft/deadlineBadge 대신 이걸 사용
-const { daysLeft, deadlineBadge, isDeadlineClosed } = useMemo(
-  () => getDeadlineInfo(job),
-  [job]
-);
+ const { daysLeft, deadlineBadge, isDeadlineClosed } = useMemo(
+    () => getDeadlineInfo(job, nowTs),
+    [job, nowTs]
+  );
+ /** ✅ 시작일/마감일 문자열 + 실시간 남은 시간(H/M/S) */
+  const openDateStr = useMemo(() => formatDateTime(job?.openDate), [job?.openDate]);
+  const closeDateTimeStr = useMemo(
+    () => formatDateTime(job?.closeDate),
+    [job?.closeDate]
+  );
+  const timeLeftText = useMemo(() => {
+    const close = parseClose(job?.closeDate);
+    if (!close) return "-";
+    const now = new Date(nowTs);
+    const diff = close.getTime() - now.getTime();
+    if (diff <= 0) return "마감";
+    const hh = Math.floor(diff / 3600000);
+    const mm = Math.floor((diff % 3600000) / 60000);
+    const ss = Math.floor((diff % 60000) / 1000);
+    return `${hh}시간 ${String(mm).padStart(2, "0")}분 ${String(ss).padStart(
+      2,
+      "0"
+    )}초`;
+  }, [job?.closeDate, nowTs]);
 
   /** 로딩 Skeleton */
   if (loading) {
@@ -504,12 +582,65 @@ const isClosed = isClosedByStatus || isDeadlineClosed;
     } catch {}
   };
 
-  /**
-   * 근무지역 표시 텍스트
-   * - 라벨 없이 지역만
-   * - 재택 가능이면 꼬리표 추가
-   */
- 
+  // 지원하기 버튼 눌렀을때 상황별 
+  const handleApplyClick = () => {
+    //로그인 안된 경우
+    if (!isAuthed) {
+      alert("로그인이 필요합니다.");
+      //전역 이벤트(openLoginModal)
+      window.dispatchEvent(new CustomEvent('openLoginModal'));
+      return;
+    }
+    // 로그인 했지만 다른 회사인 경우
+    if (user?.role === "COMPANY") {
+      if (!isOwner) {
+        alert("해당 공고문을 올린 회사가 아닙니다.");
+        return;
+      }
+      handleJobClose();
+    } else {
+      handleJobApply();
+    }
+  };
+
+  const handleJobApply = () => {
+    navigate(`/apply/${job.id}`);
+    // TODO: 실제 지원 API 호출
+  };
+// 공고를 올린 회사로 로그인
+  const handleJobClose = () => {
+    if (window.confirm("정말로 이 채용공고를 마감하시겠습니까?")) {
+      console.log("마감하기 클릭");
+      // TODO: 실제 마감 API 호출
+    }
+  };
+
+  const getButtonText = () => {
+    if (user?.role === "COMPANY") {
+      return isOwner ? "마감하기" : "권한 없음";
+    }
+    return "지원하기";
+  };
+
+  const getWideButtonText = () => {
+    if (user?.role === "COMPANY") {
+      return isOwner ? "지금 마감하기" : "권한이 없습니다";
+    }
+    return "지금 지원하기";
+  };
+
+  const isButtonDisabled = () => {
+    if (isClosed) return true;
+    if (user?.role === "COMPANY" && !isOwner) return true;
+    return false;
+  };
+
+  const getButtonTitle = () => {
+    if (isClosed) return "마감된 공고입니다.";
+    if (user?.role === "COMPANY" && !isOwner) return "해당 공고문을 올린 회사가 아닙니다.";
+    return undefined;
+  };
+
   return (
     <div className="job-detail-container">
       <div className="detail-header">
@@ -555,20 +686,15 @@ const isClosed = isClosedByStatus || isDeadlineClosed;
               >
                 <Star />
               </button>
-                <button
-                  className="apply-button"
-                  data-deadline={deadlineBadge}
-                  disabled={isClosed}
-                  aria-disabled={isClosed}
-                  onClick={(e) => {
-                    if (isClosed) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }
-                  }}
-                  title={isClosed ? "마감된 공고입니다." : undefined}
-                >
-                지원하기
+              <button
+                className="apply-button"
+                data-deadline={deadlineBadge}
+                disabled={isButtonDisabled()}
+                aria-disabled={isButtonDisabled()}
+                onClick={handleApplyClick}
+                title={getButtonTitle()}
+              >
+                {getButtonText()}
               </button>
             </div>
           </div>
@@ -668,24 +794,14 @@ const isClosed = isClosedByStatus || isDeadlineClosed;
             <div className="info-right">
               {/* 사이드 정보 */}
               <section className="card section">
-                <h2 className="section-title">채용 정보</h2>
-                <div className="side-row">
-                  <Users size={16} />
-                  <span>지원자수</span>
-                  <strong>{job.applications?.toLocaleString?.() ?? 0}</strong>
+                <h2 className="section-title">기타 및 우대사항</h2>
+                <div className="side-row" style={{ borderBottom: 0, paddingTop: 0 }}>
+                  <CheckCircle2 size={16} />
+                  <span style={{ gridColumn: "2 / span 2" }}>
+                    {job?.conditions?.etc || "등록된 내용이 없습니다."}
+                  </span>
                 </div>
-                <div className="side-row">
-                  <CalendarDays size={16} />
-                  <span>마감</span>
-                  <strong>{closeLabel || "상시채용"}</strong>
-                </div>
-                {job.conditions?.work_schedule && (
-                  <div className="side-row">
-                    <CalendarDays size={16} />
-                    <span>근무형태</span>
-                    <strong>{job.conditions.work_schedule}</strong>
-                  </div>
-                )}
+                
                 {job.homepage && (
                   <a
                     className="link-button"
@@ -699,42 +815,6 @@ const isClosed = isClosedByStatus || isDeadlineClosed;
               </section>
             </div>
           </div>
-
-          {/* 우대사항 */}
-          {((job.preferences?.length ?? 0) > 0 || !!job.conditions?.etc) && (
-            <section className="card section">
-              <h2 className="section-title">우대사항</h2>
-              <ul className="check-list">
-                {job.conditions?.etc && (
-                  <li>
-                    <CheckCircle2 size={18} />
-                    <span>{job.conditions.etc}</span>
-                  </li>
-                )}
-                {(job.preferences || []).map((p, idx) => (
-                  <li key={idx}>
-                    <CheckCircle2 size={18} />
-                    <span>{p}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {/* 복지/혜택 */}
-          {(job.benefits?.length ?? 0) > 0 && (
-            <section className="card section">
-              <h2 className="section-title">복지 및 혜택</h2>
-              <ul className="benefit-grid">
-                {job.benefits.map((b, idx) => (
-                  <li key={idx} className="benefit-item">
-                    <Star size={16} />
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
 
           {/* 직무 카테고리 */}
           {(job.categories?.length ?? 0) > 0 && (
@@ -753,11 +833,50 @@ const isClosed = isClosedByStatus || isDeadlineClosed;
           )}
 
           {/* CTA */}
-          <section className="card section">
-            <button className="apply-button wide" disabled={isClosed}>
-              지금 지원하기
-            </button>
-          </section>
+
+<section className="card section">
+  <div className="cta-row">
+    {/* 좌측: 날짜 + 버튼 */}
+    <div className="cta-tile cta-tile-left">
+          <div className="cta-dates">
+        <div className="field-row">
+        <span className="field-chip field-chip-info">시작일</span>
+        <span className="field-value">{openDateStr}</span>
+      </div>
+      <div className="field-row">
+        <span className="field-chip field-chip-danger">마감일</span>
+        <span className="field-value">{closeDateTimeStr}</span>
+        </div>
+       <div className="field-row time-left-row">
+      <span className="field-value time-left">남은시간</span>
+      <span className="field-value time-left" data-closed={isClosed ? "1" : "0"}>
+        {COUNTDOWN_TYPES.has(job.closeType) ? timeLeftText : "-"}
+      </span>
+        </div>
+      </div>
+
+      <button
+        className="apply-button wide"
+        disabled={isButtonDisabled()}
+        title={getButtonTitle()}
+        onClick={handleApplyClick} 
+      >
+        {getWideButtonText()}
+      </button>
+    </div>
+
+    {/* 우측: 지원자수 */}
+    <div className="cta-tile cta-tile-stats" aria-label="지원자 수">
+      <div className="stats-title">지원자 수</div>
+      <div className="stats-line">
+        <span className="stats-number">
+          {job.applications?.toLocaleString?.() ?? 0}
+        </span>
+        <span className="stats-unit">명</span>
+      </div>
+    </div>
+  </div>
+</section>
         </div>
       </div>
     </div>
