@@ -21,7 +21,8 @@ import {
   CompanyDashboard,
 } from "../Companies";
 
-import AdminPage from "../Admin/AdminPage";
+import { AdminPage, FaqAdminPage } from "../Admin";
+import { AboutUs, TermsOfService, PrivacyPolicy, NoticePage, NoticeAdminPage } from "../pages";
 
 // 6. job-posting-list 관련 페이지 그룹
 import { PostList, AddPost, PostDetail, UpdatePost, GroupChat, GroupChatRoom, InviteForm, PendingInvite, InviteList } from "../Community";
@@ -123,7 +124,13 @@ function AppRouter() {
         <Route path="/chat/invites/list" element={<InviteList />} />
 
         <Route path="/service" element={<Service />} />
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/notices" element={<NoticePage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/faq" element={<FaqAdminPage />} />
+        <Route path="/admin/notices" element={<NoticeAdminPage />} />
         {/* 공고 디테일 */}
         <Route path="/jobpostinglist/:id" element={<JobPostingDetail />} />
         <Route path="/apply/:jobId" element={<JobApplication />} />
