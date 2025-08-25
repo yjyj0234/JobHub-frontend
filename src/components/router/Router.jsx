@@ -110,9 +110,10 @@ function AppRouter() {
         <Route path="/resumes/:id" element={<ResumeEditorPage />} />
         <Route path="/jobposting" element={<Jobposting />} />
         <Route path="/companies/applicants" element={<ApplicantsList />} />
+        <Route path="/jobpostinglist" element={<JobPostingList />} />
+
         {/* 커뮤니티 */}
         <Route path="/postlist" element={<PostList />} />
-        <Route path="/jobpostinglist" element={<JobPostingList />} />
         <Route path="/postlist/addpost" element={<AddPost />} />
         <Route path="/postlist/detail/:id" element={<PostDetail />} />
         <Route path="/postlist/edit/:id" element={<UpdatePost />} />
