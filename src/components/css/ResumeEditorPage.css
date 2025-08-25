@@ -221,7 +221,7 @@
   line-height: 1.6;
 }
 .summary-display {
-  width: 710px;
+  width: 650px;
   min-height: 100px;
   padding: 12px 15px;
   border-radius: 8px;
@@ -400,7 +400,7 @@
 .resume-status-palette {
   background-color: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   padding: 20px;
 }
 .editor-palette h3 {
@@ -429,10 +429,10 @@
   border-color: #dee2e6;
 }
 .palette-item.disabled {
-    background-color: #e9ecef;
-    color: #adb5bd;
-    cursor: not-allowed;
-    opacity: 0.7;
+  background-color: #e9ecef;
+  color: #adb5bd;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .palette-required-text {
@@ -501,7 +501,7 @@
   right: 0;
   bottom: 0;
   background-color: #ccc;
-  transition: .4s;
+  transition: 0.4s;
   border-radius: 24px;
 }
 .toggle-switch label:before {
@@ -512,7 +512,7 @@
   left: 2px;
   bottom: 2px;
   background-color: white;
-  transition: .4s;
+  transition: 0.4s;
   border-radius: 50%;
 }
 .toggle-switch input:checked + label {

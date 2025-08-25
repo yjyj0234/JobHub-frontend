@@ -91,8 +91,196 @@ const hasAnyValue = (obj = {}) =>
     if (typeof v === "string") return v.trim() !== "";
     return true;
   });
+// URL 스킴 자동 보정(미입력 시 https:// 붙임)
+const normalizeUrl = (u) => {
+  if (!u) return null;
+  const t = String(u).trim();
+  if (!t) return null;
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+};
+
+/* ---------------------- 지역 선택 팝업 ( /api/search/regions 사용 ) ---------------------- */
+const RegionPicker = ({ initial, onSelect, onClose }) => {
+  const [sido, setSido] = useState([]);
+  const [sigungu, setSigungu] = useState([]);
+  const [selectedSido, setSelectedSido] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [q, setQ] = useState("");
+
+  // 트리 빠른검색용 캐시
+  const [flatRegions, setFlatRegions] = useState(null);
+
+  // 최초: 시/도 불러오기
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        // 🔁 최상위(시/도)
+        const res = await axios.get(`${API}/search/regions`);
+        setSido(res.data?.regions || []);
+
+        // 초기 parentId가 있으면 해당 시/도 하위도 미리 조회
+        if (initial?.parentId) {
+          setSelectedSido(initial.parentId);
+          const r2 = await axios.get(`${API}/search/regions`, {
+            params: { parentId: initial.parentId },
+          });
+          setSigungu(r2.data?.regions || []);
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [initial?.parentId]);
+
+  // 시/도 선택 시 하위(시군구) 조회
+  const handleSido = async (id) => {
+    setSelectedSido(id);
+    setSigungu([]);
+    if (!id) return;
+    setLoading(true);
+    try {
+      const res = await axios.get(`${API}/search/regions`, {
+        params: { parentId: id },
+      });
+      setSigungu(res.data?.regions || []);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 빠른 검색: /api/search/regions/tree 한번 받아서 프론트에서 필터링
+  const ensureRegionTree = async () => {
+    if (flatRegions) return flatRegions;
+    const res = await axios.get(`${API}/search/regions/tree`);
+    const roots = res.data?.regions || [];
+    const flat = [];
+    const walk = (node, parentId = null) => {
+      if (!node) return;
+      flat.push({ id: node.id, name: node.name, parentId });
+      (node.children || []).forEach((ch) => walk(ch, node.id));
+    };
+    roots.forEach((r) => walk(r, null));
+    setFlatRegions(flat);
+    return flat;
+  };
+
+  const handleQuickSearch = async (e) => {
+    e.preventDefault();
+    const keyword = q.trim();
+    if (!keyword) return;
+
+    try {
+      const flat = await ensureRegionTree();
+      const kw = keyword.toLowerCase();
+      const row = flat.find((r) => r.name.toLowerCase().includes(kw)) || null;
+
+      if (row) {
+        onSelect({
+          id: row.id,
+          name: row.name,
+          parentId: row.parentId ?? null,
+        });
+        onClose?.();
+      } else {
+        alert("검색 결과가 없습니다.");
+      }
+    } catch {
+      alert("지역 검색 중 오류가 발생했습니다.");
+    }
+  };
+
+  return (
+    <>
+      <div className="rp-backdrop" onClick={onClose} />
+      <div className="rp-pop">
+        <div className="rp-head">
+          <strong>지역 선택</strong>
+          <button className="rp-close" onClick={onClose}>
+            ×
+          </button>
+        </div>
+
+        <form className="rp-search" onSubmit={handleQuickSearch}>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="빠른 검색 (예: 종로구)"
+          />
+          <button type="submit">검색</button>
+        </form>
+
+        <div className="rp-cols">
+          <div className="rp-col">
+            <div className="rp-title">시/도</div>
+            <ul className="rp-list">
+              {sido.map((r) => (
+                <li
+                  key={r.id}
+                  className={selectedSido === r.id ? "active" : ""}
+                  onClick={() => handleSido(r.id)}
+                >
+                  {r.name}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rp-col">
+            <div className="rp-title">시/군/구</div>
+            <ul className="rp-list">
+              {sigungu.map((r) => (
+                <li
+                  key={r.id}
+                  onClick={() => {
+                    onSelect({
+                      id: r.id,
+                      name: r.name,
+                      parentId: r.parentId ?? null,
+                    });
+                    onClose?.();
+                  }}
+                >
+                  {r.name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {loading && <div className="rp-loading">불러오는 중…</div>}
+      </div>
+
+      {/* 최소 스타일 */}
+      <style>{`
+        .rp-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:999;}
+        .rp-pop{position:fixed;z-index:1000;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.2);padding:14px;width:560px;max-width:90vw;}
+        .rp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+        .rp-close{border:0;background:transparent;font-size:20px;cursor:pointer}
+        .rp-search{display:flex;gap:6px;margin:8px 0 12px}
+        .rp-search input{flex:1;padding:8px;border:1px solid #ddd;border-radius:8px}
+        .rp-search button{padding:8px 12px;border:1px solid #ddd;background:#f7f7f9;border-radius:8px;cursor:pointer}
+        .rp-cols{display:flex;gap:12px}
+        .rp-col{flex:1;border:1px solid #eee;border-radius:10px;padding:8px;max-height:280px;overflow:auto}
+        .rp-title{font-size:12px;color:#666;margin-bottom:6px}
+        .rp-list{list-style:none;margin:0;padding:0}
+        .rp-list li{padding:8px;border-radius:8px;cursor:pointer}
+        .rp-list li:hover,.rp-list li.active{background:#f3f6ff}
+        .rp-loading{margin-top:8px;color:#777;font-size:12px}
+      `}</style>
+    </>
+  );
+};
 
 /* ---------------------- 섹션별 API/정규화 ---------------------- */
+// 포트폴리오 정규화
+const normalizePortfolio = (it = {}) => ({
+  id: it.id ?? it.portfolioId ?? null,
+  title: it.title ?? it.name ?? "",
+  url: it.url ?? it.link ?? "",
+  description: it.description ?? it.desc ?? "",
+  portfolioType: it.portfolioType ?? it.type ?? "",
+});
+
 const normalizeActivity = (it = {}) => ({
   id: it.id ?? it.activityId ?? it.resumeActivityId ?? it.seq ?? null,
   activityName: it.activityName ?? it.name ?? it.title ?? "",
@@ -217,35 +405,105 @@ const SECTION_API = {
     create: (rid) => `${API}/resumes/${rid}/projects`,
     update: (id) => `${API}/resumes/projects/${id}`,
     remove: (id) => `${API}/resumes/projects/${id}`,
-    toPayload: (it) => stripMeta(it),
+    toPayload: (it) => {
+      const organization = it.organization ?? it.projectOrg;
+      const projectUrl = it.projectUrl ?? it.url;
+      const tech = Array.isArray(it.techStack)
+        ? it.techStack.map((s) => String(s).trim()).filter(Boolean)
+        : String(it.techStack ?? "")
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+
+      return {
+        projectName: (it.projectName ?? "").trim() || null,
+        organization: organization ? organization.trim() : null,
+        role: it.role ? it.role.trim() : null,
+        startDate: it.startDate || null,
+        endDate: it.ongoing ? null : it.endDate || null,
+        ongoing: Boolean(it.ongoing),
+        projectUrl: projectUrl ? projectUrl.trim() : null,
+        description: it.description ? it.description.trim() : null,
+        techStack: tech,
+      };
+    },
   },
   awards: {
     list: (rid) => `${API}/resumes/${rid}/awards`,
     create: (rid) => `${API}/resumes/${rid}/awards`,
-    update: (id) => `${API}/resumes/awards/${id}`,
-    remove: (id) => `${API}/resumes/awards/${id}`,
-    toPayload: (it) => stripMeta(it),
+    update: (rid, awardId) => `${API}/resumes/${rid}/awards/${awardId}`,
+    remove: (rid, awardId) => `${API}/resumes/${rid}/awards/${awardId}`,
+    toPayload: (it) => ({
+      awardName: it.awardName ?? it.awardTitle ?? "",
+      organization: it.organization ?? it.awardingInstitution ?? "",
+      awardDate: it.awardDate ?? null,
+      description: it.description ?? null,
+    }),
+    normalize: (r) => ({
+      id: r.id,
+      awardName: r.awardName,
+      organization: r.organization,
+      awardDate: r.awardDate,
+      description: r.description,
+    }),
   },
   certifications: {
     list: (rid) => `${API}/resumes/${rid}/certifications`,
     create: (rid) => `${API}/resumes/${rid}/certifications`,
-    update: (id) => `${API}/resumes/certifications/${id}`,
-    remove: (id) => `${API}/resumes/certifications/${id}`,
-    toPayload: (it) => stripMeta(it),
+    update: (rid, id) => `${API}/resumes/${rid}/certifications/${id}`,
+    remove: (rid, id) => `${API}/resumes/${rid}/certifications/${id}`,
+    toPayload: (it) => ({
+      certificationName: (it.certificationName ?? "").trim() || null,
+      issuingOrganization: (it.issuingOrganization ?? "").trim() || null,
+      issueDate: it.issueDate || null,
+      expiryDate: it.expiryDate || null,
+      certificationNumber: (it.certificationNumber ?? "").trim() || null,
+    }),
+    normalize: (row) => ({
+      id: row.id,
+      certificationName: row.certificationName ?? null,
+      issuingOrganization: row.issuingOrganization ?? null,
+      issueDate: row.issueDate ?? null,
+      expiryDate: row.expiryDate ?? null,
+      certificationNumber: row.certificationNumber ?? null,
+    }),
   },
+
   languages: {
     list: (rid) => `${API}/resumes/${rid}/languages`,
     create: (rid) => `${API}/resumes/${rid}/languages`,
-    update: (id) => `${API}/resumes/languages/${id}`,
-    remove: (id) => `${API}/resumes/languages/${id}`,
-    toPayload: (it) => stripMeta(it),
+    update: (rid, id) => `${API}/resumes/${rid}/languages/${id}`,
+    remove: (rid, id) => `${API}/resumes/${rid}/languages/${id}`,
+    toPayload: (it) => ({
+      language: (it.language ?? "").trim() || null,
+      proficiencyLevel:
+        (it.proficiencyLevel ?? it.fluency ?? "").trim() || null,
+      testName: (it.testName ?? "").trim() || null,
+      testScore: (it.testScore ?? "").trim() || null,
+      testDate: it.testDate || null,
+    }),
+    normalize: (r) => ({
+      id: r.id ?? r.languageId ?? null,
+      language: r.language ?? "",
+      proficiencyLevel: r.proficiencyLevel ?? r.fluency ?? "",
+      testName: r.testName ?? "",
+      testScore: r.testScore ?? "",
+      testDate: r.testDate ?? null,
+    }),
   },
+
   portfolios: {
     list: (rid) => `${API}/resumes/${rid}/portfolios`,
     create: (rid) => `${API}/resumes/${rid}/portfolios`,
     update: (id) => `${API}/resumes/portfolios/${id}`,
     remove: (id) => `${API}/resumes/portfolios/${id}`,
-    toPayload: (it) => stripMeta(it),
+    toPayload: (it) => ({
+      title: (it.title ?? "").trim() || null,
+      url: normalizeUrl(it.url),
+      description: (it.description ?? "").trim() || null,
+      portfolioType: (it.portfolioType ?? "").trim() || null,
+    }),
+    normalize: normalizePortfolio,
   },
 };
 
@@ -254,7 +512,8 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
   const fileInputRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(profile);
-  const [isUploading, setIsUploading] = useState(false); // 업로드 상태 추가
+  const [isUploading, setIsUploading] = useState(false);
+  const [showRegionPicker, setShowRegionPicker] = useState(false); // ★ 추가
 
   useEffect(() => {
     setEditData(profile);
@@ -280,36 +539,30 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // 파일 크기 체크 (예: 5MB 제한)
     if (file.size > 5 * 1024 * 1024) {
       alert("파일 크기는 5MB 이하로 업로드해주세요.");
       return;
     }
-
-    // 파일 타입 체크
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       alert("이미지 파일만 업로드 가능합니다.");
       return;
     }
 
     setIsUploading(true);
-    
-    // 🔥 즉시 미리보기를 위한 로컬 URL 생성
+
     const localPreviewUrl = URL.createObjectURL(file);
     setEditData({ ...editData, profileImageUrl: localPreviewUrl });
-    
-    try {
-      // FormData 생성
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('module', 'profiles'); // 프로필 이미지용 모듈
-      formData.append('public', 'false'); // 개인정보이므로 private
 
-      // S3 업로드 API 호출
-      const response = await fetch('http://localhost:8080/api/upload', {
-        method: 'POST',
-        credentials: 'include',
-        body: formData
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("module", "profiles");
+      formData.append("public", "false");
+
+      const response = await fetch("http://localhost:8080/api/upload", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
       });
 
       if (!response.ok) {
@@ -318,40 +571,24 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
       }
 
       const uploadResult = await response.json();
-      
-      // 🔥 백엔드 URL로 절대 경로 생성
       let imageUrl = uploadResult.viewerUrl || uploadResult.url;
-      
-      // viewerUrl이 상대경로로 오는 경우 절대경로로 변환
-      if (imageUrl && imageUrl.startsWith('/api/')) {
+      if (imageUrl && imageUrl.startsWith("/api/")) {
         imageUrl = `http://localhost:8080${imageUrl}`;
       }
-      
-      console.log('업로드 결과:', uploadResult);
-      console.log('최종 이미지 URL:', imageUrl);
-      
-      // 로컬 미리보기 URL 정리
-      URL.revokeObjectURL(localPreviewUrl);
-      
-      // S3 URL로 업데이트
-      setEditData({ ...editData, profileImageUrl: imageUrl });
-      
-      console.log('프로필 이미지 업로드 성공:', uploadResult);
 
-    } catch (error) {
-      console.error('프로필 이미지 업로드 실패:', error);
-      
-      // 🔥 업로드 실패 시 미리보기 제거
       URL.revokeObjectURL(localPreviewUrl);
-      setEditData({ ...editData, profileImageUrl: profile.profileImageUrl || "" });
-      
-      alert('이미지 업로드에 실패했습니다: ' + error.message);
+      setEditData({ ...editData, profileImageUrl: imageUrl });
+    } catch (error) {
+      console.error("프로필 이미지 업로드 실패:", error);
+      URL.revokeObjectURL(localPreviewUrl);
+      setEditData({
+        ...editData,
+        profileImageUrl: profile.profileImageUrl || "",
+      });
+      alert("이미지 업로드에 실패했습니다: " + error.message);
     } finally {
       setIsUploading(false);
-      // 파일 input 초기화
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -405,9 +642,9 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
         <div
           className="profile-photo-edit-wrapper"
           onClick={handlePhotoClick}
-          style={{ 
-            cursor: (isEditing && !isUploading) ? "pointer" : "default",
-            opacity: isUploading ? 0.7 : 1
+          style={{
+            cursor: isEditing && !isUploading ? "pointer" : "default",
+            opacity: isUploading ? 0.7 : 1,
           }}
         >
           <div className="profile-photo-wrapper">
@@ -415,23 +652,24 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
               isEditing ? editData.profileImageUrl : profile.profileImageUrl
             ) ? (
               <img
-                src={
-                  (() => {
-                    const url = isEditing ? editData.profileImageUrl : profile.profileImageUrl;
-                    // 상대경로면 백엔드 절대경로로 변환
-                    if (url && url.startsWith('/api/')) {
-                      return `http://localhost:8080${url}`;
-                    }
-                    return url;
-                  })()
-                }
+                src={(() => {
+                  const url = isEditing
+                    ? editData.profileImageUrl
+                    : profile.profileImageUrl;
+                  if (url && url.startsWith("/api/")) {
+                    return `http://localhost:8080${url}`;
+                  }
+                  return url;
+                })()}
                 alt={profile.name || "프로필"}
                 className="profile-photo"
                 onError={(e) => {
-                  console.error('이미지 로드 실패:', e.currentTarget.src);
-                  // 🔥 이미지 로드 실패 시 대체 처리
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.style.setProperty('display', 'flex');
+                  console.error("이미지 로드 실패:", e.currentTarget.src);
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextElementSibling?.style.setProperty(
+                    "display",
+                    "flex"
+                  );
                 }}
               />
             ) : (
@@ -439,8 +677,10 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
                 <User size={40} />
               </div>
             )}
-            {/* 🔥 이미지 로드 실패 시 표시될 대체 요소 */}
-            <div className="profile-photo-placeholder" style={{ display: 'none' }}>
+            <div
+              className="profile-photo-placeholder"
+              style={{ display: "none" }}
+            >
               <User size={40} />
             </div>
             {isEditing && (
@@ -509,19 +749,71 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
                 <span>{profile.phone || "-"}</span>
               )}
             </div>
-            <div className="profile-info-item">
+
+            {/* ==== 여기 수정됨: 지역 인풋을 선택 팝업으로 ==== */}
+            <div className="profile-info-item" style={{ position: "relative" }}>
               <MapPin size={14} />
               {isEditing ? (
-                <input
-                  name="regionName"
-                  value={editData.regionName || ""}
-                  onChange={handleChange}
-                  placeholder="거주지역"
-                />
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <input
+                    name="regionName"
+                    value={editData.regionName || ""}
+                    readOnly
+                    onClick={() => setShowRegionPicker(true)}
+                    placeholder="거주지역 선택"
+                    style={{ cursor: "pointer", background: "#fff" }}
+                  />
+                  {editData.regionId && (
+                    <button
+                      type="button"
+                      className="mini-btn"
+                      onClick={() =>
+                        setEditData({
+                          ...editData,
+                          regionId: null,
+                          regionName: "",
+                          regionParentId: null,
+                        })
+                      }
+                      title="지역 지우기"
+                    >
+                      지우기
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="mini-btn"
+                    onClick={() => setShowRegionPicker(true)}
+                    title="지역 선택"
+                  >
+                    선택
+                  </button>
+
+                  {showRegionPicker && (
+                    <RegionPicker
+                      initial={
+                        editData.regionParentId
+                          ? { parentId: editData.regionParentId }
+                          : null
+                      }
+                      onSelect={(r) => {
+                        setEditData({
+                          ...editData,
+                          regionId: r.id,
+                          regionName: r.name,
+                          regionParentId: r.parentId ?? null,
+                        });
+                      }}
+                      onClose={() => setShowRegionPicker(false)}
+                    />
+                  )}
+                </div>
               ) : (
                 <span>{profile.regionName || "-"}</span>
               )}
             </div>
+            {/* ==== /지역 ==== */}
+
             <div className="profile-info-item">
               <Calendar size={14} />
               {isEditing ? (
@@ -659,6 +951,14 @@ function ResumeEditorPage() {
     if (!p.schoolName) return `학력 #${idx + 1}: 학교명은 필수입니다.`;
     return null;
   };
+  const validateCertificationPayload = (p, idx = 0) => {
+    if (!p.certificationName)
+      return `자격증 #${idx + 1}: 자격증명은 필수입니다.`;
+    if (!p.issuingOrganization)
+      return `자격증 #${idx + 1}: 발급기관은 필수입니다.`;
+    if (!p.issueDate) return `자격증 #${idx + 1}: 취득일은 필수입니다.`;
+    return null;
+  };
   const buildSectionsFromResponse = (dto) => {
     const built = [];
     const push = (s) => s && built.push(s);
@@ -742,7 +1042,6 @@ function ResumeEditorPage() {
     };
     base.forEach(add);
     extra.forEach(add);
-    // ⬇️ 여기서 고정 순서로 정렬해 반환
     return sortSections(Array.from(map.values()));
   };
 
@@ -764,14 +1063,10 @@ function ResumeEditorPage() {
   };
 
   /* ---------- 프로필 로드 ---------- */
-  // 섹션 DOM refs, 포커스 대기 id
-  const sectionRefs = useRef({}); // { [sectionId]: HTMLElement }
+  const sectionRefs = useRef({});
   const [pendingFocusId, setPendingFocusId] = useState(null);
-
-  // 섹션 포커스 큐 함수
   const focusSection = (id) => setPendingFocusId(id);
 
-  // 섹션이 바뀌거나 포커스 대기가 생기면 스크롤 + 첫 입력 포커스
   useEffect(() => {
     if (!pendingFocusId) return;
     const el = sectionRefs.current[pendingFocusId];
@@ -945,7 +1240,7 @@ function ResumeEditorPage() {
     const payload = {
       name: trimOrNull(profileToSave.name),
       phone: trimOrNull(profileToSave.phone),
-      birthYear: null, // 미사용
+      birthYear: null,
       birthDate: profileToSave.birthDate || null,
       profileImageUrl: trimOrNull(profileToSave.profileImageUrl),
       headline: trimOrNull(profileToSave.headline),
@@ -1198,7 +1493,7 @@ function ResumeEditorPage() {
       return;
     }
 
-    // 섹션별 프론트 밸리데이션 (경력/학력은 기존 그대로)
+    // 섹션별 프론트 밸리데이션
     if (sec.type === "experiences") {
       const items = sec.data || [];
       for (let i = 0; i < items.length; i++) {
@@ -1208,6 +1503,7 @@ function ResumeEditorPage() {
         if (msg) return alert(msg);
       }
     }
+
     if (sec.type === "educations") {
       const items = sec.data || [];
       for (let i = 0; i < items.length; i++) {
@@ -1218,18 +1514,61 @@ function ResumeEditorPage() {
       }
     }
 
+    if (sec.type === "projects") {
+      const items = sec.data || [];
+      for (let i = 0; i < items.length; i++) {
+        if (!items[i]?.projectName?.trim())
+          return alert(`프로젝트 #${i + 1}: 프로젝트명은 필수입니다.`);
+      }
+    }
+
+    if (sec.type === "certifications") {
+      const items = sec.data || [];
+      for (let i = 0; i < items.length; i++) {
+        const p = cfg.toPayload(items[i]);
+        if (!hasAnyValue(p)) continue;
+        const msg = validateCertificationPayload(p, i);
+        if (msg) return alert(msg);
+      }
+    }
+    if (sec.type === "languages") {
+      const items = sec.data || [];
+      for (let i = 0; i < items.length; i++) {
+        const p = cfg.toPayload(items[i]);
+        if (!hasAnyValue(p)) continue;
+        if (!p.language) return alert(`외국어 #${i + 1}: 언어는 필수입니다.`);
+      }
+    }
+    if (sec.type === "portfolios") {
+      const items = sec.data || [];
+      for (let i = 0; i < items.length; i++) {
+        const p = cfg.toPayload(items[i]);
+        if (!hasAnyValue(p)) continue;
+        if (!p.title) return alert(`포트폴리오 #${i + 1}: 제목은 필수입니다.`);
+        if (!p.url) return alert(`포트폴리오 #${i + 1}: URL은 필수입니다.`);
+        if (p.url && !/^https?:\/\/[\w.-]/i.test(p.url)) {
+          return alert(`포트폴리오 #${i + 1}: URL 형식이 올바르지 않습니다.`);
+        }
+      }
+    }
+
     try {
       await Promise.all(
         (sec.data || []).map(async (it) => {
+          // UPDATE
           if (it.id) {
-            // UPDATE (스킬 링크엔 보통 없음)
             if (!cfg.update) return;
             const urlForUpdate =
               cfg.update.length === 2
                 ? cfg.update(rid, it.id)
                 : cfg.update(it.id);
             const up = cfg.toPayload ? cfg.toPayload(it) : stripMeta(it);
-            if (!hasAnyValue(up)) return;
+            if (sec.type === "certifications") {
+              const msg = validateCertificationPayload(up);
+              if (msg) throw new Error(msg);
+            } else {
+              if (!hasAnyValue(up)) return;
+            }
             await axios.put(urlForUpdate, up);
             return;
           }
@@ -1237,19 +1576,15 @@ function ResumeEditorPage() {
           // CREATE
           if (!cfg.create) return;
           const reqPayload = cfg.toPayload ? cfg.toPayload(it) : stripMeta(it);
-          if (!hasAnyValue(reqPayload)) return; // 값 없으면 생성 스킵
 
-          let res;
           if (sec.type === "skills") {
-            // ✅ 스킬만 예외 처리: (1) 기존 스킬 연결 or (2) 새 스킬 생성+연결
+            let res;
             if (reqPayload.skillId) {
-              // (1) 기존 스킬 연결 — skillId를 쿼리스트링으로
               res = await axios.post(cfg.create(rid), null, {
                 params: { skillId: reqPayload.skillId },
                 validateStatus: () => true,
               });
             } else if (reqPayload.name) {
-              // (2) 새 스킬 생성 → skillId로 연결
               const created = await axios.post(
                 `${API}/skills`,
                 {
@@ -1260,7 +1595,6 @@ function ResumeEditorPage() {
                 { validateStatus: () => true }
               );
               if (created.status < 200 || created.status >= 300) throw created;
-
               const sid =
                 typeof created.data === "number"
                   ? created.data
@@ -1272,10 +1606,9 @@ function ResumeEditorPage() {
                 validateStatus: () => true,
               });
             } else {
-              return; // 안전망
+              return;
             }
 
-            // 🔁 409(이미 연결됨)도 성공으로 간주하여 계속 진행
             if (
               !((res.status >= 200 && res.status < 300) || res.status === 409)
             ) {
@@ -1302,39 +1635,49 @@ function ResumeEditorPage() {
                 )
               );
             }
+            return;
+          }
+
+          if (sec.type === "certifications") {
+            const msg = validateCertificationPayload(reqPayload);
+            if (msg) throw new Error(msg);
           } else {
-            // 다른 섹션은 바디로 그대로
-            res = await axios.post(cfg.create(rid), reqPayload, {
-              validateStatus: () => true,
-            });
+            if (!hasAnyValue(reqPayload)) return;
+          }
 
-            if (res.status < 200 || res.status >= 300) throw res;
+          const res = await axios.post(cfg.create(rid), reqPayload, {
+            validateStatus: () => true,
+          });
+          if (res.status < 200 || res.status >= 300) throw res;
 
-            const body = res.data;
-            const newId =
-              typeof body === "number"
-                ? body
-                : body?.id ?? body?.activityId ?? null;
+          const body = res.data;
+          const newId =
+            typeof body === "number"
+              ? body
+              : body?.id ??
+                body?.resumeCertificationId ??
+                body?.activityId ??
+                null;
 
-            if (newId) {
-              setSections((prev) =>
-                prev.map((s) =>
-                  s.id === sectionIdParam
-                    ? {
-                        ...s,
-                        data: s.data.map((d) =>
-                          d.subId === it.subId ? { ...d, id: newId } : d
-                        ),
-                      }
-                    : s
-                )
-              );
-            }
+          if (newId) {
+            setSections((prev) =>
+              prev.map((s) =>
+                s.id === sectionIdParam
+                  ? {
+                      ...s,
+                      data: s.data.map((d) =>
+                        d.subId === it.subId ? { ...d, id: newId } : d
+                      ),
+                    }
+                  : s
+              )
+            );
           }
         })
       );
 
       // 저장 후 해당 섹션 재로드
+      const cfg = SECTION_API[sec.type];
       if (cfg.list) {
         const listRes = await axios.get(cfg.list(rid), {
           validateStatus: () => true,
@@ -1453,6 +1796,7 @@ function ResumeEditorPage() {
         onClose={() => setIsPreviewOpen(false)}
         title={resumeTitle}
         user={user}
+        profile={userProfile}
         sections={sections}
         sectionComponents={sectionComponents}
       />

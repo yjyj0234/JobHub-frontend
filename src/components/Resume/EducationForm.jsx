@@ -4,22 +4,18 @@ import "../css/Form.css";
 
 /**
  * DB 컬럼 매핑
- * - school_name           ⇄ schoolName (text)
- * - school_type           ⇄ schoolType (text/select)
- * - major                 ⇄ major (text)
- * - minor                 ⇄ minor (text)
- * - degree                ⇄ degree (text)
- * - admission_date        ⇄ admissionDate (date)
- * - graduation_date       ⇄ graduationDate (date)
- * - graduation_status     ⇄ graduationStatus (text/select)
- * - gpa                   ⇄ gpa (number)
- * - max_gpa               ⇄ maxGpa (number)
- *
- * 부모로 올리는 객체의 키를 위 camelCase로 유지하세요.
- * (SECTION_API.educations.toPayload(stripMeta(it)) 그대로 사용 가능)
+ * - school_name  ⇄ schoolName
+ * - school_type  ⇄ schoolType
+ * - major        ⇄ major
+ * - minor        ⇄ minor
+ * - degree       ⇄ degree
+ * - admission_date    ⇄ admissionDate
+ * - graduation_date   ⇄ graduationDate
+ * - graduation_status ⇄ graduationStatus
+ * - gpa         ⇄ gpa
+ * - max_gpa     ⇄ maxGpa
  */
-function EducationForm({ data, onUpdate }) {
-  // 들어온 data를 폼 초기값으로 동기화
+function EducationForm({ data, onUpdate, isEditing = false }) {
   const [formData, setFormData] = useState({
     schoolName: "",
     schoolType: "",
@@ -31,7 +27,7 @@ function EducationForm({ data, onUpdate }) {
     graduationStatus: "",
     gpa: "",
     maxGpa: "",
-    ...data, // 이미 값이 있으면 덮어쓰기
+    ...data,
   });
 
   useEffect(() => {
@@ -39,9 +35,11 @@ function EducationForm({ data, onUpdate }) {
   }, [data]);
 
   const handleChange = (e) => {
+    if (!isEditing) return; // 편집 불가 상태에서는 무시
+
     const { name, value } = e.target;
 
-    // 숫자 필드는 숫자/빈값만 허용(문자 입력 방지)
+    // 숫자 필드는 숫자/빈값만 허용
     if (name === "gpa" || name === "maxGpa") {
       const v = value;
       if (v === "" || /^(\d+(\.\d{0,2})?)?$/.test(v)) {
@@ -57,6 +55,8 @@ function EducationForm({ data, onUpdate }) {
     onUpdate?.(updated);
   };
 
+  const dis = !isEditing;
+
   return (
     <div className="item-form">
       <div className="grid-layout">
@@ -70,6 +70,7 @@ function EducationForm({ data, onUpdate }) {
             value={formData.schoolName || ""}
             onChange={handleChange}
             placeholder="예) 잡Hub대학교"
+            disabled={dis}
           />
         </div>
 
@@ -83,15 +84,8 @@ function EducationForm({ data, onUpdate }) {
             value={formData.schoolType || ""}
             onChange={handleChange}
             placeholder="예) 대학교 / 대학원 / 고등학교"
+            disabled={dis}
           />
-          {/* 필요하면 select로 전환
-          <select id="schoolType" name="schoolType" value={formData.schoolType || ""} onChange={handleChange}>
-            <option value="">선택</option>
-            <option value="HIGH_SCHOOL">고등학교</option>
-            <option value="UNIVERSITY">대학교</option>
-            <option value="GRAD_SCHOOL">대학원</option>
-          </select>
-          */}
         </div>
 
         {/* 전공 */}
@@ -104,6 +98,7 @@ function EducationForm({ data, onUpdate }) {
             value={formData.major || ""}
             onChange={handleChange}
             placeholder="예) 컴퓨터공학과"
+            disabled={dis}
           />
         </div>
 
@@ -117,6 +112,7 @@ function EducationForm({ data, onUpdate }) {
             value={formData.minor || ""}
             onChange={handleChange}
             placeholder="예) 데이터사이언스"
+            disabled={dis}
           />
         </div>
 
@@ -130,6 +126,7 @@ function EducationForm({ data, onUpdate }) {
             value={formData.degree || ""}
             onChange={handleChange}
             placeholder="예) 학사 / 석사 / 박사"
+            disabled={dis}
           />
         </div>
 
@@ -142,6 +139,7 @@ function EducationForm({ data, onUpdate }) {
             name="admissionDate"
             value={formData.admissionDate || ""}
             onChange={handleChange}
+            disabled={dis}
           />
         </div>
 
@@ -154,26 +152,19 @@ function EducationForm({ data, onUpdate }) {
             name="graduationDate"
             value={formData.graduationDate || ""}
             onChange={handleChange}
+            disabled={dis}
           />
         </div>
 
         {/* 졸업 상태 */}
         <div className="form-field">
           <label htmlFor="graduationStatus">졸업 상태</label>
-          {/* <input
-            type="text"
-            id="graduationStatus"
-            name="graduationStatus"
-            value={formData.graduationStatus || ""}
-            onChange={handleChange}
-            placeholder="예) 재학 / 휴학 / 졸업 / 중퇴"
-          /> */}
-          {/* 필요하면 select로 전환 */}
           <select
             id="graduationStatus"
             name="graduationStatus"
             value={formData.graduationStatus || ""}
             onChange={handleChange}
+            disabled={dis}
           >
             <option value="">선택</option>
             <option value="재학">재학</option>
@@ -194,6 +185,7 @@ function EducationForm({ data, onUpdate }) {
             value={formData.gpa ?? ""}
             onChange={handleChange}
             placeholder="예) 3.80"
+            disabled={dis}
           />
         </div>
 
@@ -208,6 +200,7 @@ function EducationForm({ data, onUpdate }) {
             value={formData.maxGpa ?? ""}
             onChange={handleChange}
             placeholder="예) 4.50"
+            disabled={dis}
           />
         </div>
       </div>

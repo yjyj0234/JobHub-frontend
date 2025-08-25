@@ -4,8 +4,14 @@
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .grid-layout {
@@ -53,7 +59,7 @@
   box-sizing: border-box;
   font-size: 1rem;
   transition: all 0.2s;
-  
+
   /* 클릭 영역을 넓히기 위한 설정 */
   position: relative;
   cursor: pointer;
@@ -73,7 +79,6 @@
   background: transparent;
 }
 /* --- 수정 끝 --- */
-
 
 .form-field input:focus,
 .form-field select:focus,
@@ -140,4 +145,154 @@
   border-color: var(--c-accent);
   color: var(--c-accent);
   background-color: #fff;
+}
+/* ===== 진행중 토글 디자인 ===== */
+.toggle-field {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.toggle-subtext {
+  font-weight: 400;
+  font-size: 12px;
+  color: #6b7280; /* gray-500 */
+}
+
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle.readonly {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.toggle-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: inherit;
+}
+
+.toggle-track {
+  width: 100%;
+  height: 100%;
+  background: #e5e7eb; /* gray-200 */
+  border-radius: 9999px;
+  transition: background 160ms ease;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  box-sizing: border-box;
+}
+
+.toggle-thumb {
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 9999px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  transform: translateX(0);
+  transition: transform 160ms ease;
+}
+
+/* checked 상태 */
+.toggle.checked .toggle-track {
+  background: #3b82f6; /* blue-500 */
+}
+.toggle.checked .toggle-thumb {
+  transform: translateX(20px);
+}
+
+/* 접근성: 키보드 포커스 링 */
+.toggle-input:focus-visible + .toggle-track {
+  outline: 2px solid #93c5fd; /* blue-300 */
+  outline-offset: 2px;
+}
+
+/* 비활성화된 종료일 시각적 힌트 */
+input[disabled][type="date"]::placeholder {
+  color: #9ca3af; /* gray-400 */
+  font-style: italic;
+}
+/* =========================
+   Fluency (datalist) styling
+   ========================= */
+
+/* datalist가 연결된 input을 일반 select처럼 보이게 */
+.form-field input[list] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 85%;
+  height: 40px; /* 프로젝트에서 쓰는 인풋 높이에 맞춰 조정 */
+  padding: 0 2.25rem 0 0.875rem; /* 화살표 공간 확보 위해 오른쪽 여유 */
+  border: 1px solid var(--input-border, #e2e8f0);
+  border-radius: 8px;
+  background: var(--input-bg, #fff)
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%2399A2AD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>')
+    no-repeat right 0.75rem center;
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--text, #0f172a);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* 포커스 상태 (다른 인풋과 동일한 효과로 맞추세요) */
+.form-field input[list]:focus {
+  outline: none;
+  border-color: var(--input-focus, #94a3b8);
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.25);
+}
+
+/* placeholder 컬러 통일 */
+.form-field input[list]::placeholder {
+  color: var(--placeholder, #9ca3af);
+}
+
+/* 읽기 전용(미편집 모드)일 때도 다른 인풋과 동일한 톤 */
+.form-field [aria-disabled="true"],
+.form-field [readonly] {
+  background-color: var(--input-readonly-bg, #f8fafc);
+  color: var(--text-muted, #475569);
+  cursor: default;
+}
+
+/* 읽기 전용일 때 placeholder도 옅게 */
+.form-field [aria-disabled="true"]::placeholder,
+.form-field [readonly]::placeholder {
+  color: var(--placeholder, #9ca3af);
+}
+
+/* 고대비/접근성 모드에서 배경 아이콘 제거 */
+@media (forced-colors: active) {
+  .form-field input[list] {
+    background-image: none;
+    padding-right: 0.875rem;
+  }
+}
+
+/* 모바일에서 줌/글자깨짐 방지 (선택) */
+@supports (-webkit-touch-callout: none) {
+  .form-field input[list] {
+    font-size: 16px;
+  }
 }
