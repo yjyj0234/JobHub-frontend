@@ -638,7 +638,7 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
                   {statusInfo.text}
                 </span>
               )}
-              {job.isNew && <span className="new-label">NEW</span>}
+              
             </div>
           </div>
         </div>
@@ -660,7 +660,7 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
         </span>
         <span className="job-detail-item">
           <Briefcase size={14} />
-          {job.experience ?? ""}
+          {job.employment ?? ""}
         </span>
         <span className="job-detail-item">
           <BookOpen size={14} />
@@ -668,7 +668,7 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
         </span>
         <span className="job-detail-item">
           <Building2 size={14} />
-          {job.employment ?? ""}
+          {job.experience ?? ""}
         </span>
       </div>
 
@@ -694,7 +694,7 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
             <span className="deadline-warning">{job.deadline}</span>
           )}
         </div>
-        <div className="salary-badge">{job.salary ?? ""}</div>
+        <div className="salary-badge">지원하기</div>
       </div>
     </div>
   );
@@ -793,7 +793,7 @@ const JobPosting = () => {
     if (type === "NEGOTIABLE") return "면접 후 협의";
 
     const formatNum = (n) => Math.floor(n / 10000);
-    if (min && max) return `${formatNum(min)}~${formatNum(max)}만원`;
+    if (min && max) return `${formatNum(min)}~${formatNum(max)}만원 `;
     if (min) return `${formatNum(min)}만원 이상`;
     if (max) return `~${formatNum(max)}만원`;
     return "회사내규";
