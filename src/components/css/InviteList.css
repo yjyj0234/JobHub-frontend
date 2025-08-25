@@ -4,14 +4,47 @@
   padding: 20px;
 }
 
-.invite-list-title {
-  text-align: center;
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 30px;
+}
+
+.invite-list-title {
   color: #2c3e50;
   font-size: 28px;
   font-weight: bold;
   border-bottom: 3px solid #3498db;
   padding-bottom: 15px;
+  margin: 0;
+}
+
+.goback-btn {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.goback-btn:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+}
+
+.goback-btn:before {
+  content: "←";
+  font-size: 16px;
+  font-weight: bold;
 }
 
 .loading-message {
@@ -126,7 +159,7 @@
 }
 
 .enter-button {
-  background: linear-gradient(135deg, #4e86da 0%, #8692c2 100%);
+  background-color: #3498db;
   color: white;
   border: none;
   border-radius: 8px;
@@ -140,6 +173,6 @@
 }
 
 .enter-button:hover {
-  background: linear-gradient(135deg, #3074d9 0%, #5b6eba 100%);
+  background-color: #2980b9;
   transform: scale(1.05);
 }

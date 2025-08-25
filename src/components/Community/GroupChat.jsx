@@ -146,7 +146,7 @@ export default function GroupChat() {
                       <div className="gc-room-header">
                         <h3 className="gc-room-name">{room.roomName}</h3>
                         {room.isOwner && (
-                          <span className="gc-owner-badge">방장</span>
+                          <span className="gc-owner-badge" style={{backgroundColor: '#6c757d', color: '#f8f9fa'}}>방장</span>
                         )}
                       </div>
                       <div className="gc-room-info">
@@ -160,6 +160,7 @@ export default function GroupChat() {
                       <button
                         type="button"
                         className="gc-delete-btn"
+                        style={{backgroundColor: '#6c757d', color: '#f8f9fa'}}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDelete(room.id);
