@@ -19,14 +19,12 @@
     background: rgba(255, 255, 255, 0.15);
     animation: float 6s infinite ease-in-out;
 }
-
 .service-hero::before { 
     top: -60px; 
     left: -60px; 
     width: 250px; 
     height: 250px; 
 }
-
 .service-hero::after { 
     bottom: -80px; 
     right: -80px; 
@@ -62,8 +60,8 @@
 }
 
 .service-search-wrapper input {
-  width: 400px;
-  padding: 20px 20px 20px 50px;
+  width: 100%;
+  padding: 20px 20px 20px 60px;
   border-radius: 30px;
   border: 1px solid #e0e7ff;
   font-size: 1.05rem;

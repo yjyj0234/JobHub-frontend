@@ -321,12 +321,6 @@ function GlobalHeader({ onLoginClick }) {
                 >
                   <MapPin size={16} /> 지역
                 </button>
-                <button
-                  className="scrolled-trigger-btn"
-                  onClick={() => setScrolledSearchExpanded(true)}
-                >
-                  <Briefcase size={16} /> 직무
-                </button>
               </div>
             )}
             <div className="auth-buttons">
