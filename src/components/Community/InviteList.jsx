@@ -46,7 +46,7 @@ export default function InterviewRooms() {
   return (
     <div className="invite-list-container">
       <div className="header-section">
-        <h2 className="invite-list-title">면접 채팅방 목록</h2>
+        <h2 className="invite-list-title">면접제의 채팅방 목록</h2>
         <button className="goback-btn" onClick={goBack}>
           뒤로가기
         </button>

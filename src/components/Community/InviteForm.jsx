@@ -40,7 +40,7 @@ export default function InviteFormCompany() {
 
   return (
     <div className="invite-form-container">
-      <h3 className="invite-form-title">면접 제안 보내기</h3>
+      <h3 className="invite-form-title">면접 제의 보내기</h3>
       
       <form onSubmit={handleSubmit} className="invite-form">
         <div className="form-group">

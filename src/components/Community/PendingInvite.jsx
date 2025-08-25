@@ -78,7 +78,7 @@ export default function PendingInvites() {
   return (
     <div className="pending-invite-container">
       <div style={{position: 'relative'}}>
-        <h3 className="pending-invite-title">내가 받은 면접제안</h3>
+        <h3 className="pending-invite-title">내가 받은 면접제의</h3>
         <button type="button" className="goback-btn" onClick={goBack}>뒤로가기</button>
       </div>
       
