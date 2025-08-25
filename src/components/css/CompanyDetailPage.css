@@ -1,0 +1,275 @@
+/* src/components/css/CompanyDetailPage.css */
+.company-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* 헤더 섹션 */
+.company-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 40px;
+  margin-bottom: 30px;
+  color: white;
+}
+
+.company-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.company-logo-wrapper {
+  width: 120px;
+  height: 120px;
+  background: white;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.company-logo-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.company-logo-placeholder {
+  color: #667eea;
+}
+
+.company-header-info {
+  flex: 1;
+}
+
+.company-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.company-name-row h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.verified-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.company-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 16px;
+}
+
+.company-meta span,
+.company-meta a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: white;
+  text-decoration: none;
+}
+
+.company-meta a:hover {
+  text-decoration: underline;
+}
+
+.bookmark-btn {
+  padding: 12px 24px;
+  background: white;
+  color: #667eea;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s;
+}
+
+.bookmark-btn.active {
+  background: #ffd700;
+  color: #333;
+}
+
+/* 컨텐츠 섹션 */
+.company-content {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+}
+
+.content-section {
+  margin-bottom: 40px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid #eee;
+}
+
+.content-section:last-child {
+  border-bottom: none;
+}
+
+.content-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.company-description {
+  line-height: 1.8;
+  color: #555;
+}
+
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+/* 채용공고 섹션 */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.view-all-link {
+  color: #667eea;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.view-all-link:hover {
+  text-decoration: underline;
+}
+
+.job-postings-list {
+  display: grid;
+  gap: 16px;
+}
+
+.job-posting-card {
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.job-posting-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+}
+
+.posting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.posting-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.posting-date {
+  color: #888;
+  font-size: 14px;
+}
+
+.posting-meta {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.posting-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.posting-salary {
+  font-weight: 600;
+  color: #667eea;
+}
+
+.no-postings {
+  text-align: center;
+  color: #888;
+  padding: 40px 0;
+}
+
+/* 로딩/에러 상태 */
+.company-detail-loading,
+.company-detail-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 20px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f0f0f0;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .company-header-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .company-meta {
+    justify-content: center;
+  }
+  
+  .benefits-grid {
+    grid-template-columns: 1fr;
+  }
+}

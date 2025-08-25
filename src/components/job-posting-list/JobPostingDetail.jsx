@@ -668,7 +668,13 @@ const isClosed = isClosedByStatus || isDeadlineClosed;
                   {isClosed && <span className="title-closed">마감된 공고입니다.</span>}
                 </div>
                 <div className="company-line">
-                  <span className="company-name">{job.company}</span>
+                 <Link 
+  to={`/companies/${job.companyId}`} 
+  className="company-name company-link"
+  onClick={(e) => e.stopPropagation()}
+>
+  {job.company}
+</Link>
                   {closeLabel && <span className="deadline-badge">{closeLabel}</span>}
                 </div>
               </div>
