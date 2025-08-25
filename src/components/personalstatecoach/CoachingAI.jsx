@@ -1,12 +1,13 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
+import "../css/proofread.css";
 
 /**
- * 백엔드 응답 포맷 가정:
- * POST /api/proofread  { text: string }
- * -> { corrected: string, issues: [{ start: number, end: number, original: string, suggestion: string, message: string, type: 'SPELL'|'SPACING'|'STYLE' }]}
+ * POST /api/proofread { text }
+ * -> { corrected, issues: [{ start, end, original, suggestion, message, type }] }
  */
 
 const MAX_LEN = 10000;
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || "/").replace(/\/+$/, "");
 
 function escapeHtml(s = "") {
   return s
@@ -21,9 +22,13 @@ function buildHighlightedHtml(text, issues) {
   if (!text) return "";
   if (!Array.isArray(issues) || issues.length === 0) return escapeHtml(text);
 
-  // 겹치는 구간 최소 가정(일반적으로 API는 겹치지 않게 내려줌)
   const ranges = issues
-    .filter(it => Number.isFinite(it.start) && Number.isFinite(it.end) && it.end > it.start)
+    .filter(
+      (it) =>
+        Number.isFinite(it.start) &&
+        Number.isFinite(it.end) &&
+        it.end > it.start
+    )
     .sort((a, b) => a.start - b.start);
 
   let html = "";
@@ -31,14 +36,14 @@ function buildHighlightedHtml(text, issues) {
 
   ranges.forEach((r) => {
     const { start, end, message, type, suggestion } = r;
-    // 앞쪽 평문
-    if (cursor < start) {
-      html += escapeHtml(text.slice(cursor, start));
-    }
-    // 문제 구간
+    if (cursor < start) html += escapeHtml(text.slice(cursor, start));
     const bad = text.slice(start, end);
     const title = escapeHtml(
-      [type || "ISSUE", message ? `: ${message}` : "", suggestion ? ` → ${suggestion}` : ""]
+      [
+        type || "ISSUE",
+        message ? `: ${message}` : "",
+        suggestion ? ` → ${suggestion}` : "",
+      ]
         .join("")
         .trim()
     );
@@ -46,22 +51,19 @@ function buildHighlightedHtml(text, issues) {
     cursor = end;
   });
 
-  // 남은 꼬리
-  if (cursor < text.length) {
-    html += escapeHtml(text.slice(cursor));
-  }
+  if (cursor < text.length) html += escapeHtml(text.slice(cursor));
   return html;
 }
 
 export default function CoachingAI() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null); // { corrected, issues: [] }
+  const [result, setResult] = useState(null);
   const [error, setError] = useState("");
+  const abortRef = useRef(null);
 
   const chars = text.length;
   const over = chars > MAX_LEN;
-
   const canSubmit = !loading && !over && text.trim().length > 0;
 
   const highlightedOriginal = useMemo(() => {
@@ -70,32 +72,55 @@ export default function CoachingAI() {
 
   const handleCheck = async () => {
     if (!canSubmit) return;
+    if (abortRef.current) {
+      try {
+        abortRef.current.abort();
+      } catch {}
+    }
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     setError("");
     setResult(null);
 
     try {
-      const res = await fetch("/api/proofread", {
+      const url =
+        API_BASE === "/" ? "/api/proofread" : `${API_BASE}/api/proofread`;
+      const res = await fetch(url, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ text }),
+        signal: controller.signal,
       });
 
       if (!res.ok) {
+        if (res.status === 401)
+          throw new Error("로그인이 필요합니다. 먼저 로그인해 주세요.");
+        if (res.status === 403) throw new Error("접근 권한이 없습니다.");
+        if (res.status === 404)
+          throw new Error("엔드포인트가 없습니다. 프록시/경로 확인!");
         const t = await res.text().catch(() => "");
-        throw new Error(`HTTP ${res.status} ${res.statusText} ${t ? `- ${t}` : ""}`);
+        throw new Error(
+          `HTTP ${res.status} ${res.statusText}${t ? ` - ${t}` : ""}`
+        );
       }
 
       const data = await res.json();
-      // 안전망
       setResult({
         corrected: typeof data.corrected === "string" ? data.corrected : "",
         issues: Array.isArray(data.issues) ? data.issues : [],
       });
     } catch (e) {
+      if (e.name === "AbortError") return;
       console.error(e);
-      setError("검사 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+      setError(
+        e?.message || "검사 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+      );
     } finally {
       setLoading(false);
     }
@@ -117,108 +142,138 @@ export default function CoachingAI() {
   };
 
   return (
-    <div className="prf-container">
+    <div className="prf-container prf-compact">
       <div className="prf-header">
         <div className="prf-icon">✍️</div>
         <div>
           <h1 className="prf-title">맞춤법 · 띄어쓰기 검사</h1>
-          <p className="prf-sub">자소서·이메일을 붙여넣고 한 번에 교정해 보세요.</p>
+          <p className="prf-sub">
+            자소서·이메일을 붙여넣고 한 번에 교정해 보세요.
+          </p>
         </div>
       </div>
 
-      <div className="prf-grid">
+      <div className="prf-grid prf-grid-compact">
         {/* 입력 카드 */}
-        <section className="prf-card">
-          <div className="prf-card-head">
+        <section className="prf-card prf-card-compact">
+          <div className="prf-card-head prf-card-head-sticky">
             <h2>입력</h2>
             <div className={`prf-counter ${over ? "over" : ""}`}>
               {chars.toLocaleString()} / {MAX_LEN.toLocaleString()}자
             </div>
           </div>
 
-          <textarea
-            className="prf-textarea"
-            placeholder="여기에 글을 붙여넣으세요. (최대 10,000자)"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            maxLength={MAX_LEN + 2000} // UX: 살짝 초과 입력되도 카운터 경고로 안내
-          />
+          <div className="prf-card-body prf-scroll">
+            <textarea
+              className="prf-textarea prf-textarea-compact"
+              placeholder="여기에 글을 붙여넣으세요. (최대 10,000자)"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              maxLength={MAX_LEN + 2000}
+            />
+            {error && <div className="prf-error">{error}</div>}
+          </div>
 
-          <div className="prf-actions">
-            <button className="btn ghost" type="button" onClick={handleClear} disabled={!text}>
+          <div className="prf-actions prf-actions-compact">
+            <button
+              className="btn ghost sm"
+              type="button"
+              onClick={handleClear}
+              disabled={!text}
+            >
               비우기
             </button>
-            <button className="btn primary" type="button" onClick={handleCheck} disabled={!canSubmit}>
+            <button
+              className="btn primary sm"
+              type="button"
+              onClick={handleCheck}
+              disabled={!canSubmit}
+            >
               {loading ? "검사 중..." : "검사하기"}
             </button>
           </div>
-
-          {error && <div className="prf-error">{error}</div>}
         </section>
 
         {/* 결과 카드 */}
-        <section className="prf-card">
-          <div className="prf-card-head">
+        <section className="prf-card prf-card-compact">
+          <div className="prf-card-head prf-card-head-sticky">
             <h2>결과</h2>
             {result?.corrected && (
-              <button className="btn outline sm" onClick={handleCopy}>교정문 복사</button>
+              <button
+                className="btn outline xs"
+                onClick={handleCopy}
+                aria-label="교정문 복사"
+              >
+                복사
+              </button>
             )}
           </div>
 
-          {!result && !loading && (
-            <div className="prf-placeholder">검사 결과가 여기에 표시됩니다.</div>
-          )}
-
-          {/* 교정문 */}
-          {result?.corrected && (
-            <>
-              <div className="prf-block">
-                <div className="prf-label">교정된 문장</div>
-                <textarea
-                  className="prf-textarea small"
-                  value={result.corrected}
-                  readOnly
-                />
+          <div className="prf-card-body prf-scroll">
+            {!result && !loading && (
+              <div className="prf-placeholder">
+                검사 결과가 여기에 표시됩니다.
               </div>
+            )}
 
-              <div className="prf-block">
-                <div className="prf-label">문제 구간(원문 기준 하이라이트)</div>
-                <div
-                  className="prf-preview"
-                  dangerouslySetInnerHTML={{ __html: highlightedOriginal }}
-                />
-              </div>
-            </>
-          )}
+            {result?.corrected && (
+              <>
+                <div className="prf-block prf-block-compact">
+                  <div className="prf-label sm">교정된 문장</div>
+                  <textarea
+                    className="prf-textarea small prf-textarea-compact"
+                    value={result.corrected}
+                    readOnly
+                  />
+                </div>
 
-          {/* 이슈 리스트 */}
-          {result?.issues?.length > 0 && (
-            <div className="prf-issues">
-              <div className="prf-issues-head">
-                발견된 항목 <strong>{result.issues.length}</strong>건
-              </div>
-              <ul className="prf-issue-list">
-                {result.issues.map((it, idx) => (
-                  <li key={idx} className="prf-issue">
-                    <span className={`tag tag-${(it.type || "OTHER").toLowerCase()}`}>
-                      {it.type || "기타"}
-                    </span>
-                    <div className="issue-text">
-                      <div className="from">{it.original}</div>
-                      <div className="arrow">→</div>
-                      <div className="to">{it.suggestion || "제안 없음"}</div>
+                <div className="prf-block prf-block-compact">
+                  <div className="prf-label sm">
+                    문제 구간(원문 기준 하이라이트)
+                  </div>
+                  <div
+                    className="prf-preview prf-preview-compact"
+                    dangerouslySetInnerHTML={{ __html: highlightedOriginal }}
+                  />
+                </div>
+
+                {result?.issues?.length > 0 && (
+                  <div className="prf-issues prf-issues-compact">
+                    <div className="prf-issues-head">
+                      발견된 항목 <strong>{result.issues.length}</strong>건
                     </div>
-                    {it.message && <div className="issue-msg">{it.message}</div>}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+                    <ul className="prf-issue-list">
+                      {result.issues.map((it, idx) => (
+                        <li key={idx} className="prf-issue prf-issue-compact">
+                          <span
+                            className={`tag tag-${(
+                              it.type || "OTHER"
+                            ).toLowerCase()}`}
+                          >
+                            {it.type || "기타"}
+                          </span>
+                          <div className="issue-text">
+                            <div className="from">{it.original}</div>
+                            <div className="arrow">→</div>
+                            <div className="to">
+                              {it.suggestion || "제안 없음"}
+                            </div>
+                          </div>
+                          {it.message && (
+                            <div className="issue-msg">{it.message}</div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            )}
 
-          {/* 로딩 상태 */}
-          {loading && (
-            <div className="prf-loading">AI가 문장을 분석 중입니다...</div>
-          )}
+            {loading && (
+              <div className="prf-loading">AI가 문장을 분석 중입니다...</div>
+            )}
+          </div>
         </section>
       </div>
     </div>
