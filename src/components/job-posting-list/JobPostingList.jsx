@@ -1,15 +1,13 @@
 // src/components/JobPostingList.jsx
-import React, { useState, useEffect } from "react";
-
-import { useLocation } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+ import React, { useState, useEffect } from "react";
+ import { useLocation, useNavigate, Link } from "react-router-dom";
 
 import {
   Search,
   MapPin,
   Briefcase,
   Eye,
-  Building2,
+  Building,
   Award,
   BookOpen,
   Star,
@@ -633,11 +631,7 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
           </div>
           <div className="company-info">
   {job.companyId ? (
-    <Link 
-      to={`/companies/${job.companyId}`}
-      className="company-name"
-      onClick={(e) => e.stopPropagation()}
-    >
+    <Link to={`/companies/${job.companyId}`} className="company-name" onClick={(e) => e.stopPropagation()}>
       {job.company}
     </Link>
   ) : (
@@ -678,9 +672,9 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
           <BookOpen size={14} />
           {job.education || "학력무관"}
         </span>
-        <span className="job-detail-item">
-          <Building2 size={14} />
-          {job.experience || "경력무관"}
+       <span className="job-detail-item">
+        <Building size={14} />
+        {job.experience || "경력무관"}
         </span>
       </div>
 
@@ -744,6 +738,7 @@ const JobPosting = () => {
   // API → UI 매핑
   const mapApiJobToUi = (j) => ({
     id: j.id,
+    companyId: j.companyId,
     company: j.companyName,
     logo: j.companyLogo,
     position: j.title,
