@@ -114,18 +114,19 @@
 }
 
 .cta-button.secondary {
-  background: transparent;
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--c-accent);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .cta-button.secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 1);
   transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
 }
+
+
+
 
 /* ========== 애니메이션 키프레임 ========== */
 @keyframes fadeInUp {

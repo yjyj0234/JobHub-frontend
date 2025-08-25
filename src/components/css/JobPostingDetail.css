@@ -1,7 +1,7 @@
 /* JobPostingDetail.css */
 .job-detail-container {
   background-color: var(--c-bg-light);
-  min-height: 100vh;
+  min-height: 100dvh;
   padding-bottom: 40px;
   background-color: white;
   border: 1px solid rgb(241, 236, 236);
@@ -9,9 +9,10 @@
 
 .detail-header {
   position: relative;
-  background:
-    linear-gradient(135deg, var(--c-accent) 0%, #8692c2 100%),
-    radial-gradient(1200px 200px at 20% -50%, rgba(255,255,255,0.25), transparent 60%);
+background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.08);
   padding: 2rem 0;
   margin-bottom: 2rem;
   color: white;

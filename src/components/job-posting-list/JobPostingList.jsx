@@ -1,15 +1,13 @@
 // src/components/JobPostingList.jsx
-import React, { useState, useEffect } from "react";
-
-import { useLocation } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+ import React, { useState, useEffect } from "react";
+ import { useLocation, useNavigate, Link } from "react-router-dom";
 
 import {
   Search,
   MapPin,
   Briefcase,
   Eye,
-  Building2,
+  Building,
   Award,
   BookOpen,
   Star,
@@ -563,24 +561,33 @@ const JobFilters = ({ onFilterChange }) => {
   );
 };
 
+// JobPostingList.jsx의 getJobStatusDisplay 함수 수정
 const getJobStatusDisplay = (job) => {
-  // DEADLINE 타입이면서 마감일이 지난 경우
-  if (job.closeType === "DEADLINE" && job.closeDate) {
-    const closeDate = new Date(job.closeDate);
-    if (closeDate < new Date()) {
-      return { text: "마감", className: "status-closed" };
-    }
-  }
-
-  // 정상 상태 체크
+  // 백엔드에서 이미 처리한 상태를 그대로 사용
   switch (job.status) {
     case "OPEN":
+      // DEADLINE 타입이면 D-Day 표시 추가
+      if (job.closeType === "DEADLINE" && job.closeDate) {
+        const daysLeft = Math.ceil(
+          (new Date(job.closeDate) - new Date()) / (1000 * 60 * 60 * 24)
+        );
+        if (daysLeft === 0) {
+          return { text: "D-DAY", className: "status-dday" };
+        } else if (daysLeft > 0 && daysLeft <= 7) {
+          return { text: `D-${daysLeft}`, className: "status-deadline" };
+        }
+      }
       return { text: "채용중", className: "status-open" };
-    case "CLOSED":
+    
     case "EXPIRED":
+      return { text: "마감(기간만료)", className: "status-expired" };
+    
+    case "CLOSED":
       return { text: "마감", className: "status-closed" };
+    
     case "DRAFT":
-      return { text: "임시저장", className: "status-draft" };
+      return null; // 리스트에 표시 안 함
+    
     default:
       return { text: job.status, className: "" };
   }
@@ -588,12 +595,17 @@ const getJobStatusDisplay = (job) => {
 
 // ==================== 채용공고 아이템 ====================
 const JobItem = ({ job, onBookmark, onOpen }) => {
-  // ✅ 중괄호 사용하고 변수 선언
   const statusInfo = getJobStatusDisplay(job);
+  
+  // 마감 여부 확인
+  const isClosed = job.status === "CLOSED" || job.status === "EXPIRED" || 
+                   (statusInfo && statusInfo.text === "마감");
 
-  // ✅ return 문 추가
   return (
-    <div className="job-item" onClick={onOpen}>
+    <div 
+      className={`job-item ${isClosed ? 'job-item-closed' : ''}`} 
+      onClick={onOpen}
+    >
       <div className="job-item-header">
         <div className="company-section">
           <div className="company-logo-box">
@@ -618,29 +630,22 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
             )}
           </div>
           <div className="company-info">
-            <div className="company-name">{job.company}</div>
-            <div className="job-position">
-              {job.position}
-              {statusInfo.text !== "채용중" && (
-                <span
-                  className={`status-badge ${statusInfo.className}`}
-                  style={{
-                    marginLeft: "8px",
-                    padding: "2px 8px",
-                    borderRadius: "4px",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    backgroundColor:
-                      statusInfo.text === "마감" ? "#ef4444" : "#6b7280",
-                    color: "white",
-                  }}
-                >
-                  {statusInfo.text}
-                </span>
-              )}
-              
-            </div>
-          </div>
+  {job.companyId ? (
+    <Link to={`/companies/${job.companyId}`} className="company-name" onClick={(e) => e.stopPropagation()}>
+      {job.company}
+    </Link>
+  ) : (
+    <div className="company-name">{job.company}</div>
+  )}
+  <div className="job-position">
+    {job.position}
+    {statusInfo && statusInfo.text !== "채용중" && (
+      <span className={`status-badge ${statusInfo.className}`}>
+        {statusInfo.text}
+      </span>
+    )}
+  </div>
+</div>
         </div>
         <button
           className={`bookmark-button ${job.bookmarked ? "active" : ""}`}
@@ -648,6 +653,7 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
             e.stopPropagation();
             onBookmark(job.id);
           }}
+          disabled={isClosed}
         >
           <Star size={24} fill={job.bookmarked ? "currentColor" : "none"} />
         </button>
@@ -656,24 +662,24 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
       <div className="job-details">
         <span className="job-detail-item">
           <MapPin size={14} />
-          {job.location}
+          {job.location || "지역 미지정"}
         </span>
         <span className="job-detail-item">
           <Briefcase size={14} />
-          {job.employment ?? ""}
+          {job.employment || "정규직"}
         </span>
         <span className="job-detail-item">
           <BookOpen size={14} />
-          {job.education ?? ""}
+          {job.education || "학력무관"}
         </span>
-        <span className="job-detail-item">
-          <Building2 size={14} />
-          {job.experience ?? ""}
+       <span className="job-detail-item">
+        <Building size={14} />
+        {job.experience || "경력무관"}
         </span>
       </div>
 
       <div className="job-skills">
-        {(job.skills ?? []).map((skill) => (
+        {(job.skills ?? []).slice(0, 5).map((skill) => (
           <span key={skill} className="skill-tag">
             {skill}
           </span>
@@ -688,13 +694,19 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
           </span>
           <span className="meta-info-item">
             <User size={14} />
-            지원 {job.applications ?? 0}
+            지원 {(job.applications ?? 0).toLocaleString()}
           </span>
-          {job.deadline && job.deadline !== "상시채용" && (
-            <span className="deadline-warning">{job.deadline}</span>
-          )}
+          {/* 마감일/상시채용 표시 */}
+          
+<span className={`deadline-info ${
+  isClosed ? 'deadline-closed' : ''
+} ${
+  (job.deadline === "상시채용" || !job.closeDate) ? 'always-open' : ''
+}`}>
+  {job.deadline || formatDeadline(job.closeType, job.closeDate)}
+</span>
         </div>
-        <div className="salary-badge">지원하기</div>
+        
       </div>
     </div>
   );
@@ -726,11 +738,11 @@ const JobPosting = () => {
   // API → UI 매핑
   const mapApiJobToUi = (j) => ({
     id: j.id,
+    companyId: j.companyId,
     company: j.companyName,
     logo: j.companyLogo,
     position: j.title,
     location: (j.regions ?? [])[0] ?? "",
-    // ✅ DB에서 받은 실제 데이터 사용
     experience: j.experienceLevel
       ? mapExperienceLevel(j.experienceLevel)
       : "경력무관",
@@ -742,9 +754,10 @@ const JobPosting = () => {
       : "정규직",
     salary: formatSalary(j.minSalary, j.maxSalary, j.salaryType),
     skills: j.skills ?? [],
-    status: j.status ?? "OPEN", // 상태 추가
-    closeDate: j.closeDate, // 마감일 추가
-    deadline: formatDeadline(j.closeType, j.closeDate), // 마감 표시 포맷
+    status: j.status ?? "OPEN",
+    closeType: j.closeType, // ✅ closeType 추가
+    closeDate: j.closeDate,
+    deadline: formatDeadline(j.closeType, j.closeDate),
     views: j.viewCount ?? 0,
     applications: j.applicationCount ?? 0,
     isNew:
@@ -752,6 +765,7 @@ const JobPosting = () => {
       Date.now() - new Date(j.createdAt).getTime() < 1000 * 60 * 60 * 24 * 7,
     bookmarked: false,
   });
+
 
   const mapExperienceLevel = (level) => {
     const map = {
@@ -800,14 +814,28 @@ const JobPosting = () => {
   };
 
   const formatDeadline = (closeType, closeDate) => {
-    if (closeType === "CONTINUOUS") return "상시채용";
-    if (closeType === "UNTIL_FILLED") return "충원시까지";
-    if (closeDate) return `~ ${closeDate.substring(0, 10)}`;
-    return "";
-  };
+  if (closeType === "CONTINUOUS" || closeType === "continuous") return "상시채용";
+  if (closeType === "UNTIL_FILLED" || closeType === "until_filled") return "충원시까지";
+  if (closeType === "PERIODIC" || closeType === "periodic") return "주기적 채용";
+  
+  if (closeDate) {
+    // 날짜가 있으면 포맷팅
+    try {
+      const date = new Date(closeDate);
+      if (!isNaN(date.getTime())) {
+        return `~ ${date.toISOString().substring(0, 10)}`;
+      }
+    } catch (e) {
+      console.error("날짜 파싱 오류:", e);
+    }
+  }
+  
+  // 날짜가 없거나 파싱 실패시 상시채용
+  return "상시채용";
+};
 
   // 초기 로드 함수
-  const handleInitialLoad = async () => {
+   const handleInitialLoad = async () => {
     const body = {
       keyword: null,
       regionIds: [],
@@ -822,8 +850,6 @@ const JobPosting = () => {
       size: 20,
     };
 
-    console.log("요청 보내기:", JSON.stringify(body, null, 2));
-
     setLoading(true);
     setError(null);
     try {
@@ -836,13 +862,13 @@ const JobPosting = () => {
       const page = await res.json();
       const list = (page.content ?? []).map(mapApiJobToUi);
 
-      // ✅ 방법 1: 필터링 결과를 변수에 저장
-      const filteredList = list.filter(
+      // DRAFT 상태 필터링 (백엔드에서 이미 처리되지만 안전장치)
+      const activeJobs = list.filter(
         (job) => job.status !== "DRAFT" && job.status !== "draft"
       );
 
-      setJobs(filteredList); // ✅ 필터링된 리스트 사용
-      setFilteredJobs(filteredList); // ✅ 필터링된 리스트 사용
+      setJobs(activeJobs);
+      setFilteredJobs(activeJobs);
     } catch (e) {
       console.error("초기 데이터 로드 실패:", e);
       setJobs([]);
@@ -925,18 +951,15 @@ const JobPosting = () => {
           : null,
       regionIds: regionIds.length > 0 ? regionIds : null,
       categoryIds: categoryIds.length > 0 ? categoryIds : null,
-      employmentType: null, // ✅ 필터 값이 있으면 추가
-      experienceLevel: null, // ✅ 필터 값이 있으면 추가
-      minSalary: null, // ✅ null로 초기화
-      maxSalary: null, // ✅ null로 초기화
-      isRemote: null, // ✅ null로 초기화
+      employmentType: null,
+      experienceLevel: null,
+      minSalary: null,
+      maxSalary: null,
       isRemote: searchParams.quickFilters?.includes("재택근무") ? true : null,
       sortBy: "latest",
       page: 0,
       size: 20,
     };
-
-    console.log("API 요청 Body:", body);
 
     setLoading(true);
     setError(null);
@@ -950,9 +973,13 @@ const JobPosting = () => {
       const page = await res.json();
       const list = (page.content ?? []).map(mapApiJobToUi);
 
-      const filterDraftPostings = filterDraftPostings(list);
-      setJobs(list);
-      setFilteredJobs(list);
+      // ✅ 오류 수정: filterDraftPostings 함수 대신 직접 필터링
+      const activeJobs = list.filter(
+        (job) => job.status !== "DRAFT" && job.status !== "draft"
+      );
+
+      setJobs(activeJobs);
+      setFilteredJobs(activeJobs);
     } catch (e) {
       console.error("검색 실패:", e);
       setJobs([]);

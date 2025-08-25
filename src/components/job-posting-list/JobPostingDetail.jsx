@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import {
   MapPin,
   Briefcase,
-  Building2,
+  Building,
   CalendarDays,
   DollarSign,
   Star,
   Users,
-  Globe2,
+  Globe,
   CheckCircle2,
   Clock,
 } from "lucide-react";
@@ -402,6 +402,7 @@ const JobPostingDetail = ({ onLoginClick }) => {
       title: j.title,
       company: j.companyName ?? j.company_name ?? j.company?.name ?? j.company,
       logo: j.companyLogo ?? j.logo ?? j.company?.logo ?? j.company?.logoUrl,
+      companyId: j.companyId,
       companyOwnerId: j.companyOwnerId, // 이제 백엔드에서 제대로 전달됨
       locations: normalizeLocations(j),
       categories: normalizeCategories(j),
@@ -668,7 +669,13 @@ const isClosed = isClosedByStatus || isDeadlineClosed;
                   {isClosed && <span className="title-closed">마감된 공고입니다.</span>}
                 </div>
                 <div className="company-line">
-                  <span className="company-name">{job.company}</span>
+                 <Link 
+  to={`/companies/${job.companyId}`} 
+  className="company-name company-link"
+  onClick={(e) => e.stopPropagation()}
+>
+  {job.company}
+</Link>
                   {closeLabel && <span className="deadline-badge">{closeLabel}</span>}
                 </div>
               </div>
@@ -722,7 +729,7 @@ const isClosed = isClosedByStatus || isDeadlineClosed;
 
             {/* 4. 경력 */}
             <span className="meta">
-              <Building2 size={16} /> {experienceYearsLabel}
+              <Building size={16} /> {experienceYearsLabel}
             </span>
 
             {/* 5. 학력 */}
@@ -809,7 +816,7 @@ const isClosed = isClosedByStatus || isDeadlineClosed;
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <Globe2 size={16} /> 회사 홈페이지
+                    <Globe size={16} /> 회사 홈페이지
                   </a>
                 )}
               </section>
