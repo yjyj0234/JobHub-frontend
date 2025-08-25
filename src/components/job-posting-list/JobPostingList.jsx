@@ -632,16 +632,26 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
             )}
           </div>
           <div className="company-info">
-            <div className="company-name">{job.company}</div>
-            <div className="job-position">
-              {job.position}
-              {statusInfo && statusInfo.text !== "채용중" && (
-                <span className={`status-badge ${statusInfo.className}`}>
-                  {statusInfo.text}
-                </span>
-              )}
-            </div>
-          </div>
+  {job.companyId ? (
+    <Link 
+      to={`/companies/${job.companyId}`}
+      className="company-name"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {job.company}
+    </Link>
+  ) : (
+    <div className="company-name">{job.company}</div>
+  )}
+  <div className="job-position">
+    {job.position}
+    {statusInfo && statusInfo.text !== "채용중" && (
+      <span className={`status-badge ${statusInfo.className}`}>
+        {statusInfo.text}
+      </span>
+    )}
+  </div>
+</div>
         </div>
         <button
           className={`bookmark-button ${job.bookmarked ? "active" : ""}`}

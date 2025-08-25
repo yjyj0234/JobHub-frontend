@@ -19,6 +19,7 @@ import {
   ApplicantsList,
   CompanyProfile,
   CompanyDashboard,
+  CompanyDetailPage
 } from "../Companies";
 
 import AdminPage from "../Admin/AdminPage";
@@ -107,6 +108,7 @@ function AppRouter() {
         <Route path="/resumes/edit/:id" element={<ResumeEditorPage />} />
         <Route path="/company-info" element={<CompanyDashboard />} />
         <Route path="/company/profile" element={<CompanyProfile />} />
+        <Route path="/companies/:id" element={<CompanyDetailPage />} />
         <Route path="/resumes/:id" element={<ResumeEditorPage />} />
         <Route path="/jobposting" element={<Jobposting />} />
         <Route path="/companies/applicants" element={<ApplicantsList />} />
