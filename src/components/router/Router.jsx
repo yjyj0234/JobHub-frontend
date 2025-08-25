@@ -24,7 +24,7 @@ import {
 import AdminPage from "../Admin/AdminPage";
 
 // 6. job-posting-list 관련 페이지 그룹
-import { PostList, AddPost, PostDetail, UpdatePost, GroupChat, GroupChatRoom } from "../Community";
+import { PostList, AddPost, PostDetail, UpdatePost, GroupChat, GroupChatRoom, InviteForm, PendingInvite, InviteList } from "../Community";
 import { JobPostingList, JobPostingDetail, JobApplication } from "../job-posting-list";
 import { CoachingAI } from "../personalstatecoach";
 function MainLayout() {
@@ -110,6 +110,7 @@ function AppRouter() {
         <Route path="/resumes/:id" element={<ResumeEditorPage />} />
         <Route path="/jobposting" element={<Jobposting />} />
         <Route path="/companies/applicants" element={<ApplicantsList />} />
+        {/* 커뮤니티 */}
         <Route path="/postlist" element={<PostList />} />
         <Route path="/jobpostinglist" element={<JobPostingList />} />
         <Route path="/postlist/addpost" element={<AddPost />} />
@@ -117,6 +118,10 @@ function AppRouter() {
         <Route path="/postlist/edit/:id" element={<UpdatePost />} />
         <Route path="/group-chat" element={<GroupChat />} />
         <Route path="/group-chat/rooms/:roomId" element={<GroupChatRoom />} />
+        <Route path="/chat/invites" element={<InviteForm />} />
+        <Route path="/chat/invites/pending" element={<PendingInvite />} />
+        <Route path="/chat/invites/list" element={<InviteList />} />
+
         <Route path="/service" element={<Service />} />
         <Route path="/admin" element={<AdminPage />} />
         {/* 공고 디테일 */}

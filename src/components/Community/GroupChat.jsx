@@ -93,7 +93,7 @@ export default function GroupChat() {
     <div className="gc-page">
       <div className="gc-container">
         <header className="gc-header">
-          <h1 className="gc-title">그룹 채팅방</h1>
+          <h1 className="gc-title">오픈그룹 채팅방</h1>
           <div className="gc-actions">
             <button type="button" className="gc-back-btn" onClick={goBack}>
               게시판 목록
