@@ -1487,7 +1487,9 @@ function ResumeEditorPage() {
     }
 
     const rid = await ensureResumeId();
-    const cfg = SECTION_API[sec.type];
+
+      const cfg = SECTION_API[sec.type];
+
     if (!cfg) {
       alert("이 섹션은 아직 서버 연동이 설정되지 않았어요.");
       return;
@@ -1677,7 +1679,7 @@ function ResumeEditorPage() {
       );
 
       // 저장 후 해당 섹션 재로드
-      const cfg = SECTION_API[sec.type];
+      
       if (cfg.list) {
         const listRes = await axios.get(cfg.list(rid), {
           validateStatus: () => true,
