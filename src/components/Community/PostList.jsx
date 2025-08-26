@@ -54,6 +54,23 @@ const PostList = () => {
   const [errMsg, setErrMsg] = useState('');
   const [visibleCount, setVisibleCount] = useState(6);
 
+  const [role, setRole] = useState(null); // 로그인한 유저 role 저장용
+
+   // ✅ 현재 로그인 사용자 정보 불러오기
+  useEffect(() => {
+    let mounted = true;
+    axios.get(`http://localhost:8080/auth/me`, { withCredentials: true })
+      .then(res => {
+        if (!mounted) return;
+        setRole(res.data?.userType ?? null); // "COMPANY" | "USER" | null
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setRole(null);
+      });
+    return () => { mounted = false; };
+  }, []);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,7 +79,7 @@ const PostList = () => {
     setErrMsg('');
 
     axios.get('http://localhost:8080/community/list', {
-      withCredentials: true,                        // 쿠키 미전송
+      withCredentials: true,                        // 쿠키 
       headers: { Authorization: undefined },         // 인터셉터 무력화
       signal: controller.signal                      // 언마운트 시 취소
     })
@@ -142,6 +159,9 @@ const handleSearch = (e) => {
   const addPost = () => navigate('/postlist/addpost');
   const goDetail = (id) => navigate(`/postlist/detail/${id}`);
   const goGroupChat = () => navigate('/group-chat');
+  const goInviteForm = () => navigate('/chat/invites');
+  const goPendingInvite = () => navigate('/chat/invites/pending');
+  const goInviteList = () => navigate('/chat/invites/list');
 
   return (
     <div className="pl-page">
@@ -149,8 +169,7 @@ const handleSearch = (e) => {
         <section className="pl-popular" aria-label="인기글 추천">
           <div className="pl-popular-head">
             <h2 className="pl-popular-title">조회수가 많은 글이에요</h2>
-            <p><button type="button" className='pl-addbtn' onClick={addPost}>글 등록하기</button></p>
-            <p><button type="button" className='group-chat-btn' onClick={goGroupChat}>그룹 채팅방</button></p>
+            <p style={{textAlign: 'right'}}><button type="button" className='pl-addbtn' onClick={addPost}>글 등록하기</button></p>
           </div>
 
           <div className="pl-popular-grid">
@@ -190,60 +209,87 @@ const handleSearch = (e) => {
           </div>
         </header>
 
-        {loading && <div className="pl-loading" aria-live="polite">불러오는 중…</div>}
-        {!loading && errMsg && <div className="pl-error" role="alert">{errMsg}</div>}
+        <div style={{display: 'flex', gap: '20px'}}>
+          <div style={{flex: 1}}>
+            {loading && <div className="pl-loading" aria-live="polite">불러오는 중…</div>}
+            {!loading && errMsg && <div className="pl-error" role="alert">{errMsg}</div>}
 
-        {!loading && !errMsg && (
-          <>
-            <ul className="pl-list" role="list">
-              {visiblePosts.map(post => (
-                <li key={post.id} className="pl-card">
-                  <button
-                    type="button"
-                    onClick={() => goDetail(post.id)}
-                    className="pl-card-title pl-as-link"
-                    title={post.title}
-                  >
-                    {post.title}
-                  </button>
-                  <p className="pl-card-preview">{stripHtml(post.content)}</p>
-                  <div className="pl-card-footer">
-                    <div className="pl-card-meta">
-                      <span className="pl-meta-author">{post.userName ?? '탈퇴회원'}
-                        <span style={{color:'blue'}}>{post.owner ? '(본인) ' : ''}</span>
-                      </span>
-                      
-                      <span className="pl-meta-sep" aria-hidden="true">·</span>
-                      <time className="pl-meta-date" dateTime={toDateTimeAttr(post.createdAt)}>
-                        {formatDate(post.createdAt)}
-                      </time>
-                    </div>
-                    <div className="pl-card-stats" aria-label="게시글 통계">
-                      <span className="pl-stat">댓글 {post.commentCount ?? 0}</span>
-                      <span className="pl-stat">조회 {post.viewCount ?? 0}</span>
-                    </div>
+            {!loading && !errMsg && (
+              <>
+                <ul className="pl-list" role="list">
+                  {visiblePosts.map(post => (
+                    <li key={post.id} className="pl-card">
+                      <button
+                        type="button"
+                        onClick={() => goDetail(post.id)}
+                        className="pl-card-title pl-as-link"
+                        title={post.title}
+                      >
+                        {post.title}
+                      </button>
+                      <p className="pl-card-preview">{stripHtml(post.content)}</p>
+                      <div className="pl-card-footer">
+                        <div className="pl-card-meta">
+                          <span className="pl-meta-author">{post.userName ?? '탈퇴회원'}
+                            <span style={{color:'blue'}}>{post.owner ? '(본인) ' : ''}</span>
+                          </span>
+                          
+                          <span className="pl-meta-sep" aria-hidden="true">·</span>
+                          <time className="pl-meta-date" dateTime={toDateTimeAttr(post.createdAt)}>
+                            {formatDate(post.createdAt)}
+                          </time>
+                        </div>
+                        <div className="pl-card-stats" aria-label="게시글 통계">
+                          <span className="pl-stat">댓글 {post.commentCount ?? 0}</span>
+                          <span className="pl-stat">조회 {post.viewCount ?? 0}</span>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+
+                  {filteredPosts.length === 0 && (
+                    <li className="pl-empty">등록된 게시글이 없습니다</li>
+                  )}
+                </ul>
+
+                {hasMorePosts && (
+                  <div className="pl-load-more">
+                    <button
+                      type="button"
+                      className="pl-load-more-btn"
+                      onClick={handleLoadMore}
+                    >
+                      {visibleCount >= filteredPosts.length ? '접기' : '더보기'}
+                    </button>
                   </div>
-                </li>
-              ))}
-
-              {filteredPosts.length === 0 && (
-                <li className="pl-empty">등록된 게시글이 없습니다</li>
-              )}
-            </ul>
-
-            {hasMorePosts && (
-              <div className="pl-load-more">
-                <button
-                  type="button"
-                  className="pl-load-more-btn"
-                  onClick={handleLoadMore}
-                >
-                  {visibleCount >= filteredPosts.length ? '접기' : '더보기'}
-                </button>
-              </div>
+                )}
+              </>
             )}
-          </>
-        )}
+          </div>
+
+          {/* 사이드바 */}
+          <div style={{width: '250px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px', height: 'fit-content'}}>
+            <h3 style={{marginBottom: '15px', fontSize: '18px', fontWeight: 'bold'}}>채팅</h3>
+            <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+              <button type="button" className='group-chat-btn' onClick={goGroupChat} style={{width: '100%', padding: '10px', border: 'none', borderRadius: '4px', cursor: 'pointer'}}>
+                그룹채팅방
+              </button>
+              <button type='button' className='group-chat-btn' onClick={goInviteList} style={{width: '100%', padding: '10px', border: 'none', borderRadius: '4px', cursor: 'pointer'}}>
+                면접제의 채팅방 목록
+              </button>
+              {role === 'COMPANY' && (
+                <button type='button' className='group-chat-btn' onClick={goInviteForm} style={{width: '100%', padding: '10px', border: 'none', borderRadius: '4px', cursor: 'pointer'}}>
+                  면접제의폼
+                </button>
+              )}
+              {role === 'USER' && (
+                <button type='button' className='group-chat-btn' onClick={goPendingInvite} style={{width: '100%', padding: '10px', border: 'none', borderRadius: '4px', cursor: 'pointer'}}>
+                  대기중인 면접제의 보기
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
