@@ -98,7 +98,7 @@ export default function PendingInvites() {
               </div>
               <div className="invite-info-row">
                 <span className="invite-label">초대자:</span>
-                <span className="invite-value">  {(inv.inviterName || inv.inviterId)} → {(inv.inviteeName || inv.inviteeId)}</span>
+                <span className="invite-value">  {(inv.inviterName || inv.inviterId)}</span>
               </div>
               <div className="invite-info-row">
                 <span className="invite-label">상태:</span>
