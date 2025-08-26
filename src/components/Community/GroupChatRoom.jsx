@@ -262,7 +262,7 @@ useEffect(() => {
       <div className="gcr-container">
         <header className="gcr-header">
           <div className="gcr-header-left">
-            <h1 className="gcr-title"> {roomNameLoading ? "불러오는 중…" : (roomName+" 면접제안" || "채팅방")}</h1>
+            <h1 className="gcr-title"> {roomNameLoading ? "불러오는 중…" : (roomName+" 면접제의" || "채팅방")}</h1>
             <span className="gcr-room-id">#{roomId}</span>
           </div>
           <button type="button" className="gcr-back-btn" onClick={goBack}>

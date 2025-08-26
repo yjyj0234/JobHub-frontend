@@ -263,6 +263,7 @@ const handleSearch = (e) => {
                 <ul className="pl-list" role="list">
                   {visiblePosts.map(post => (
                     <li key={post.id} className="pl-card">
+                      <label>
                       <button
                         type="button"
                         onClick={() => goDetail(post.id)}
@@ -288,6 +289,7 @@ const handleSearch = (e) => {
                           <span className="pl-stat">조회 {post.viewCount ?? 0}</span>
                         </div>
                       </div>
+                      </label>
                     </li>
                   ))}
 

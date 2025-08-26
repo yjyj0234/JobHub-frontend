@@ -250,6 +250,7 @@ background: linear-gradient(135deg, #4e86da 0%, #8692c2 100%);
   border-radius: 12px;
   padding: 16px;
   transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
+  cursor: pointer;
 }
 
 .pl-card:hover {
