@@ -631,7 +631,9 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
           </div>
           <div className="company-info">
   {job.companyId ? (
+
     <Link to={`/companies/${job.companyId}`} className="company-name" onClick={(e) => e.stopPropagation()}>
+
       {job.company}
     </Link>
   ) : (
@@ -672,9 +674,11 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
           <BookOpen size={14} />
           {job.education || "학력무관"}
         </span>
+
        <span className="job-detail-item">
         <Building size={14} />
         {job.experience || "경력무관"}
+
         </span>
       </div>
 
