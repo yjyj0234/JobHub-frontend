@@ -350,8 +350,7 @@ function GlobalHeader({ onLoginClick }) {
                 이력서
               </button>
             )}
-            <button type="button">취업툴</button>
-            <button type="button" onClick={() => navigate("/coaching-ai")}>이력서 코칭 AI</button>
+            <button type="button" onClick={() => navigate("/coaching-ai")}>취업툴</button>
             {isAdmin && (<button type="button" onClick={() => navigate("/admin")}>관리자</button>)}
           </nav>
 
