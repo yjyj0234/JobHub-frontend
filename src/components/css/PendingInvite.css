@@ -80,7 +80,7 @@
   font-size: 14px;
 }
 
-.goback-btn {
+.goback2-btn {
   background: linear-gradient(135deg, #4e86da 0%, #8692c2 100%);
   color: white;
   border: none;
@@ -96,9 +96,15 @@
   top: 15px;
 }
 
-.goback-btn:hover {
+.goback2-btn:hover {
   background: linear-gradient(135deg, #3074d9 0%, #5b6eba 100%);
   transform: translateY(-1px);
+}
+
+.goback2-btn:before {
+  content: "←";
+  font-size: 16px;
+  font-weight: bold;
 }
 
 

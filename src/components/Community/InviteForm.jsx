@@ -58,6 +58,7 @@ export default function InviteFormCompany() {
   return (
     <div className="invite-form-container">
       <h3 className="invite-form-title">면접 제의 보내기</h3>
+      <button type="button" className="goback-btn">뒤로가기</button>
       
       <form onSubmit={handleSubmit} className="invite-form">
         <input type="hidden" value={targetUserId}/>

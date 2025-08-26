@@ -4,13 +4,13 @@
   padding: 20px;
 }
 
-/* .header-section {
+.header-section {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
-} */
-
+  justify-content: space-between; /* or flex-start */
+  gap: 12px;
+  margin-bottom: 20px;
+}
 .invite-list-title {
   color: #2c3e50;
   font-size: 28px;
@@ -18,10 +18,11 @@
   border-bottom: 3px solid #3498db;
   padding-bottom: 15px;
   margin: 0;
+  margin-bottom: 25px;
 }
 
-.goback-btn {
-  background-color: #6c757d;
+.goback1-btn {
+  background: linear-gradient(135deg, #4e86da 0%, #8692c2 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -36,12 +37,12 @@
   gap: 8px;
 }
 
-.goback-btn:hover {
-  background-color: #5a6268;
+.goback1-btn:hover {
+  background: linear-gradient(135deg, #3074d9 0%, #5b6eba 100%);
   transform: translateY(-1px);
 }
 
-.goback-btn:before {
+.goback1-btn:before {
   content: "←";
   font-size: 16px;
   font-weight: bold;

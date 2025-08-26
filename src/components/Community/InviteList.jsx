@@ -47,7 +47,7 @@ export default function InterviewRooms() {
     <div className="invite-list-container">
       <div className="header-section" style={{position: 'relative'}}>
         <h2 className="invite-list-title">면접제의 채팅방 목록</h2>
-        <button className="goback-btn" onClick={goBack}>
+        <button className="goback1-btn" onClick={goBack}>
           뒤로가기
         </button>
       </div>
