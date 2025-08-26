@@ -1,7 +1,7 @@
 // src/components/ApplicantsList.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import "../css/Jobposting.css";
 
@@ -768,6 +768,9 @@ const loadResumeForPreview = async (rid, application) => {
     }
   };
 
+  //네이게이션 추가
+  const navigate = useNavigate();
+
   const handleStatusChange = async (application, nextStatus) => {
     try {
       await updateApplicationStatus(application.id, nextStatus);
@@ -780,6 +783,25 @@ const loadResumeForPreview = async (rid, application) => {
           ? { ...p, app: { ...p.app, status: nextStatus } }
           : p
       );
+    } catch (e) {
+      console.error(e);
+      alert("상태 변경에 실패했습니다.");
+    }
+  };
+
+    const handleInterview = async (application, nextStatus) => {
+    try {
+      await updateApplicationStatus(application.id, nextStatus);
+      setApplicants(prev =>
+        prev.map(x => (x.id === application.id ? { ...x, status: nextStatus } : x))
+      );
+      // 모달 동기화 (안전 가드)
+      setPreview((p) =>
+        p.open && p.app && p.app.id === application.id
+          ? { ...p, app: { ...p.app, status: nextStatus } }
+          : p
+      );
+      navigate(`/chat/invites/${application.applicantId}?name=${encodeURIComponent(application.applicantName)}`); //면접제안 페이지로 이동 (userid,이름 넘겨주기)
     } catch (e) {
       console.error(e);
       alert("상태 변경에 실패했습니다.");
@@ -948,7 +970,7 @@ const loadResumeForPreview = async (rid, application) => {
         <span>현재 상태: <StatusBadge status={preview.app?.status} /></span>
       </div>
       <div className="al-actionbar-right">
-        <button className="al-btn" onClick={() => handleStatusChange(preview.app, "INTERVIEW_REQUEST")}
+        <button className="al-btn" onClick={() => handleInterview(preview.app, "INTERVIEW_REQUEST")}
                 disabled={preview.app?.status === "INTERVIEW_REQUEST"}>면접요청</button>
         <button className="al-btn" onClick={() => handleStatusChange(preview.app, "OFFERED")}
                 disabled={preview.app?.status === "OFFERED"}>채용 제안</button>

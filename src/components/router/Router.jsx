@@ -122,7 +122,7 @@ function AppRouter() {
         <Route path="/postlist/edit/:id" element={<UpdatePost />} />
         <Route path="/group-chat" element={<GroupChat />} />
         <Route path="/group-chat/rooms/:roomId" element={<GroupChatRoom />} />
-        <Route path="/chat/invites" element={<InviteForm />} />
+        <Route path="/chat/invites/:userId" element={<InviteForm />} />
         <Route path="/chat/invites/pending" element={<PendingInvite />} />
         <Route path="/chat/invites/list" element={<InviteList />} />
 

@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../css/InviteForm.css";
+import { useParams, useSearchParams } from "react-router-dom";
 
 axios.defaults.withCredentials = true; // 쿠키 인증 사용
 const API = "http://localhost:8080";
@@ -11,6 +12,22 @@ export default function InviteFormCompany() {
   const [loading, setLoading]   = useState(false);
   const [result, setResult]     = useState(null);
   const [error, setError]       = useState(null);
+  const { userId } =useParams();
+  const [targetUserName, setTargetUserName] = useState("");
+  const [searchParams] = useSearchParams();
+
+
+  //이력서에서 넘어온 userid값
+    useEffect(() => {
+    if (userId) setTargetUserId(String(userId));
+
+   const nameFromQuery = searchParams.get("name");
+   if (nameFromQuery) {
+     setTargetUserName(nameFromQuery);
+     // 메시지가 비어 있으면 기본 메시지 자동 세팅
+     setMessage((m) => m || `[${nameFromQuery}]님, 면접 제안을 드립니다.`);
+   }
+  }, [userId, searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,15 +60,16 @@ export default function InviteFormCompany() {
       <h3 className="invite-form-title">면접 제의 보내기</h3>
       
       <form onSubmit={handleSubmit} className="invite-form">
+        <input type="hidden" value={targetUserId}/>
         <div className="form-group">
-          <label>대상 USER ID: </label>
-          <input
+          <label> 대상 지원자: {targetUserName ? `${targetUserName} (#${targetUserId})` : `#${targetUserId}`}</label>
+          {/* <input
             type="number"
             value={targetUserId}
             onChange={(e) => setTargetUserId(e.target.value)}
             placeholder="예: 12"
             className="form-input"
-          />
+          /> */}
         </div>
         
         <div className="form-group">

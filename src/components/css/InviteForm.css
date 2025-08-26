@@ -42,6 +42,8 @@
   font-size: 16px;
   transition: border-color 0.3s ease;
   outline: none;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .form-input:focus {
@@ -58,6 +60,8 @@
   font-family: inherit;
   transition: border-color 0.3s ease;
   outline: none;
+  width: 100% !important; 
+  box-sizing: border-box !important;
 }
 
 .form-textarea:focus {
