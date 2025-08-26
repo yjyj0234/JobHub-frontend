@@ -1,79 +1,80 @@
+/* 전체 페이지 컨테이너 스타일 */
 .admin-page-container {
-  max-width: 960px;
-  margin: 40px auto;
-  padding: 40px;
-  background-color: #f8f9fa;
-  border-radius: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* 콘텐츠를 상단에 정렬 */
+  min-height: 100vh;
+  background-color: #f8f9fa; /* 부드러운 배경색 */
+  padding: 40px 20px;
+  box-sizing: border-box;
 }
 
+/* 실제 콘텐츠 영역 */
+.admin-page-content {
+  width: 100%;
+  max-width: 1100px;
+}
+
+/* 헤더 (뒤로가기 버튼, 제목) */
 .admin-header {
-  text-align: center;
-  margin-bottom: 50px;
-  color: #343a40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .admin-header h1 {
   font-size: 2.5rem;
-  font-weight: 800;
-  margin: 16px 0 8px 0;
+  color: #333;
+  margin: 0;
 }
 
-.admin-header p {
+.admin-subtitle {
   font-size: 1.1rem;
-  color: #6c757d;
+  color: #666;
+  margin-top: 0;
+  margin-bottom: 40px;
 }
 
-.admin-menu-grid {
+/* 관리 메뉴 (카드 그리드) */
+.admin-menu {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 30px;
+  /* 2개씩 보이도록 설정, 화면이 작아지면 1개씩 */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
 }
 
-.admin-menu-item {
+/* 관리 메뉴 카드 */
+.admin-menu-card {
   background-color: #ffffff;
-  border: 1px solid #dee2e6;
   border-radius: 12px;
-  padding: 30px;
+  padding: 32px;
   text-align: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e9ecef;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
-.admin-menu-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  border-color: var(--c-accent);
+.admin-menu-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
 }
 
-.admin-menu-item svg {
-  color: var(--c-accent);
+.admin-menu-card .menu-icon {
+  color: var(--c-accent); /* index.css 에 정의된 메인 컬러 사용 */
   margin-bottom: 16px;
 }
 
-.admin-menu-item h3 {
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin: 0 0 12px 0;
+.admin-menu-card h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.5rem;
+  color: #343a40;
 }
 
-.admin-menu-item p {
-  color: #6c757d;
-  font-size: 0.95rem;
-  margin-bottom: 24px;
-  line-height: 1.6;
-}
-
-.admin-button {
-  background-color: var(--c-accent);
-  color: white;
+.admin-menu-card p {
+  margin: 0;
   font-size: 1rem;
-  font-weight: 600;
-  padding: 12px 24px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.admin-button:hover {
-  background-color: #3a75c4;
+  color: #6c757d;
+  line-height: 1.5;
 }

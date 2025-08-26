@@ -134,72 +134,68 @@ const DropdownPanel = ({
 };
 
 const AnnouncementFeature = () => {
-  const navigate = useNavigate();
   const [announcements, setAnnouncements] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [hasNew, setHasNew] = useState(false);
-  const stompRef = useRef(null);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [newCount, setNewCount] = useState(0);
   const containerRef = useRef(null);
-  
-  const latestAnnouncement = announcements?.[0];
+  const navigate = useNavigate();
 
+  // API에서 초기 공지사항 목록 가져오기
   useEffect(() => {
-    const fetchInitialAnnouncements = async () => {
+    const fetchAnnouncements = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/announcements/latest`);
-        setAnnouncements(response.data || []);
+        const response = await axios.get("http://localhost:8080/api/announcements/latest");
+        setAnnouncements(response.data);
       } catch (error) {
-        console.error("초기 공지사항 로드 실패:", error);
+        console.error("공지사항을 불러오는 데 실패했습니다:", error);
       }
     };
-    fetchInitialAnnouncements();
+    fetchAnnouncements();
+  }, []);
 
+  useEffect(() => {
     const client = new Client({
+      brokerURL: "ws://localhost:8080/ws",
       webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
-      reconnectDelay: 5000,
       onConnect: () => {
-        client.subscribe("/topic/announcements", (message) => {
-          try {
-            const newAnnouncement = JSON.parse(message.body);
-            setAnnouncements(prev => [newAnnouncement, ...prev].slice(0, 10)); // 최신 10개만 유지
-            if (!isModalOpen) setHasNew(true);
-          } catch (e) {
-            console.error("공지 메시지 파싱 오류:", e);
-          }
+        client.subscribe("/topic/announcements", message => {
+          const newAnnouncement = JSON.parse(message.body);
+          setAnnouncements(prev => [newAnnouncement, ...prev]);
+          setNewCount(prevCount => prevCount + 1);
         });
+      },
+      onStompError: (frame) => {
+        console.error("Broker reported error: " + frame.headers["message"]);
+        console.error("Additional details: " + frame.body);
       },
     });
 
     client.activate();
-    stompRef.current = client;
 
     return () => {
-      if (stompRef.current) stompRef.current.deactivate();
+      client.deactivate();
     };
-  }, [isModalOpen]);
-  
-  useOnClickOutside(containerRef, () => setIsModalOpen(false));
+  }, []);
 
   const toggleModal = () => {
-    setIsModalOpen(prev => !prev);
-    if (!isModalOpen) setHasNew(false);
+    if (!isModalOpen) {
+      setNewCount(0);
+    }
+    setModalOpen(!isModalOpen);
   };
-  
+
   const handleNoticeClick = () => {
-      navigate('/notices');
-      setIsModalOpen(false);
+    navigate("/notice");
+    setModalOpen(false);
   };
+
+  useOnClickOutside(containerRef, () => setModalOpen(false));
 
   return (
     <div className="announcement-container" ref={containerRef}>
       <button onClick={toggleModal} className="announcement-button" aria-label="공지사항">
         <Bell size={20} />
-        {hasNew && <span className="new-badge"></span>}
-        {latestAnnouncement && (
-            <div className="announcement-text-wrapper">
-                <p key={latestAnnouncement.id}>{latestAnnouncement.title}</p>
-            </div>
-        )}
+        {newCount > 0 && <span className="new-badge">{newCount}</span>}
       </button>
 
       {isModalOpen && (
@@ -210,7 +206,7 @@ const AnnouncementFeature = () => {
           <div className="modal-body">
             {announcements.length > 0 ? (
               <ul>
-                {announcements.map((item) => (
+                {announcements.map(item => (
                   <li key={item.id} onClick={handleNoticeClick}>
                     <span className="announcement-title">{item.title}</span>
                     <span className="announcement-date">{new Date(item.createdAt).toLocaleDateString()}</span>
