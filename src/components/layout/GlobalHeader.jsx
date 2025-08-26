@@ -304,7 +304,15 @@ function GlobalHeader({ onLoginClick }) {
 
   const handleResumeClick = () => (isAuthed ? navigate("/resumes") : onLoginClick());
   const postList = () => navigate("/postlist");
-  const jobPosting = () => navigate("/jobposting");
+   // 기업정보 페이지 이동 (COMPANY 권한 체크 포함)
+  const handleCompanyInfo = () => {
+    // 이중 체크: 프론트에서도 권한 확인
+    if (isCompany) {
+      navigate("/company-info");
+    } else {
+      alert("기업 회원만 접근 가능합니다");
+    }
+  };
 
   const toggleRegion = () => {
     setRegionOpen((prev) => !prev);
@@ -329,10 +337,18 @@ function GlobalHeader({ onLoginClick }) {
           <nav className="nav">
             <button type="button" onClick={() => navigate("/jobpostinglist")}>채용정보</button>
             <button type="button" onClick={postList}>커뮤니티</button>
-            {isCompany ? (
-              <button type="button" onClick={jobPosting}>공고 등록</button>
+                       {isCompany ? (
+              <button type="button" onClick={handleCompanyInfo}>
+                기업정보
+              </button>
             ) : (
-              <button type="button" onClick={handleResumeClick}>이력서</button>
+              <button
+                type="button"
+                className="resume-btn"
+                onClick={handleResumeClick}
+              >
+                이력서
+              </button>
             )}
             <button type="button">취업툴</button>
             <button type="button" onClick={() => navigate("/coaching-ai")}>이력서 코칭 AI</button>
