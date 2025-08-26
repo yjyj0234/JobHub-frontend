@@ -23,7 +23,7 @@ import {
 } from "../Companies";
 
 import { AdminPage, FaqAdminPage } from "../Admin";
-import { AboutUs, TermsOfService, PrivacyPolicy, NoticePage, NoticeAdminPage } from "../pages";
+import { AboutUs, TermsOfService, PrivacyPolicy, NoticePage, NoticeAdminPage } from "../Pages";
 
 // 6. job-posting-list 관련 페이지 그룹
 import { PostList, AddPost, PostDetail, UpdatePost, GroupChat, GroupChatRoom, InviteForm, PendingInvite, InviteList } from "../Community";

@@ -29,8 +29,8 @@ import {
   FileRepository, // ✅ 의존성 선언용
 } from "ckeditor5";
 
-// 전역 axios
-axios.defaults.baseURL = "http://localhost:8080";
+// 전역 axios - 프로덕션 환경에서는 상대 경로 사용하여 nginx 프록시를 통해 백엔드 호출
+axios.defaults.baseURL = "http://3.35.136.37:8080";
 
 // ✅ "COMPANY" / "ROLE_COMPANY" 모두 허용
 

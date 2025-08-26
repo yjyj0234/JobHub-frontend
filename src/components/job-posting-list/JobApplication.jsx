@@ -186,7 +186,7 @@ useEffect(() => {
     setError(null);
     try {
       // 1) 공고
-      const r1 = await fetch(`http://localhost:8080/api/jobs/${jobId}`, {
+      const r1 = await fetch(`/api/jobs/${jobId}`, {
         credentials: "include",
         headers: { Accept: "application/json" },
       });
@@ -197,7 +197,7 @@ useEffect(() => {
       // 2) auth/me (id/email 등)
       let me = null;
       try {
-        const r2 = await fetch("http://localhost:8080/auth/me", {
+        const r2 = await fetch("/api/auth/me", {
           credentials: "include",
           headers: { Accept: "application/json" },
         });
@@ -211,7 +211,7 @@ setProfileLoading(true);
 try {
   let profileDto = null;
 
-  const rP = await fetch("http://localhost:8080/api/profile/me", {
+  const rP = await fetch("/api/profile/me", {
     credentials: "include",
     headers: { Accept: "application/json" },
   });
@@ -220,7 +220,7 @@ try {
     profileDto = await rP.json();
   } else if (rP.status === 403 && me?.id) {
     // 🔁 Fallback: me가 403이면 owner endpoint로 시도
-    const rP2 = await fetch(`http://localhost:8080/api/profile/${me.id}`, {
+    const rP2 = await fetch(`/api/profile/${me.id}`, {
       credentials: "include",
       headers: { Accept: "application/json" },
     });
@@ -250,7 +250,7 @@ try {
       // 4) 내 이력서 목록
       try {
         setResumesLoading(true);
-        const r3 = await fetch("http://localhost:8080/api/resumes", {
+        const r3 = await fetch("/api/resumes", {
           credentials: "include",
           headers: { Accept: "application/json" },
         });
@@ -288,7 +288,7 @@ async function saveProfileIfNeeded() {
     phone: form.phone?.trim() || "",
   };
   try {
-    await fetch(`http://localhost:8080/api/profile/${auth.id}`, {
+    await fetch(`/api/profile/${auth.id}`, {
       method: "PUT",
       credentials: "include",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -332,7 +332,7 @@ const handleSubmit = async () => {
     fd.append("availableFrom", form.availableFrom ?? "");
     fd.append("resumeId", String(selectedResumeId));  
 
-    const res = await fetch("http://localhost:8080/api/applications", {
+    const res = await fetch("/api/applications", {
       method: "POST",
       credentials: "include",
       body: fd,
@@ -359,7 +359,7 @@ const handleSubmit = async () => {
 
 const handleSaveDraft = async () => {
   try {
-    const res = await fetch("http://localhost:8080/api/applications/draft", {
+    const res = await fetch("/api/applications/draft", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },

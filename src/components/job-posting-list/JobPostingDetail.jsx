@@ -80,7 +80,7 @@ function formatDateTime(v) {
 }
 
 /** 백엔드 Origin (프리사인/프록시 뷰어 등에서 사용) */
-const BACKEND_ORIGIN = "http://localhost:8080";
+const BACKEND_ORIGIN = "";
 
 /** 다양한 형태의 이미지 src를 실제 뷰어 URL로 정규화 */
 function toViewerUrlFromAny(src) {
@@ -167,7 +167,7 @@ const JobPostingDetail = ({ onLoginClick }) => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`http://localhost:8080/api/jobs/${id}?_=${Date.now()}`, {
+        const res = await fetch(`/api/jobs/${id}?_=${Date.now()}`, {
           credentials: "include",
           headers: { Accept: "application/json", "Cache-Control": "no-cache"},
         });

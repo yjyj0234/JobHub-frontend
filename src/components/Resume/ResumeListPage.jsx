@@ -27,7 +27,7 @@ import { Modal } from "../UI/index.js";
 import { Bot } from "lucide-react";
 
 /* ---------------------- 공통 설정 ---------------------- */
-const API_BASE_URL = "http://localhost:8080/api"; // 백엔드 표준 프리픽스
+const API_BASE_URL = "/api"; // 백엔드 표준 프리픽스
 const API = API_BASE_URL; // ProfileHeader/RegionPicker에서 그대로 사용
 axios.defaults.withCredentials = true;
 
@@ -259,7 +259,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
       formData.append("module", "profiles");
       formData.append("public", "false");
 
-      const response = await fetch("http://localhost:8080/api/upload", {
+      const response = await fetch("/api/upload", {
         method: "POST",
         credentials: "include",
         body: formData,
@@ -273,7 +273,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
       const uploadResult = await response.json();
       let imageUrl = uploadResult.viewerUrl || uploadResult.url;
       if (imageUrl && imageUrl.startsWith("/api/")) {
-        imageUrl = `http://localhost:8080${imageUrl}`;
+        imageUrl = `${imageUrl}`;
       }
 
       URL.revokeObjectURL(localPreviewUrl);
@@ -357,7 +357,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
                     ? editData.profileImageUrl
                     : profile.profileImageUrl;
                   if (url && url.startsWith("/api/")) {
-                    return `http://localhost:8080${url}`;
+                    return `${url}`;
                   }
                   return url;
                 })()}

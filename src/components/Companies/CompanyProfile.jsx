@@ -16,7 +16,7 @@ import "../css/CompanyProfile.css";
 
 // axios 인스턴스 (쿠키 포함)
 const api = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "http://3.35.136.37:8080",
   withCredentials: true,
 });
 
@@ -49,7 +49,7 @@ const CompanyProfile = () => {
   const [currentBenefit, setCurrentBenefit] = useState("");
   const [step, setStep] = useState(1);
 
-  // ---- (1) 로컬 가드: /auth/me로 직접 확인 ----
+  // ---- (1) 로컬 가드: /api/auth/me로 직접 확인 ----
   useEffect(() => {
     let cancelled = false;
 
@@ -71,7 +71,7 @@ const CompanyProfile = () => {
           return;
         }
 
-        const res = await api.get("/auth/me");
+        const res = await api.get("/api/auth/me");
         const u = res.data;
         const roles2 = new Set([
           ...(Array.isArray(u?.authorities) ? u.authorities : []),

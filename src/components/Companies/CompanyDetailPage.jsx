@@ -18,7 +18,7 @@ import {
 import "../css/CompanyDetailPage.css";
 
 const api = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "http://3.35.136.37:8080",
   withCredentials: true,
 });
 

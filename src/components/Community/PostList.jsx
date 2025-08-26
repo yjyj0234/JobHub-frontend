@@ -103,7 +103,7 @@ const PostList = () => {
    // ✅ 현재 로그인 사용자 정보 불러오기
   useEffect(() => {
     let mounted = true;
-    axios.get(`http://localhost:8080/auth/me`, { withCredentials: true })
+    axios.get(`/api/auth/me`, { withCredentials: true })
       .then(res => {
         if (!mounted) return;
         setRole(res.data?.userType ?? null); // "COMPANY" | "USER" | null

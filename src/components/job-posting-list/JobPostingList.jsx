@@ -76,7 +76,7 @@ const JobSearchBar = ({ onSearch, initialSearchData }) => {
       setError((prev) => ({ ...prev, regions: null }));
       try {
         const res = await fetch(
-          "http://localhost:8080/api/search/regions/tree"
+          "/api/search/regions/tree"
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const payload = await res.json();
@@ -103,7 +103,7 @@ const JobSearchBar = ({ onSearch, initialSearchData }) => {
       setError((prev) => ({ ...prev, categories: null }));
       try {
         const res = await fetch(
-          "http://localhost:8080/api/search/job-categories/tree"
+          "/api/search/job-categories/tree"
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const payload = await res.json();

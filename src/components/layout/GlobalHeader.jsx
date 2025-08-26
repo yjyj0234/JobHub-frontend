@@ -8,7 +8,7 @@ import axios from "axios";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client/dist/sockjs.js";
 
-const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL = "/api";
 axios.defaults.withCredentials = true;
 
 const useOnClickOutside = (ref, handler) => {
@@ -134,29 +134,36 @@ const DropdownPanel = ({
 };
 
 const AnnouncementFeature = () => {
+  const { isAuthed } = useAuth(); // isAuthed 가져오기
   const [announcements, setAnnouncements] = useState([]);
   const [isModalOpen, setModalOpen] = useState(false);
   const [newCount, setNewCount] = useState(0);
   const containerRef = useRef(null);
   const navigate = useNavigate();
 
-  // API에서 초기 공지사항 목록 가져오기
+  // API에서 초기 공지사항 목록 가져오기 (인증된 사용자만)
   useEffect(() => {
     const fetchAnnouncements = async () => {
+      // 인증되지 않은 사용자는 공지사항을 로드하지 않음
+      if (!isAuthed) return;
+      
       try {
-        const response = await axios.get("http://localhost:8080/api/announcements/latest");
+        const response = await axios.get("/api/announcements/latest");
         setAnnouncements(response.data);
       } catch (error) {
         console.error("공지사항을 불러오는 데 실패했습니다:", error);
       }
     };
     fetchAnnouncements();
-  }, []);
+  }, [isAuthed]); // isAuthed 상태가 변경될 때만 실행
 
   useEffect(() => {
+    // 인증되지 않은 사용자는 WebSocket 연결을 시도하지 않음
+    if (!isAuthed) return;
+
     const client = new Client({
-      brokerURL: "ws://localhost:8080/ws",
-      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      brokerURL: `ws://${window.location.host}/ws`,
+      webSocketFactory: () => new SockJS(`${window.location.protocol}//${window.location.host}/ws`),
       onConnect: () => {
         client.subscribe("/topic/announcements", message => {
           const newAnnouncement = JSON.parse(message.body);
@@ -175,7 +182,7 @@ const AnnouncementFeature = () => {
     return () => {
       client.deactivate();
     };
-  }, []);
+  }, [isAuthed]); // isAuthed 상태가 변경될 때만 실행
 
   const toggleModal = () => {
     if (!isModalOpen) {

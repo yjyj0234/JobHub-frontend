@@ -35,7 +35,7 @@ function Service() {
         setError(null);
         
         // 2단계에서 만든 백엔드 API 주소로 GET 요청을 보냅니다.
-        const response = await axios.get('http://localhost:8080/api/service/faqs');
+        const response = await axios.get('/api/service/faqs');
         
         // 성공적으로 데이터를 받아오면 faqs 상태를 업데이트합니다.
         setFaqs(response.data);

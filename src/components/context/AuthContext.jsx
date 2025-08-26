@@ -1,7 +1,8 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import axios from "axios";
 
-axios.defaults.baseURL = "http://localhost:8080";
+// 프로덕션 환경에서 포트 8080을 포함한 백엔드 URL 사용
+axios.defaults.baseURL = "http://3.35.136.37:8080";
 axios.defaults.withCredentials = true; // JWT 쿠키 자동 첨부
 
 const AuthContext = createContext(null);
@@ -34,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   const login = async ({ email, password }) => {
     // 500 이상만 throw, 401/404는 직접 처리
     const res = await axios.post(
-      "/auth/login",
+      "/api/auth/login",
       { email, password },
       { validateStatus: (s) => s < 500 }
     );
@@ -53,7 +54,7 @@ export const AuthProvider = ({ children }) => {
 
     // ✅ 로그인 직후: 서버 세션(쿠키) 기준으로 확정
     let me;
-    const meRes = await axios.get("/auth/me", {
+    const meRes = await axios.get("/api/auth/me", {
       validateStatus: (s) => s === 200 || s === 401, // 던지지 말고 우리가 판단
     });
 
@@ -132,13 +133,13 @@ export const AuthProvider = ({ children }) => {
       }
     }
 
-    await axios.post("/auth/register", fd);
+    await axios.post("/api/auth/register", fd);
     return login({ email: fd.get("email"), password: fd.get("password") });
   };
 
   const logout = async () => {
     try {
-      await axios.post("/auth/logout");
+      await axios.post("/api/auth/logout");
     } catch {
       // ignore
     }
@@ -147,7 +148,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  // ✅ 초기 복원: JWT_MARK 없으면 /auth/me 스킵
+  // ✅ 초기 복원: JWT_MARK 없으면 /api/auth/me 스킵
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     let alive = true;
@@ -162,8 +163,8 @@ export const AuthProvider = ({ children }) => {
           return;
         }
 
-        // 2) 있을 때만 /auth/me 호출
-        const res = await axios.get("/auth/me", {
+        // 2) 있을 때만 /api/auth/me 호출
+        const res = await axios.get("/api/auth/me", {
           // 401/403도 throw 안 되게
           validateStatus: (s) => s === 200 || s === 401 || s === 403,
         });

@@ -559,7 +559,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
       formData.append("module", "profiles");
       formData.append("public", "false");
 
-      const response = await fetch("http://localhost:8080/api/upload", {
+      const response = await fetch("/api/upload", {
         method: "POST",
         credentials: "include",
         body: formData,
@@ -573,7 +573,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
       const uploadResult = await response.json();
       let imageUrl = uploadResult.viewerUrl || uploadResult.url;
       if (imageUrl && imageUrl.startsWith("/api/")) {
-        imageUrl = `http://localhost:8080${imageUrl}`;
+        imageUrl = `${imageUrl}`;
       }
 
       URL.revokeObjectURL(localPreviewUrl);
@@ -657,7 +657,7 @@ const ProfileHeader = ({ profile, onUpdate, onSave }) => {
                     ? editData.profileImageUrl
                     : profile.profileImageUrl;
                   if (url && url.startsWith("/api/")) {
-                    return `http://localhost:8080${url}`;
+                    return `${url}`;
                   }
                   return url;
                 })()}
