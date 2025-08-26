@@ -7,7 +7,6 @@ import "../css/Jobposting.css";
 
 // Resume 미리보기 및 섹션 컴포넌트들 (타이틀만 사용)
 import {
-  ResumePreviewModal,
   ExperienceForm,
   EducationForm,
   AwardForm,
@@ -47,8 +46,27 @@ function formatDate(value) {
   const m = String(d.getMinutes()).padStart(2, "0");
   return `${Y}-${M}-${D} ${h}:${m}`;
 }
+// === 링크/기간/문단 유틸 (전역) ===
+const isUrl = (s) => {
+  if (!s) return false;
+  try { const u = new URL(s); return ["http:", "https:"].includes(u.protocol); } catch { return false; }
+};
+const LinkText = ({ href, children }) => (
+  <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: "#2563eb", textDecoration: "underline" }}>
+    {children || href}
+  </a>
+);
 
-const SECTION_ORDER = ["educations","skills","projects","experiences","certifications","activities","awards","languages","portfolios"];
+const fmtPeriod = (s, e) => {
+  const p = (v) => (v ? formatDate(v).split(" ")[0] : "-");
+  return `${p(s)} ~ ${e ? p(e) : "진행중"}`;
+};
+
+const Para = ({ text }) => (
+  <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.6, margin: "6px 0" }}>{text || "-"}</p>
+);
+
+const SECTION_ORDER = ["educations","skills","projects","experiences","certifications","activities","awards","languages","portfolios","links"];
 const SECTION_ORDER_INDEX = Object.fromEntries(SECTION_ORDER.map((t, i) => [t, i]));
 const sortSections = (arr=[]) => [...arr].sort((a,b) => (SECTION_ORDER_INDEX[a.type]??999)-(SECTION_ORDER_INDEX[b.type]??999));
 const makeSection = (type, items=[]) => {
@@ -74,6 +92,189 @@ const StatusBadge = ({ status }) => {
   const cls = (status || "").toLowerCase();
   return <span className={`status-badge ${cls}`}>{STATUS_LABEL[status] || status}</span>;
 };
+// ===== 공통 섹션 레이아웃 =====
+const SectionBox = ({ title, children }) => (
+  <section style={{ background:"#fff", border:"1px solid #eee", borderRadius:12, padding:16, margin:"12px 0" }}>
+    <h3 style={{ margin:"0 0 10px", fontSize:16 }}>{title}</h3>
+    {children}
+  </section>
+);
+const Row = ({ label, value, strong }) => (
+  <div style={{ display:"grid", gridTemplateColumns:"120px 1fr", gap:12, padding:"6px 0", borderBottom:"1px dashed #f1f1f1" }}>
+    <div style={{ color:"#555" }}>{label}</div>
+    <div style={{ fontWeight: strong ? 600 : 400 }}>{value}</div>
+  </div>
+);
+
+// ===== 프로필 =====
+const ProfileBlock = ({ profile, app }) => (
+  <SectionBox title="프로필">
+    <Row label="이름" value={app?.applicantName || profile?.name || "-"} strong />
+    <Row label="한 줄 소개" value={<Para text={profile?.summary || profile?.headline || ""} />} />
+    <Row label="연락처" value={
+      <>
+        {app?.applicantEmail && <div>{app.applicantEmail}</div>}
+        {profile?.phone && <div>{profile.phone}</div>}
+        {profile?.website && isUrl(profile.website) && <div><LinkText href={profile.website} /></div>}
+      </>
+    } />
+  </SectionBox>
+);
+
+// ===== 학력 =====
+const EducationBlock = ({ items = [] }) => (
+  <SectionBox title="학력">
+    {items.map((ed) => (
+      <div key={ed.subId} style={{ padding:"8px 0" }}>
+        <div style={{ fontWeight:600 }}>{ed.schoolName} {ed.degree ? `· ${ed.degree}` : ""}</div>
+        <div style={{ color:"#666" }}>{ed.major || "-"}</div>
+        <div style={{ fontSize:13, color:"#888" }}>{fmtPeriod(ed.admissionDate, ed.graduationDate)}</div>
+        {(ed.gpa || ed.maxGpa) && <div style={{ marginTop:4 }}>학점: {ed.gpa} / {ed.maxGpa || "-"}</div>}
+      </div>
+    ))}
+  </SectionBox>
+);
+
+// ===== 기술 =====
+const SkillsBlock = ({ items = [] }) => {
+  const flat = items[0]?.skills || [];
+  return (
+    <SectionBox title="기술">
+      <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+        {flat.map((s) => (
+          <span key={s.subId || s.id || s.name}
+                style={{ padding:"6px 10px", border:"1px solid #e5e7eb", borderRadius:999 }}>
+            {s.name}
+          </span>
+        ))}
+      </div>
+    </SectionBox>
+  );
+};
+
+// ===== 프로젝트 =====
+const ProjectsBlock = ({ items = [] }) => (
+  <SectionBox title="프로젝트">
+    {items.map((p) => (
+      <div key={p.subId} style={{ padding:"10px 0" }}>
+        <div style={{ fontWeight:600 }}>{p.projectName} {p.organization ? `(${p.organization})` : ""}</div>
+        <div style={{ fontSize:13, color:"#888" }}>{fmtPeriod(p.startDate, p.endDate || (p.ongoing ? null : null))}</div>
+        {p.projectUrl && isUrl(p.projectUrl) && <div style={{ marginTop:6 }}>링크: <LinkText href={p.projectUrl} /></div>}
+        {Array.isArray(p.techStack) && p.techStack.length > 0 && (
+          <div style={{ marginTop:6 }}>사용 기술: {p.techStack.join(", ")}</div>
+        )}
+        {p.description && <Para text={p.description} />}
+      </div>
+    ))}
+  </SectionBox>
+);
+
+// ===== 경력 =====
+const ExperiencesBlock = ({ items = [] }) => (
+  <SectionBox title="경력">
+    {items.map((x) => (
+      <div key={x.subId} style={{ padding:"10px 0" }}>
+        <div style={{ fontWeight:600 }}>{x.companyName} · {x.position}</div>
+        <div style={{ fontSize:13, color:"#888" }}>{fmtPeriod(x.startDate, x.endDate)}</div>
+        {x.employmentType && <div style={{ marginTop:4 }}>고용형태: {x.employmentType}</div>}
+        {x.achievements && <Para text={x.achievements} />}
+        {(!x.achievements && x.description) && <Para text={x.description} />}
+      </div>
+    ))}
+  </SectionBox>
+);
+
+// ===== 자격증 =====
+const CertificationsBlock = ({ items = [] }) => (
+  <SectionBox title="자격증">
+    {items.map((c) => (
+      <div key={c.subId} style={{ padding:"8px 0" }}>
+        <div style={{ fontWeight:600 }}>{c.certificationName}</div>
+        <div style={{ color:"#666" }}>{c.issuingOrganization || "-"}</div>
+        <div style={{ fontSize:13, color:"#888" }}>
+          취득일: {c.issueDate ? formatDate(c.issueDate).split(" ")[0] : "-"}
+          {c.expiryDate ? ` · 만료: ${formatDate(c.expiryDate).split(" ")[0]}` : ""}
+        </div>
+        {c.certificationNumber && <div>자격번호: {c.certificationNumber}</div>}
+      </div>
+    ))}
+  </SectionBox>
+);
+
+// ===== 대외활동 =====
+const ActivitiesBlock = ({ items = [] }) => (
+  <SectionBox title="대외활동">
+    {items.map((a) => (
+      <div key={a.subId} style={{ padding:"8px 0" }}>
+        <div style={{ fontWeight:600 }}>{a.activityName} {a.organization ? `· ${a.organization}` : ""}</div>
+        <div style={{ fontSize:13, color:"#888" }}>{fmtPeriod(a.startDate, a.endDate)}</div>
+        {a.description && <Para text={a.description} />}
+      </div>
+    ))}
+  </SectionBox>
+);
+
+// ===== 수상 =====
+const AwardsBlock = ({ items = [] }) => (
+  <SectionBox title="수상 경력">
+    {items.map((w) => (
+      <div key={w.subId} style={{ padding:"8px 0" }}>
+        <div style={{ fontWeight:600 }}>{w.awardName}</div>
+        <div style={{ color:"#666" }}>{w.organization || "-"}</div>
+        {w.awardDate && <div style={{ fontSize:13, color:"#888" }}>{formatDate(w.awardDate).split(" ")[0]}</div>}
+        {w.description && <Para text={w.description} />}
+      </div>
+    ))}
+  </SectionBox>
+);
+
+// ===== 외국어 =====
+const LanguagesBlock = ({ items = [] }) => (
+  <SectionBox title="외국어">
+    {items.map((l) => (
+      <div key={l.subId} style={{ padding:"8px 0" }}>
+        <div style={{ fontWeight:600 }}>{l.language} {l.proficiencyLevel ? `· ${l.proficiencyLevel}` : ""}</div>
+        {(l.testName || l.testScore || l.testDate) && (
+          <div style={{ color:"#666" }}>
+            시험: {l.testName || "-"} / 점수: {l.testScore || "-"} / 일자: {l.testDate ? formatDate(l.testDate).split(" ")[0] : "-"}
+          </div>
+        )}
+      </div>
+    ))}
+  </SectionBox>
+);
+
+// ===== 포트폴리오 =====
+const PortfoliosBlock = ({ items = [] }) => (
+  <SectionBox title="포트폴리오">
+    {items.map((p) => (
+      <div key={p.subId} style={{ padding:"8px 0" }}>
+        <div style={{ fontWeight:600 }}>{p.title} {p.portfolioType ? `· ${p.portfolioType}` : ""}</div>
+        {p.url && isUrl(p.url) && <div><LinkText href={p.url} /></div>}
+        {p.description && <Para text={p.description} />}
+      </div>
+    ))}
+  </SectionBox>
+);
+const LinksBlock = ({ items = [] }) => (
+  <SectionBox title="첨부 링크">
+    <ul style={{ paddingLeft: 18, margin: 0 }}>
+      {items.map((it) => (
+        <li key={it.subId} style={{ margin: "6px 0" }}>
+          <a
+            href={it.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#2563eb", textDecoration: "underline", wordBreak: "break-all" }}
+          >
+            {it.label || it.url}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </SectionBox>
+);
+
 
 /* ================= 섹션 정규화 (컨트롤러 DTO → 미리보기 필드) ================= */
 const normalizeEducation = (r={}) => ({
@@ -164,6 +365,7 @@ const normalizePortfolio = (r={}) => ({
   portfolioType: r.portfolioType ?? r.type ?? "",
 });
 
+
 /* ================= 엔드포인트 맵 (컨트롤러 반영) ================= */
 const API = "/api";
 const SECTION_API = {
@@ -225,15 +427,13 @@ const ApplicantsList = () => {
 const loadResumeForPreview = async (rid, application) => {
   const toAbs = (u) =>
     !u ? "" : u.startsWith("/api/") ? `${axios.defaults.baseURL}${u}` : u;
-
-  // 0) 파일 기반 먼저 (resumeUrl or resumeFileKey)
+   // 파일 URL 계산만 해두고, 페이지형으로 링크만 노출할 것
   const rawUrl = application?.resumeUrl
     ? toAbs(application.resumeUrl)
     : application?.resumeFileKey
-    ? `${axios.defaults.baseURL}/api/files/view?key=${encodeURIComponent(
-        application.resumeFileKey
-      )}&disposition=inline`
+    ? `${axios.defaults.baseURL}/api/files/view?key=${encodeURIComponent(application.resumeFileKey)}&disposition=inline`
     : null;
+
 
   // iframe 금지 도메인(대표 예시)
   const EMBED_DENY = [
@@ -252,34 +452,7 @@ const loadResumeForPreview = async (rid, application) => {
   };
   const isDenied = (u) => EMBED_DENY.some((re) => re.test(urlHost(u)));
 
-  if (rawUrl) {
-    const lower = rawUrl.toLowerCase();
-    const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.|10\.)/i.test(
-      rawUrl
-    );
-    const isIframeSafe = /\.(pdf|png|jpe?g|gif)$/i.test(lower);
-    const isOfficeDoc = /\.(docx?|pptx?)$/i.test(lower);
-    const isHwp = /\.(hwp|hwpx)$/i.test(lower);
 
-    let viewerUrl = null;
-    if (isIframeSafe && !isDenied(rawUrl)) {
-      viewerUrl = rawUrl;
-    } else if (!isLocal && !isDenied(rawUrl) && (isOfficeDoc || isHwp)) {
-      // Office Viewer는 공개 URL이어야 접근 가능
-      viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
-        rawUrl
-      )}`;
-    }
-
-    return {
-      mode: "file",
-      title: application?.resumeTitle || "이력서",
-      fileUrl: rawUrl,
-      fileViewerUrl: viewerUrl, // null이면 모달에서 "새 탭으로 열기" 안내
-      profile: { name: application?.applicantName || "" },
-      sections: [],
-    };
-  }
 
   // 1) (선택) 서버에 기업용 통합 뷰가 있다면 먼저 시도
   // 예: GET /api/applications/{id}/resume  (없으면 404일 것)
@@ -349,7 +522,16 @@ const loadResumeForPreview = async (rid, application) => {
         mode: "page",
         title: snap.title ?? application?.resumeTitle ?? "이력서",
         profile: snap.profile ?? { name: application?.applicantName || "" },
-        sections,
+        sections: rawUrl
+          ? sortSections([
+              ...sections,
+              {
+                id: `links-${Date.now()}`,
+                type: "links",
+                data: [{ subId: `links-item-${Date.now()}`, label: "첨부 파일", url: rawUrl }],
+             },
+           ])
+         : sections,
       };
     }
   } catch {
@@ -362,8 +544,13 @@ const loadResumeForPreview = async (rid, application) => {
       mode: "page",
       title: application?.resumeTitle || "이력서",
       profile: { name: application?.applicantName || "" },
-      sections: [],
-    };
+     sections: rawUrl
+       ? [{
+           id: `links-${Date.now()}`,
+           type: "links",
+           data: [{ subId: `links-item-${Date.now()}`, label: "첨부 파일", url: rawUrl }],
+         }]
+       : [],    };
   }
 
   // 3) 섹션별 API 호출 (주의: 대부분 “지원자 본인”만 가능 → 기업 계정이면 401/403 가능)
@@ -416,8 +603,16 @@ const loadResumeForPreview = async (rid, application) => {
     mode: "page",
     title: application?.resumeTitle || "이력서",
     profile: { name: application?.applicantName || "" },
-    sections,
-  };
+   sections: rawUrl
+     ? sortSections([
+         ...sections,
+         {
+           id: `links-${Date.now()}`,
+           type: "links",
+           data: [{ subId: `links-item-${Date.now()}`, label: "첨부 파일", url: rawUrl }],
+         },
+       ])
+     : sections,  };
 };
 
 
@@ -699,172 +894,73 @@ const loadResumeForPreview = async (rid, application) => {
         )}
       </fieldset>
 
-      {/* ======= 페이지형 이력서 미리보기 모달 ======= */}
-      {preview.open && preview.mode === "page" && (
-        <>
-          <ResumePreviewModal
-            isOpen={true}
-            onClose={() =>
-              setPreview({
-                open:false, app:null, mode:"page",
-                resumeTitle:"", profile:null, sections:[],
-                fileUrl: null, fileViewerUrl: null,
-              })
-            }
-            title={preview.resumeTitle}
-            user={{}}
-            profile={preview.profile || {}}
-            sections={preview.sections || []}
-            sectionComponents={sectionComponents}
-          />
-
-          {/* 상태 액션바 */}
-          <div className="al-actionbar-fixed">
-            <div className="al-actionbar-left">
-              <span>지원자: <strong>{preview.app?.applicantName}</strong></span>
-              <span>현재 상태: <StatusBadge status={preview.app?.status} /></span>
-            </div>
-            <div className="al-actionbar-right">
-              <button
-                className="al-btn"
-                onClick={() => handleStatusChange(preview.app, "INTERVIEW_REQUEST")}
-                disabled={preview.app?.status === "INTERVIEW_REQUEST"}
-              >
-                면접요청
-              </button>
-              <button
-                className="al-btn"
-                onClick={() => handleStatusChange(preview.app, "OFFERED")}
-                disabled={preview.app?.status === "OFFERED"}
-              >
-                채용 제안
-              </button>
-              <button
-                className="al-btn"
-                onClick={() => handleStatusChange(preview.app, "HIRED")}
-                disabled={preview.app?.status === "HIRED"}
-              >
-                채용확정
-              </button>
-              <button
-                className="al-btn danger"
-                onClick={() => handleStatusChange(preview.app, "REJECTED")}
-                disabled={preview.app?.status === "REJECTED"}
-              >
-                불합격
-              </button>
-            </div>
+    {/* ======= 페이지형 이력서 미리보기 모달 (커스텀) ======= */}
+{preview.open && preview.mode === "page" && (
+  <>
+    <div className="preview-modal-overlay" onClick={() =>
+      setPreview({ open:false, app:null, mode:"page", resumeTitle:"", profile:null, sections:[], fileUrl:null, fileViewerUrl:null })
+    }>
+      <div className="preview-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="preview-header">
+          <h1>{preview.resumeTitle || "이력서"}</h1>
+          <div className="export-actions">
+            {/* 필요시 'PDF로 내보내기' 등 확장 */}
+            <button className="close-btn" onClick={() =>
+              setPreview({ open:false, app:null, mode:"page", resumeTitle:"", profile:null, sections:[], fileUrl:null, fileViewerUrl:null })
+            } aria-label="닫기">&times;</button>
           </div>
-        </>
-      )}
+        </div>
 
-      {/* ======= 파일형 이력서 미리보기 모달 (iframe) ======= */}
-      {preview.open && preview.mode === "file" && (
-        <>
-          <div
-            className="preview-modal-overlay"
-            onClick={() =>
-              setPreview({
-                open: false,
-                app: null,
-                mode: "page",
-                resumeTitle: "",
-                profile: null,
-                sections: [],
-                fileUrl: null,
-                fileViewerUrl: null,
-              })
-            }
-          >
-            <div
-              className="preview-modal-content"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="preview-header">
-                <h1>{preview.resumeTitle || "이력서 파일"}</h1>
-                <div className="export-actions">
-                  {preview.fileUrl && (
-                    <a
-                      className="export-btn"
-                      href={preview.fileUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      title="원본 열기"
-                    >
-                      원본 열기
-                    </a>
-                  )}
-                  <button
-                    className="close-btn"
-                    onClick={() =>
-                      setPreview({
-                        open: false,
-                        app: null,
-                        mode: "page",
-                        resumeTitle: "",
-                        profile: null,
-                        sections: [],
-                        fileUrl: null,
-                        fileViewerUrl: null,
-                      })
-                    }
-                    aria-label="닫기"
-                  >
-                    &times;
-                  </button>
-                </div>
-              </div>
+        <div style={{ maxHeight: "70vh", overflow:"auto", paddingRight:8 }}>
+          {/* 상단 프로필 */}
+          <ProfileBlock profile={preview.profile} app={preview.app} />
 
-              <div style={{ height: "70vh" }}>
-                <iframe
-                  src={preview.fileViewerUrl || preview.fileUrl}
-                  title="resume-file"
-                  style={{ width: "100%", height: "100%", border: 0 }}
-                  allow="encrypted-media"
-                />
-              </div>
-            </div>
-          </div>
+          {/* 섹션별 렌더 */}
+          {preview.sections.map((sec) => {
+            const t = sec.type;
+            const data = sec.data || [];
+            if (t === "educations") return <EducationBlock key={sec.id} items={data} />;
+            if (t === "skills") return <SkillsBlock key={sec.id} items={data} />;
+            if (t === "projects") return <ProjectsBlock key={sec.id} items={data} />;
+            if (t === "experiences") return <ExperiencesBlock key={sec.id} items={data} />;
+            if (t === "certifications") return <CertificationsBlock key={sec.id} items={data} />;
+            if (t === "activities") return <ActivitiesBlock key={sec.id} items={data} />;
+            if (t === "awards") return <AwardsBlock key={sec.id} items={data} />;
+            if (t === "languages") return <LanguagesBlock key={sec.id} items={data} />;
+            if (t === "portfolios") return <PortfoliosBlock key={sec.id} items={data} />;
+            if (t === "links") return <LinksBlock key={sec.id} items={data} />;
 
-          {/* 상태 액션바 (파일 모달) */}
-          <div className="al-actionbar-fixed">
-            <div className="al-actionbar-left">
-              <span>지원자: <strong>{preview.app?.applicantName}</strong></span>
-              <span>현재 상태: <StatusBadge status={preview.app?.status} /></span>
-            </div>
-            <div className="al-actionbar-right">
-              <button
-                className="al-btn"
-                onClick={() => handleStatusChange(preview.app, "INTERVIEW_REQUEST")}
-                disabled={preview.app?.status === "INTERVIEW_REQUEST"}
-              >
-                면접요청
-              </button>
-              <button
-                className="al-btn"
-                onClick={() => handleStatusChange(preview.app, "OFFERED")}
-                disabled={preview.app?.status === "OFFERED"}
-              >
-                채용 제안
-              </button>
-              <button
-                className="al-btn"
-                onClick={() => handleStatusChange(preview.app, "HIRED")}
-                disabled={preview.app?.status === "HIRED"}
-              >
-                채용확정
-              </button>
-              <button
-                className="al-btn danger"
-                onClick={() => handleStatusChange(preview.app, "REJECTED")}
-                disabled={preview.app?.status === "REJECTED"}
-              >
-                불합격
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+            // 알 수 없는 섹션은 텍스트로 폴백
+            return (
+              <SectionBox key={sec.id} title={t}>
+                <Para text={JSON.stringify(data, null, 2)} />
+              </SectionBox>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+
+    {/* 상태 액션바 (그대로 유지) */}
+    <div className="al-actionbar-fixed">
+      <div className="al-actionbar-left">
+        <span>지원자: <strong>{preview.app?.applicantName}</strong></span>
+        <span>현재 상태: <StatusBadge status={preview.app?.status} /></span>
+      </div>
+      <div className="al-actionbar-right">
+        <button className="al-btn" onClick={() => handleStatusChange(preview.app, "INTERVIEW_REQUEST")}
+                disabled={preview.app?.status === "INTERVIEW_REQUEST"}>면접요청</button>
+        <button className="al-btn" onClick={() => handleStatusChange(preview.app, "OFFERED")}
+                disabled={preview.app?.status === "OFFERED"}>채용 제안</button>
+        <button className="al-btn" onClick={() => handleStatusChange(preview.app, "HIRED")}
+                disabled={preview.app?.status === "HIRED"}>채용확정</button>
+        <button className="al-btn danger" onClick={() => handleStatusChange(preview.app, "REJECTED")}
+                disabled={preview.app?.status === "REJECTED"}>불합격</button>
+      </div>
+    </div>
+  </>
+)}
+
 
       {/* 액션바 최소 스타일(공통) */}
       <style>{`
