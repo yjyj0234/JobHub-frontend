@@ -3,8 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import "../css/Jobposting.css";
-
+import "../css/ApplicantsList.css";
 // Resume 미리보기 및 섹션 컴포넌트들 (타이틀만 사용)
 import {
   ExperienceForm,
@@ -35,16 +34,28 @@ const sectionComponents = {
 };
 
 /* ================= 공통 유틸 ================= */
-function formatDate(value) {
-  if (!value) return "-";
+// KST(Asia/Seoul) 기준 날짜/시간 분리
+const kstDateFmt = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Seoul",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}); // en-CA → YYYY-MM-DD 형태
+const kstTimeFmt = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+function formatKST(value) {
+  if (!value) return { date: "-", time: "" };
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return String(value);
-  const Y = d.getFullYear();
-  const M = String(d.getMonth() + 1).padStart(2, "0");
-  const D = String(d.getDate()).padStart(2, "0");
-  const h = String(d.getHours()).padStart(2, "0");
-  const m = String(d.getMinutes()).padStart(2, "0");
-  return `${Y}-${M}-${D} ${h}:${m}`;
+  if (Number.isNaN(d.getTime())) return { date: String(value), time: "" };
+  return { date: kstDateFmt.format(d), time: kstTimeFmt.format(d) };
+}
+function onlyDate(v) {
+  return formatKST(v).date; // 없으면 "-" 반환됨
 }
 // === 링크/기간/문단 유틸 (전역) ===
 const isUrl = (s) => {
@@ -58,8 +69,7 @@ const LinkText = ({ href, children }) => (
 );
 
 const fmtPeriod = (s, e) => {
-  const p = (v) => (v ? formatDate(v).split(" ")[0] : "-");
-  return `${p(s)} ~ ${e ? p(e) : "진행중"}`;
+  return `${onlyDate(s)} ~ ${e ? onlyDate(e) : "진행중"}`;
 };
 
 const Para = ({ text }) => (
@@ -94,15 +104,15 @@ const StatusBadge = ({ status }) => {
 };
 // ===== 공통 섹션 레이아웃 =====
 const SectionBox = ({ title, children }) => (
-  <section style={{ background:"#fff", border:"1px solid #eee", borderRadius:12, padding:16, margin:"12px 0" }}>
-    <h3 style={{ margin:"0 0 10px", fontSize:16 }}>{title}</h3>
+  <section className="al-card">
+    <h3 className="al-card-title">{title}</h3>
     {children}
   </section>
 );
 const Row = ({ label, value, strong }) => (
-  <div style={{ display:"grid", gridTemplateColumns:"120px 1fr", gap:12, padding:"6px 0", borderBottom:"1px dashed #f1f1f1" }}>
-    <div style={{ color:"#555" }}>{label}</div>
-    <div style={{ fontWeight: strong ? 600 : 400 }}>{value}</div>
+  <div className="al-row">
+    <div className="al-row-label">{label}</div>
+    <div className={`al-row-value${strong ? " strong" : ""}`}>{value}</div>
   </div>
 );
 
@@ -122,9 +132,12 @@ const ProfileBlock = ({ profile, app }) => (
 );
 
 // ===== 학력 =====
+// 학력
 const EducationBlock = ({ items = [] }) => (
   <SectionBox title="학력">
-    {items.map((ed) => (
+    {(!items || items.length === 0) ? (
+      <EmptyNote />
+    ) : items.map((ed) => (
       <div key={ed.subId} style={{ padding:"8px 0" }}>
         <div style={{ fontWeight:600 }}>{ed.schoolName} {ed.degree ? `· ${ed.degree}` : ""}</div>
         <div style={{ color:"#666" }}>{ed.major || "-"}</div>
@@ -135,27 +148,33 @@ const EducationBlock = ({ items = [] }) => (
   </SectionBox>
 );
 
-// ===== 기술 =====
+// 기술
 const SkillsBlock = ({ items = [] }) => {
   const flat = items[0]?.skills || [];
   return (
     <SectionBox title="기술">
-      <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
-        {flat.map((s) => (
-          <span key={s.subId || s.id || s.name}
-                style={{ padding:"6px 10px", border:"1px solid #e5e7eb", borderRadius:999 }}>
-            {s.name}
-          </span>
-        ))}
-      </div>
+      {flat.length === 0 ? (
+        <EmptyNote />
+      ) : (
+        <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+          {flat.map((s) => (
+            <span key={s.subId || s.id || s.name}
+                  style={{ padding:"6px 10px", border:"1px solid #e5e7eb", borderRadius:999 }}>
+              {s.name}
+            </span>
+          ))}
+        </div>
+      )}
     </SectionBox>
   );
 };
 
-// ===== 프로젝트 =====
+// 프로젝트
 const ProjectsBlock = ({ items = [] }) => (
   <SectionBox title="프로젝트">
-    {items.map((p) => (
+    {(!items || items.length === 0) ? (
+      <EmptyNote />
+    ) : items.map((p) => (
       <div key={p.subId} style={{ padding:"10px 0" }}>
         <div style={{ fontWeight:600 }}>{p.projectName} {p.organization ? `(${p.organization})` : ""}</div>
         <div style={{ fontSize:13, color:"#888" }}>{fmtPeriod(p.startDate, p.endDate || (p.ongoing ? null : null))}</div>
@@ -169,10 +188,12 @@ const ProjectsBlock = ({ items = [] }) => (
   </SectionBox>
 );
 
-// ===== 경력 =====
+// 경력
 const ExperiencesBlock = ({ items = [] }) => (
   <SectionBox title="경력">
-    {items.map((x) => (
+    {(!items || items.length === 0) ? (
+      <EmptyNote />
+    ) : items.map((x) => (
       <div key={x.subId} style={{ padding:"10px 0" }}>
         <div style={{ fontWeight:600 }}>{x.companyName} · {x.position}</div>
         <div style={{ fontSize:13, color:"#888" }}>{fmtPeriod(x.startDate, x.endDate)}</div>
@@ -184,16 +205,18 @@ const ExperiencesBlock = ({ items = [] }) => (
   </SectionBox>
 );
 
-// ===== 자격증 =====
+// 자격증
 const CertificationsBlock = ({ items = [] }) => (
   <SectionBox title="자격증">
-    {items.map((c) => (
+    {(!items || items.length === 0) ? (
+      <EmptyNote />
+    ) : items.map((c) => (
       <div key={c.subId} style={{ padding:"8px 0" }}>
         <div style={{ fontWeight:600 }}>{c.certificationName}</div>
         <div style={{ color:"#666" }}>{c.issuingOrganization || "-"}</div>
         <div style={{ fontSize:13, color:"#888" }}>
-          취득일: {c.issueDate ? formatDate(c.issueDate).split(" ")[0] : "-"}
-          {c.expiryDate ? ` · 만료: ${formatDate(c.expiryDate).split(" ")[0]}` : ""}
+          취득일: {c.issueDate ? onlyDate(c.issueDate) : "-"}
+          {c.expiryDate ? ` · 만료: ${onlyDate(c.expiryDate)}` : ""}
         </div>
         {c.certificationNumber && <div>자격번호: {c.certificationNumber}</div>}
       </div>
@@ -201,10 +224,12 @@ const CertificationsBlock = ({ items = [] }) => (
   </SectionBox>
 );
 
-// ===== 대외활동 =====
+// 대외활동
 const ActivitiesBlock = ({ items = [] }) => (
   <SectionBox title="대외활동">
-    {items.map((a) => (
+    {(!items || items.length === 0) ? (
+      <EmptyNote />
+    ) : items.map((a) => (
       <div key={a.subId} style={{ padding:"8px 0" }}>
         <div style={{ fontWeight:600 }}>{a.activityName} {a.organization ? `· ${a.organization}` : ""}</div>
         <div style={{ fontSize:13, color:"#888" }}>{fmtPeriod(a.startDate, a.endDate)}</div>
@@ -214,29 +239,33 @@ const ActivitiesBlock = ({ items = [] }) => (
   </SectionBox>
 );
 
-// ===== 수상 =====
+// 수상
 const AwardsBlock = ({ items = [] }) => (
   <SectionBox title="수상 경력">
-    {items.map((w) => (
+    {(!items || items.length === 0) ? (
+      <EmptyNote />
+    ) : items.map((w) => (
       <div key={w.subId} style={{ padding:"8px 0" }}>
         <div style={{ fontWeight:600 }}>{w.awardName}</div>
         <div style={{ color:"#666" }}>{w.organization || "-"}</div>
-        {w.awardDate && <div style={{ fontSize:13, color:"#888" }}>{formatDate(w.awardDate).split(" ")[0]}</div>}
+        {w.awardDate && <div style={{ fontSize:13, color:"#888" }}>{onlyDate(w.awardDate)}</div>}
         {w.description && <Para text={w.description} />}
       </div>
     ))}
   </SectionBox>
 );
 
-// ===== 외국어 =====
+// 외국어
 const LanguagesBlock = ({ items = [] }) => (
   <SectionBox title="외국어">
-    {items.map((l) => (
+    {(!items || items.length === 0) ? (
+      <EmptyNote />
+    ) : items.map((l) => (
       <div key={l.subId} style={{ padding:"8px 0" }}>
         <div style={{ fontWeight:600 }}>{l.language} {l.proficiencyLevel ? `· ${l.proficiencyLevel}` : ""}</div>
         {(l.testName || l.testScore || l.testDate) && (
           <div style={{ color:"#666" }}>
-            시험: {l.testName || "-"} / 점수: {l.testScore || "-"} / 일자: {l.testDate ? formatDate(l.testDate).split(" ")[0] : "-"}
+            시험: {l.testName || "-"} / 점수: {l.testScore || "-"} / 일자: {l.testDate ? onlyDate(l.testDate) : "-"}
           </div>
         )}
       </div>
@@ -244,10 +273,12 @@ const LanguagesBlock = ({ items = [] }) => (
   </SectionBox>
 );
 
-// ===== 포트폴리오 =====
+// 포트폴리오
 const PortfoliosBlock = ({ items = [] }) => (
   <SectionBox title="포트폴리오">
-    {items.map((p) => (
+    {(!items || items.length === 0) ? (
+      <EmptyNote />
+    ) : items.map((p) => (
       <div key={p.subId} style={{ padding:"8px 0" }}>
         <div style={{ fontWeight:600 }}>{p.title} {p.portfolioType ? `· ${p.portfolioType}` : ""}</div>
         {p.url && isUrl(p.url) && <div><LinkText href={p.url} /></div>}
@@ -365,6 +396,10 @@ const normalizePortfolio = (r={}) => ({
   portfolioType: r.portfolioType ?? r.type ?? "",
 });
 
+// 공통 빈 안내
+const EmptyNote = ({ text = "등록하지 않았습니다." }) => (
+  <div style={{ padding: "6px 0", color: "#9ca3af", fontSize: 14 }}>{text}</div>
+);
 
 /* ================= 엔드포인트 맵 (컨트롤러 반영) ================= */
 const API = "/api";
@@ -453,166 +488,70 @@ const loadResumeForPreview = async (rid, application) => {
   const isDenied = (u) => EMBED_DENY.some((re) => re.test(urlHost(u)));
 
 
-
-  // 1) (선택) 서버에 기업용 통합 뷰가 있다면 먼저 시도
-  // 예: GET /api/applications/{id}/resume  (없으면 404일 것)
-  try {
-    const agg = await axios.get(`/api/applications/${application.id}/resume`, {
-      withCredentials: true,
-      validateStatus: () => true,
-    });
-    if (agg.status >= 200 && agg.status < 300 && agg.data) {
-      const snap = agg.data;
-      const arr = (v) =>
-        Array.isArray(v) ? v : Array.isArray(v?.content) ? v.content : [];
-      const sections = sortSections(
-        [
-          makeSection(
-            "educations",
-            arr(snap.educations ?? snap.educationList).map(normalizeEducation)
-          ),
-          (() => {
-            const skills = arr(snap.skills ?? snap.skillList)
-              .map(normalizeSkill)
-              .filter((s) => (s.name || "").trim());
-            return skills.length
-              ? {
-                  id: `skills-${Date.now()}`,
-                  type: "skills",
-                  data: [{ subId: `skills-item-${Date.now()}`, skills }],
-                }
-              : null;
-          })(),
-          makeSection(
-            "projects",
-            arr(snap.projects ?? snap.projectList).map(normalizeProject)
-          ),
-          makeSection(
-            "experiences",
-            arr(snap.experiences ?? snap.experienceList).map(
-              normalizeExperience
-            )
-          ),
-          makeSection(
-            "certifications",
-            arr(snap.certifications ?? snap.certificationList).map(
-              normalizeCertification
-            )
-          ),
-          makeSection(
-            "activities",
-            arr(snap.activities ?? snap.activityList).map(normalizeActivity)
-          ),
-          makeSection(
-            "awards",
-            arr(snap.awards ?? snap.awardList).map(normalizeAward)
-          ),
-          makeSection(
-            "languages",
-            arr(snap.languages ?? snap.languageList).map(normalizeLanguage)
-          ),
-          makeSection(
-            "portfolios",
-            arr(snap.portfolios ?? snap.portfolioList).map(normalizePortfolio)
-          ),
-        ].filter(Boolean)
-      );
-
-      return {
-        mode: "page",
-        title: snap.title ?? application?.resumeTitle ?? "이력서",
-        profile: snap.profile ?? { name: application?.applicantName || "" },
-        sections: rawUrl
-          ? sortSections([
-              ...sections,
-              {
-                id: `links-${Date.now()}`,
-                type: "links",
-                data: [{ subId: `links-item-${Date.now()}`, label: "첨부 파일", url: rawUrl }],
-             },
-           ])
-         : sections,
-      };
-    }
-  } catch {
-    // ignore → 섹션별 API 폴백
-  }
-
   // 2) resumeId가 없으면 최소 정보만
-  if (!rid) {
-    return {
-      mode: "page",
-      title: application?.resumeTitle || "이력서",
-      profile: { name: application?.applicantName || "" },
-     sections: rawUrl
-       ? [{
-           id: `links-${Date.now()}`,
-           type: "links",
-           data: [{ subId: `links-item-${Date.now()}`, label: "첨부 파일", url: rawUrl }],
-         }]
-       : [],    };
-  }
-
-  // 3) 섹션별 API 호출 (주의: 대부분 “지원자 본인”만 가능 → 기업 계정이면 401/403 가능)
-  const entries = Object.entries(SECTION_API);
-  const results = await Promise.all(
-    entries.map(async ([type, cfg]) => {
-      try {
-        const res = await axios.get(cfg.list(rid), {
-          withCredentials: true,
-          validateStatus: () => true,
-        });
-        if (res.status !== 200) {
-          if (res.status === 401 || res.status === 403) {
-            console.warn(
-              `[preview] ${type} ${res.status} (권한 없음/로그인 필요) — 기업 계정은 이 엔드포인트 접근이 막혀 있을 수 있어요.`
-            );
-          } else {
-            console.warn(`[preview] ${type} fetch failed: ${res.status}`);
-          }
-          return null;
-        }
-
-        const raw = pickArray(res.data);
-        const normalized = cfg.normalize ? raw.map(cfg.normalize) : raw;
-        if (!normalized?.length) return null;
-
-        if (cfg.isSkill) {
-          const flat = normalized
-            .map(normalizeSkill)
-            .filter((s) => (s.name || "").trim().length > 0);
-          if (!flat.length) return null;
-          return {
-            id: `skills-${Date.now()}`,
-            type: "skills",
-            data: [{ subId: `skills-item-${Date.now()}`, skills: flat }],
-          };
-        }
-
-        return makeSection(type, normalized);
-      } catch (e) {
-        console.warn(`[preview] ${type} error`, e);
-        return null;
-      }
-    })
-  );
-
-  const sections = sortSections(results.filter(Boolean));
-
+ if (!rid) {
   return {
     mode: "page",
     title: application?.resumeTitle || "이력서",
     profile: { name: application?.applicantName || "" },
-   sections: rawUrl
-     ? sortSections([
-         ...sections,
-         {
-           id: `links-${Date.now()}`,
-           type: "links",
-           data: [{ subId: `links-item-${Date.now()}`, label: "첨부 파일", url: rawUrl }],
-         },
-       ])
-     : sections,  };
+    sections: rawUrl
+      ? [{
+          id: `links-${Date.now()}`,
+          type: "links",
+          data: [{ subId: `links-item-${Date.now()}`, label: "첨부 파일", url: rawUrl }],
+        }]
+      : [],
+  };
+}
+
+// 섹션 호출 (403/404 등은 조용히 무시)
+const entries = Object.entries(SECTION_API);
+const results = await Promise.all(
+  entries.map(async ([type, cfg]) => {
+    try {
+      const res = await axios.get(cfg.list(rid), {
+        withCredentials: true,
+        validateStatus: () => true, // 어떤 코드든 받아서 직접 분기
+      });
+      if (res.status !== 200) return null; // 401/403/404 등은 skip
+
+      const raw = pickArray(res.data);
+      const normalized = cfg.normalize ? raw.map(cfg.normalize) : raw;
+      if (!normalized?.length) return null;
+
+      if (cfg.isSkill) {
+        const flat = normalized
+          .map(normalizeSkill)
+          .filter((s) => (s.name || "").trim().length > 0);
+        if (!flat.length) return null;
+        return {
+          id: `skills-${Date.now()}`,
+          type: "skills",
+          data: [{ subId: `skills-item-${Date.now()}`, skills: flat }],
+        };
+      }
+
+      return makeSection(type, normalized);
+    } catch {
+      return null; // 네트워크 예외도 조용히 skip
+    }
+  })
+);
+
+  const sections = sortSections(results.filter(Boolean));
+
+return {
+  mode: "page",
+  title: application?.resumeTitle || "이력서",
+  profile: { name: application?.applicantName || "" },
+  sections: rawUrl
+    ? sortSections([
+        ...sections,
+        { id: `links-${Date.now()}`, type: "links",
+          data: [{ subId: `links-item-${Date.now()}`, label: "첨부 파일", url: rawUrl }] },
+      ])
+    : sections,
+};
 };
 
 
@@ -883,8 +822,21 @@ const loadResumeForPreview = async (rid, application) => {
               <tbody>
                 {applicants.map((a) => (
                   <tr key={a.id}>
-                    <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3" }}>{a.applicantName}</td>
-                    <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3" }}>{a.applicantEmail}</td>
+                        <td
+                          style={{
+                            padding: "10px 8px",
+                            borderBottom: "1px solid #f3f3f3",
+                            fontSize: "16px",
+                            whiteSpace: "nowrap",
+                            maxWidth: 160,          // 필요 시 조절
+                            overflow: "hidden",
+                            textOverflow: "ellipsis"
+                          }}
+                          title={a.applicantName}   // 말줄임 시 툴팁
+                        >
+                          {a.applicantName}
+                        </td>                    
+                <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3",fontSize:"12px" }}>{a.applicantEmail}</td>
                     <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3" }}>
                       {a.resumeTitle ? (
                         <button
@@ -899,12 +851,28 @@ const loadResumeForPreview = async (rid, application) => {
                         <span style={{ color: "#777" }}>제목 없음</span>
                       )}
                     </td>
-                    <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3" }}>
-                      {formatDate(a.appliedAt)}
-                    </td>
-                    <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3" }}>
-                      {a.viewedAt ? formatDate(a.viewedAt) : "-"}
-                    </td>
+                 <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3" }}>
+                  {(() => {
+                    const { date, time } = formatKST(a.appliedAt);
+                    return (
+                      <>
+                        <div>{date}</div>
+                        {time && <div style={{ fontSize: 12, color: "#666" }}>{time}</div>}
+                      </>
+                    );
+                  })()}
+                </td>
+                  <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3" }}>
+                  {a.viewedAt ? (() => {
+                    const { date, time } = formatKST(a.viewedAt);
+                    return (
+                      <>
+                        <div>{date}</div>
+                        {time && <div style={{ fontSize: 12, color: "#666" }}>{time}</div>}
+                      </>
+                    );
+                  })() : "-"}
+                </td>
                     <td style={{ padding: "10px 8px", borderBottom: "1px solid #f3f3f3" }}>
                       <StatusBadge status={a.status} />
                     </td>
@@ -924,6 +892,7 @@ const loadResumeForPreview = async (rid, application) => {
     }>
       <div className="preview-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="preview-header">
+          
           <h1>{preview.resumeTitle || "이력서"}</h1>
           <div className="export-actions">
             {/* 필요시 'PDF로 내보내기' 등 확장 */}
@@ -933,9 +902,8 @@ const loadResumeForPreview = async (rid, application) => {
           </div>
         </div>
 
-        <div style={{ maxHeight: "70vh", overflow:"auto", paddingRight:8 }}>
-          {/* 상단 프로필 */}
-          <ProfileBlock profile={preview.profile} app={preview.app} />
+      <div className="preview-scroll">
+        <ProfileBlock profile={preview.profile} app={preview.app} />
 
           {/* 섹션별 렌더 */}
           {preview.sections.map((sec) => {
