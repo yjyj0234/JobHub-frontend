@@ -1,0 +1,317 @@
+/* 컨테이너/그리드 -------------------------------------------------------- */
+.prf-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.prf-container.prf-compact {
+  padding-top: 12px;
+}
+
+.prf-header {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.prf-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+.prf-title {
+  font-size: 18px;
+  margin: 0;
+  font-weight: 700;
+}
+.prf-sub {
+  color: #6b7280;
+  margin: 2px 0 0;
+  font-size: 12px;
+}
+
+.prf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.prf-grid.prf-grid-compact {
+  gap: 10px;
+}
+@media (max-width: 980px) {
+  .prf-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 카드 공통 -------------------------------------------------------------- */
+.prf-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  min-height: 360px; /* 기본 높이 */
+  max-height: 520px; /* 과도하게 커지는 것 방지 */
+  overflow: hidden;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.02), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+.prf-card.prf-card-compact {
+  min-height: 100%;
+  max-height: 100%;
+}
+
+.prf-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f9fafb;
+}
+.prf-card-head h2 {
+  font-size: 14px;
+  margin: 0;
+  font-weight: 700;
+}
+.prf-card-head-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.prf-card-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+.prf-scroll {
+  overflow: auto;
+}
+
+/* 입력/버튼 -------------------------------------------------------------- */
+.prf-counter {
+  font-size: 11px;
+  color: #6b7280;
+}
+.prf-counter.over {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.prf-textarea {
+  width: 94%;
+  min-height: 200px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  resize: vertical;
+  outline: none;
+}
+.prf-textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+.prf-textarea.small {
+  min-height: 120px;
+}
+.prf-textarea-compact {
+  min-height: 160px;
+}
+
+.prf-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid #f1f5f9;
+}
+.prf-actions-compact {
+  padding: 8px 12px;
+}
+
+.btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 13px;
+}
+.btn.sm {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.btn.xs {
+  padding: 5px 9px;
+  font-size: 11px;
+}
+.btn.primary {
+  background: #111827;
+  color: #fff;
+}
+.btn.primary:hover {
+  background: #0b1220;
+}
+.btn.ghost {
+  background: #f7f7f7;
+}
+.btn.ghost:hover {
+  background: #eee;
+}
+.btn.outline {
+  background: #fff;
+  border-color: #d1d5db;
+}
+.btn.outline:hover {
+  background: #f8fafc;
+}
+
+.prf-error {
+  margin-top: 6px;
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+/* 결과/블록 --------------------------------------------------------------- */
+.prf-placeholder {
+  color: #6b7280;
+  font-size: 12px;
+  padding: 10px;
+  background: #f8fafc;
+  border: 1px dashed #e5e7eb;
+  border-radius: 8px;
+}
+
+.prf-block {
+  margin-top: 6px;
+}
+.prf-block-compact {
+  margin-top: 6px;
+}
+.prf-label {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+.prf-label.sm {
+  font-size: 11px;
+}
+
+.prf-preview {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+  min-height: 100px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.prf-preview-compact {
+  min-height: 90px;
+}
+
+/* 하이라이트 -------------------------------------------------------------- */
+mark.hl-bad {
+  background: #fff3cd;
+  padding: 0 2px;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* 이슈 리스트 -------------------------------------------------------------- */
+.prf-issues {
+  margin-top: 8px;
+}
+.prf-issues-compact {
+  margin-top: 6px;
+}
+.prf-issues-head {
+  font-weight: 700;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+.prf-issue-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.prf-issue {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 8px;
+  background: #fff;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+}
+.prf-issue-compact {
+  padding: 6px;
+  gap: 6px;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 10.5px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  align-self: flex-start;
+}
+.tag-style {
+  border-color: #f59e0b;
+}
+.tag-spacing {
+  border-color: #0ea5e9;
+}
+.tag-spell {
+  border-color: #22c55e;
+}
+
+.issue-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+.issue-text .from,
+.issue-text .to {
+  overflow-wrap: anywhere;
+}
+.issue-msg {
+  color: #4b5563;
+  font-size: 11px;
+  margin-top: 2px;
+  grid-column: 1 / -1;
+}
+.arrow {
+  opacity: 0.65;
+}
+
+.prf-loading {
+  color: #374151;
+  font-size: 12px;
+}
+
+/* 스크롤바 미세 디자인 ---------------------------------------------------- */
+.prf-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.prf-scroll::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 8px;
+}
+.prf-scroll::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}

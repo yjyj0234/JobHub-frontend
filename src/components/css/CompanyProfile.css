@@ -1,0 +1,257 @@
+.company-profile-container {
+  max-width: 800px;
+  margin: 48px auto;
+  background: #fff;
+  border-radius: 28px;
+  box-shadow: 0 6px 32px rgba(0, 0, 0, 0.1);
+  padding: 48px 44px;
+}
+
+.profile-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  text-align: center;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* 단계 표시기 */
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+.step {
+  position: relative;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-subtext);
+  background: #f5f5f5;
+  border-radius: 20px;
+  transition: all 0.3s;
+}
+
+.step.active {
+  color: white;
+  background: var(--c-accent);
+}
+
+/* 로고 업로드 영역 */
+.logo-upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-preview {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  border: 2px solid var(--c-border);
+  border-radius: 12px;
+  padding: 12px;
+  background: #fafafa;
+}
+
+.logo-placeholder {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 2px dashed var(--c-border);
+  border-radius: 12px;
+  color: var(--c-subtext);
+  background: #fafafa;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-label {
+  padding: 8px 20px;
+  background: var(--c-accent);
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.file-label:hover {
+  background: #3a75c4;
+}
+
+/* 복지 입력 영역 */
+.benefits-input-wrapper {
+  display: flex;
+  gap: 8px;
+}
+
+.benefits-input-wrapper input {
+  flex: 1;
+}
+
+.btn-add-benefit {
+  padding: 16px 24px;
+  background: var(--c-accent);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.benefits-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.benefit-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #e8f0ff;
+  color: var(--c-accent);
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn-remove-tag {
+  background: none;
+  border: none;
+  color: var(--c-accent);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 버튼 그룹 */
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  justify-content: center;
+}
+
+.btn-prev,
+.btn-next,
+.btn-save {
+  padding: 16px 40px;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-prev {
+  background: #f0f0f0;
+  color: var(--c-text);
+}
+
+.btn-next,
+.btn-save {
+  background: var(--c-accent);
+  color: white;
+}
+
+.btn-prev:hover {
+  background: #e0e0e0;
+}
+
+.btn-next:hover,
+.btn-save:hover {
+  background: #3a75c4;
+  transform: translateY(-2px);
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 폼 스타일 (Jobposting.css와 동일) */
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 38px;
+}
+
+.form-section {
+  border: 1.5px solid #e0e0e0;
+  border-radius: 18px;
+  padding: 32px 28px 24px 28px;
+}
+
+.form-section legend {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--c-accent);
+  padding: 0 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: #444;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  font-size: 1.15rem;
+  padding: 16px 20px;
+  border: 1.5px solid #ddd;
+  border-radius: 14px;
+  background: #f7f7f7;
+  transition: border-color 0.2s;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: var(--c-accent);
+  background: white;
+}
+
+.form-group-inline {
+  display: flex;
+  gap: 32px;
+}
+
+.form-group-inline .form-group {
+  flex: 1;
+}

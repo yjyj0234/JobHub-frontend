@@ -1,0 +1,543 @@
+/* src/components/css/ResumeEditorPage.css */
+.resume-editor-page {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  width: 1400px;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.editor-main {
+  width: 100%;
+  max-width: 800px;
+}
+
+.editor-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 20px;
+}
+
+/* --- ProfileHeader (디자인 및 레이아웃 수정됨) --- */
+.profile-header-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.profile-header {
+  position: relative;
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 25px 30px;
+  margin-bottom: 30px;
+}
+.profile-header.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #868e96;
+  min-height: 250px;
+}
+
+/* 수정 버튼 (오른쪽 상단) */
+.profile-edit-toggle,
+.profile-edit-actions {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: inline-flex;
+  gap: 8px;
+}
+.profile-edit-toggle {
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+.profile-edit-toggle:hover {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+  background-color: #f7faff;
+}
+
+/* 사진 + 정보 (가로 배치) */
+.profile-main-info {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  width: 100%;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f3f8;
+  margin-bottom: 20px;
+}
+
+/* 사진 (왼쪽) */
+.profile-photo-edit-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+.profile-photo-wrapper {
+  width: 120px; /* 가로 크기 */
+  height: 160px; /* 세로 크기 (3:4 비율) */
+  border-radius: 12px; /* 사각형에 어울리게 원형 -> 사각 라운드 */
+  overflow: hidden;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.profile-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.profile-photo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e9ecef;
+  color: #adb5bd;
+}
+.photo-edit-icon {
+  position: absolute;
+  bottom: 5px; /* 위치 조정 */
+  right: 5px; /* 위치 조정 */
+  background-color: white;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ced4da;
+  cursor: pointer; /* 커서 추가 */
+}
+
+/* 정보 (중앙) - 사진 크기 변경으로 인한 간격 조정 */
+.profile-main-info {
+  display: flex;
+  align-items: center;
+  gap: 30px; /* 간격 조정 */
+  width: 100%;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f3f8;
+  margin-bottom: 20px;
+}
+.profile-name-display {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1c3d5a;
+  margin: 0;
+}
+.profile-headline-display {
+  font-size: 1.1rem;
+  color: #4a69bd;
+  margin: 0;
+}
+.profile-name-input,
+.profile-headline-input {
+  border: 1px solid #dbe4f5;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  width: 100%;
+}
+.profile-name-input {
+  font-size: 1.6rem;
+  font-weight: 700;
+  max-width: 250px;
+}
+.profile-headline-input {
+  font-size: 1rem;
+  color: #555;
+  max-width: 400px;
+}
+
+/* 연락처 등 정보 */
+.profile-info-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  font-size: 0.95rem;
+  color: #334155;
+  margin-top: 15px;
+}
+.profile-info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.profile-info-item input {
+  border: none;
+  background: #f1f5f9;
+  padding: 6px 10px;
+  border-radius: 6px;
+  width: 140px;
+}
+.profile-info-item svg {
+  color: #64748b;
+  flex-shrink: 0;
+}
+.profile-info-item span {
+  font-weight: 500;
+}
+
+/* 자기소개 (하단) */
+.profile-info-wide {
+  width: 100%;
+}
+.profile-info-wide label {
+  font-weight: 600;
+  color: #4a69bd;
+  margin-bottom: 8px;
+  display: block;
+}
+.profile-info-wide textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #dbe4f5;
+  background-color: white;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.summary-display {
+  width: 650px;
+  min-height: 100px;
+  padding: 12px 15px;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #495057;
+  white-space: pre-wrap;
+  text-align: left;
+}
+/* --- --- */
+
+/* 이력서 제목 및 액션 버튼 */
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 20px;
+}
+.resume-title-input {
+  font-size: 1.8rem;
+  font-weight: 700;
+  border: none;
+  padding: 10px;
+  flex-grow: 1;
+}
+.resume-title-input:focus {
+  outline: none;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+.editor-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.2s;
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  color: #495057;
+  white-space: nowrap;
+}
+.action-btn:hover {
+  background-color: #f8f9fa;
+}
+.action-btn.primary {
+  background-color: var(--c-accent);
+  color: white;
+  border-color: var(--c-accent);
+}
+.action-btn.primary:hover {
+  background-color: #3a5aa0; /* darken color */
+}
+
+/* 에디터 컨텐츠 영역 */
+.editor-content {
+  min-height: 500px;
+}
+.editor-placeholder {
+  text-align: center;
+  padding: 100px 20px;
+  color: #868e96;
+  border: 2px dashed #e9ecef;
+  border-radius: 8px;
+}
+
+/* 섹션 스타일 */
+.editor-section {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+}
+.section-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.required-mark {
+  color: #ff4d4f;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.required-text {
+  color: #d90429;
+  font-size: 0.8rem;
+  font-weight: 900;
+  margin-left: 4px;
+  transition: all 0.2s;
+}
+.required-text.active {
+  color: #ff7b7b;
+}
+
+.section-header-actions {
+  display: flex;
+  gap: 10px;
+}
+.section-content {
+  padding: 20px;
+}
+
+/* 여러 항목을 감싸는 래퍼 */
+.item-form-wrapper {
+  position: relative;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 15px;
+  background-color: #fafafa;
+}
+
+/* 각 항목별 삭제 버튼 */
+.remove-item-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #adb5bd;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  display: flex;
+}
+.remove-item-btn:hover {
+  background-color: #f1f3f5;
+  color: #ff6b6b;
+}
+
+/* 항목 추가 버튼 */
+.add-item-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px dashed #ccc;
+  font-weight: 600;
+  color: #777;
+  background-color: #f8f9fa;
+  transition: all 0.2s ease;
+}
+
+.add-item-btn:hover {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+  background-color: #fff;
+}
+
+/* 오른쪽 사이드바 (팔레트) */
+.editor-palette,
+.resume-status-palette {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+}
+.editor-palette h3 {
+  margin: 0 0 15px 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.palette-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.palette-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+  border: 1px solid #f8f9fa;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+.palette-item:hover {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+}
+.palette-item.disabled {
+  background-color: #e9ecef;
+  color: #adb5bd;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.palette-required-text {
+  color: rgb(212, 20, 20);
+  font-size: 12px;
+  font-weight: normal;
+}
+
+/* 완성도 및 토글 스위치 */
+.resume-status-palette {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.completeness-meter .meter-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #495057;
+}
+.meter-bar-background {
+  width: 100%;
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.meter-bar-foreground {
+  height: 100%;
+  background-color: var(--c-accent);
+  border-radius: 4px;
+  transition: width 0.5s ease-in-out;
+}
+.status-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.toggle-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.toggle-item label {
+  font-weight: 500;
+  color: #495057;
+}
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-switch label {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 24px;
+}
+.toggle-switch label:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+.toggle-switch input:checked + label {
+  background-color: var(--c-accent);
+}
+.toggle-switch input:checked + label:before {
+  transform: translateX(20px);
+}
+
+.delete-confirm-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  gap: 15px;
+  text-align: center;
+}
+
+.delete-confirm-box span {
+  font-weight: 600;
+  color: #333;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 10px;
+}

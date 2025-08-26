@@ -1,0 +1,382 @@
+/* 페이지 컨테이너 */
+.gc-page {
+  background: #ffffff;
+  padding: 24px 16px;
+}
+
+.gc-container {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* 헤더 영역 */
+.gc-header {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.gc-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.gc-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.my-room-btn {
+  background: linear-gradient(135deg, #f7f3d7 0%, #f0e6b3 100%);
+  color: #8b7355;
+  border: none;
+  border-radius: 25px;
+  padding: 10px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(212, 192, 138, 0.3);
+}
+
+.my-room-btn:hover {
+  background: linear-gradient(135deg, #f0e6b3 0%, #e6d7a0 100%);
+  color: #7a6b4a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 192, 138, 0.4);
+}
+
+.gc-back-btn {
+  background: linear-gradient(135deg, #4e86da 0%, #8692c2 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 25px;
+  padding: 10px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(212, 192, 138, 0.3);
+}
+
+.gc-back-btn:hover {
+  background: linear-gradient(135deg, #3074d9 0%, #5b6eba 100%);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 192, 138, 0.4);
+}
+
+.gc-back-btn:active {
+  transform: translateY(0);
+}
+
+/* 채팅방 생성 섹션 */
+.gc-create-section {
+  margin-bottom: 28px;
+}
+
+.gc-create-form {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.gc-create-form:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.1);
+}
+
+.gc-room-input {
+  flex: 1;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  background: #f9fafb;
+}
+
+.gc-room-input:focus {
+  border-color: #667eea;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.gc-create-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 25px;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  white-space: nowrap;
+}
+
+.gc-create-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.gc-create-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 채팅방 목록 섹션 */
+.gc-rooms-section {
+  margin-top: 24px;
+}
+
+.gc-rooms-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 16px;
+  color: #111827;
+  position: relative;
+}
+
+.gc-rooms-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 2px;
+}
+
+.gc-rooms-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .gc-rooms-list { gap: 14px; }
+}
+
+@media (min-width: 768px) {
+  .gc-rooms-list { gap: 16px; }
+}
+
+.gc-room-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gc-room-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.gc-room-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
+  transform: translateY(-3px);
+}
+
+.gc-room-card:hover::before {
+  transform: scaleX(1);
+}
+
+.gc-room-content {
+  flex: 1;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+}
+
+.gc-room-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.gc-room-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.gc-owner-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #ffba43, #f3962b);
+  color: #ffffff;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.gc-room-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gc-member-count {
+  font-size: 13px;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.gc-last-message {
+  font-size: 14px;
+  color: #374151;
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.gc-delete-btn {
+  background: linear-gradient(135deg, #ff7c7c 0%, #fb4646 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  flex-shrink: 0;
+}
+
+.gc-delete-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* 빈 상태 */
+.gc-empty {
+  background: #ffffff;
+  border: 1px dashed #e5e7eb;
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.gc-empty::before {
+  content: '💬';
+  display: block;
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+/* 로딩 상태 */
+.gc-loading {
+  text-align: center;
+  padding: 20px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.gc-loading::before {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+/* 에러 상태 */
+.gc-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  margin: 16px 0;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .gc-create-form {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .gc-room-input {
+    width: 100%;
+  }
+  
+  .gc-room-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .gc-delete-btn {
+    align-self: flex-end;
+  }
+  
+  .gc-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}

@@ -1,0 +1,42 @@
+.grid-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 40px;
+}
+
+/* 기존 */
+.grid-section {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 60px 20px 100px 20px;
+  position: relative; /* 배경 장식용 */
+  overflow: hidden; /* 장식이 튀어나오지 않도록 */
+}
+
+/* 은은한 배경 하이라이트(Top banner와 톤 맞춤) */
+.grid-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    1400px 300px at -10% -20%,
+    rgba(255, 255, 255, 0.35),
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+/* Top10처럼 좀 더 조밀하게 보이고 싶을 때(옵션) */
+.grid-section--top10 .grid {
+  gap: 20px;
+}
+
+/* 카드가 화면을 적당히 채우도록 최소/최대 폭 보정(선택) */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 300px));
+  gap: 25px;
+  justify-content: center;
+}

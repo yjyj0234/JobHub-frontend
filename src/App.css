@@ -1,11 +1,24 @@
 :root {
-  --font-main: 'Pretendard', sans-serif;
+  --font-main: "Pretendard", sans-serif;
   --c-accent: #4e86da;
-  --c-accent-light: #FFE5E5;
-  --c-text: #4A4A4A;
+  --c-accent-light: #ffe5e5;
+  --c-text: #4a4a4a;
   --c-subtext: #888888;
-  --c-bg: #FFFFFF;
-  --c-border: #F0F0F0;
+  --c-bg: #ffffff;
+  --c-border: #f0f0f0;
+  --c-bg-light: #f7f7f7;
+   /* === 여기부터 신규 추가 === */
+  --c-accent-2: #ffb2a0; /* 그라데이션 끝 컬러 */
+  --page-gradient: linear-gradient(45deg, var(--c-accent) 0%, var(--c-accent-2) 100%);
+  --page-radial: radial-gradient(1200px 200px at 20% -50%, rgba(255,255,255,.25), transparent 60%);
+
+  /* 유리카드 느낌 */
+  --card-bg: rgba(255,255,255,.88);
+  --card-border: rgba(255,255,255,.55);
+
+  /* 텍스트 대비 */
+  --ink-strong: #1b1f23;
+  --ink-dim: #444;
 }
 
 body {
@@ -15,18 +28,26 @@ body {
   color: var(--c-text);
 }
 
-button, input {
+button,
+input {
   font-family: var(--font-main);
   border: none;
   outline: none;
   background: none;
   color: inherit;
 }
-button { cursor: pointer; }
-a { text-decoration: none; color: inherit; }
+
+button {
+  cursor: pointer;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
 
 .container {
-  max-width: 1100px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 40px;
 }
@@ -34,3 +55,14 @@ a { text-decoration: none; color: inherit; }
 body.body-no-scroll {
   overflow: hidden;
 }
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* 최소 높이를 뷰포트 높이와 같게 설정 */
+}
+
+.main-content {
+  flex: 1; /* 헤더와 푸터를 제외한 모든 남는 공간을 차지 */
+}
+
