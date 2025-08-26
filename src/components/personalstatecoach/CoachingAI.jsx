@@ -200,6 +200,7 @@ export default function CoachingAI() {
             <h2>결과</h2>
             {result?.corrected && (
               <button
+                type="button"
                 className="btn outline xs"
                 onClick={handleCopy}
                 aria-label="교정문 복사"
@@ -233,6 +234,7 @@ export default function CoachingAI() {
                   </div>
                   <div
                     className="prf-preview prf-preview-compact"
+                    // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
                     dangerouslySetInnerHTML={{ __html: highlightedOriginal }}
                   />
                 </div>
@@ -244,6 +246,7 @@ export default function CoachingAI() {
                     </div>
                     <ul className="prf-issue-list">
                       {result.issues.map((it, idx) => (
+                        // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
                         <li key={idx} className="prf-issue prf-issue-compact">
                           <span
                             className={`tag tag-${(
