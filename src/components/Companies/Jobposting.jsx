@@ -501,7 +501,8 @@ const Jobposting = () => {
   };
 
   return (
-    <div className="jobposting-container large">
+    // 🔥 클래스명 수정 및 스타일 제한
+    <div className="jobposting-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
       <h2 className="jobposting-title">채용공고 등록</h2>
 
       <form className="jobposting-form" onSubmit={handleSubmit}>
@@ -509,13 +510,14 @@ const Jobposting = () => {
         <fieldset className="form-section">
           <legend>직무 분류</legend>
 
-          <div className="form-group-inline" style={{ gap: "10px" }}>
-            <div className="form-group" style={{ flex: 1 }}>
+          <div className="form-group-inline" style={{ gap: "10px", flexWrap: 'wrap' }}>
+            <div className="form-group" style={{ flex: '1', minWidth: '200px' }}>
               <label htmlFor="job_mid_cd">직무 대분류</label>
               <select
                 id="job_mid_cd"
                 value={selectedJobMid}
                 onChange={handleJobMidChange}
+                style={{ width: '100%', padding: '8px', fontSize: '14px' }}
               >
                 <option value="">대분류 선택</option>
                 {jobCategories.map((cat) => (
@@ -526,13 +528,14 @@ const Jobposting = () => {
               </select>
             </div>
 
-            <div className="form-group" style={{ flex: 1 }}>
+            <div className="form-group" style={{ flex: '1', minWidth: '200px' }}>
               <label htmlFor="job_cd">세부 직무/키워드</label>
               <select
                 id="job_cd"
                 value={selectedJobCode}
                 onChange={(e) => setSelectedJobCode(e.target.value)}
                 disabled={!selectedJobMid}
+                style={{ width: '100%', padding: '8px', fontSize: '14px' }}
               >
                 <option value="">세부 직무 선택</option>
                 {jobKeywords.map((k) => (
@@ -543,8 +546,8 @@ const Jobposting = () => {
               </select>
             </div>
 
-            <div className="form-group" style={{ marginTop: 8 }}>
-              <label>
+            <div className="form-group" >
+              <label style={{ fontSize: '14px' }}>
                 <input
                   type="checkbox"
                   checked={isPrimary}
@@ -592,81 +595,83 @@ const Jobposting = () => {
               id="title"
               name="title"
               placeholder="예: 프론트엔드 개발자"
+              style={{ width: '100%', padding: '8px', fontSize: '14px' }}
             />
           </div>
 
           <div className="form-group">
             <label htmlFor="description">상세 설명</label>
 
-            <CKEditor
-              editor={ClassicEditor}
-              data={description}
-              config={{
-                licenseKey: "GPL",
-                // ✅ 필요한 플러그인들을 명시적으로 등록
-                plugins: [
-                  Essentials,
-                  Paragraph,
-                  Heading,
-                  Bold,
-                  Italic,
-                  Underline,
-                  Link,
-                  List,
-                  BlockQuote,
-                  FontSize,
-                  Image,
-                  ImageCaption,
-                  ImageStyle,
-                  ImageToolbar,
-                  ImageUpload,
-                  FileRepository,
-                ],
-                // ✅ 커스텀 업로드 플러그인은 extraPlugins로
-                extraPlugins: [CustomUploadAdapterPlugin],
-                // 커스텀 플러그인에서 쓸 setter를 config로 전달
-                jobhubSetAttachments: setAttachments,
-                toolbar: [
-                  "undo",
-                  "redo",
-                  "|",
-                  "heading",
-                  "|",
-                  "bold",
-                  "italic",
-                  "underline",
-                  "|",
-                  "fontSize",
-                  "|",
-                  "link",
-                  "|",
-                  "bulletedList",
-                  "numberedList",
-                  "blockQuote",
-                  "|",
-                  "uploadImage",
-                ],
-                fontSize: {
-                  options: [10, 12, 14, 16, 18, 24, 32, "default"],
-                },
-                image: {
-                  toolbar: [
-                    "imageTextAlternative",
-                    "|",
-                    "imageStyle:inline",
-                    "imageStyle:block",
-                    "imageStyle:side",
+            {/* 🔥 CKEditor 컨테이너 크기 제한 */}
+            <div style={{ maxWidth: '100%', overflow: 'hidden' }}>
+              <CKEditor
+                editor={ClassicEditor}
+                data={description}
+                config={{
+                  licenseKey: "GPL",
+                  plugins: [
+                    Essentials,
+                    Paragraph,
+                    Heading,
+                    Bold,
+                    Italic,
+                    Underline,
+                    Link,
+                    List,
+                    BlockQuote,
+                    FontSize,
+                    Image,
+                    ImageCaption,
+                    ImageStyle,
+                    ImageToolbar,
+                    ImageUpload,
+                    FileRepository,
                   ],
-                },
-              }}
-              onReady={(editor) => {
-                editorRef.current = editor;
-              }}
-              onChange={(_, editor) => setDescription(editor.getData())}
-              onError={(e) => console.error("CKEditor error:", e)}
-            />
+                  extraPlugins: [CustomUploadAdapterPlugin],
+                  jobhubSetAttachments: setAttachments,
+                  // 🔥 에디터 높이 제한
+                  height: '300px',
+                  toolbar: [
+                    "undo",
+                    "redo",
+                    "|",
+                    "heading",
+                    "|",
+                    "bold",
+                    "italic",
+                    "underline",
+                    "|",
+                    "fontSize",
+                    "|",
+                    "link",
+                    "|",
+                    "bulletedList",
+                    "numberedList",
+                    "blockQuote",
+                    "|",
+                    "uploadImage",
+                  ],
+                  fontSize: {
+                    options: [10, 12, 14, 16, 18, 24, 32, "default"],
+                  },
+                  image: {
+                    toolbar: [
+                      "imageTextAlternative",
+                      "|",
+                      "imageStyle:inline",
+                      "imageStyle:block",
+                      "imageStyle:side",
+                    ],
+                  },
+                }}
+                onReady={(editor) => {
+                  editorRef.current = editor;
+                }}
+                onChange={(_, editor) => setDescription(editor.getData())}
+                onError={(e) => console.error("CKEditor error:", e)}
+              />
+            </div>
 
-            {/* (선택) 첨부 목록/추가 업로더 – 본문 삽입은 CKEditor에서 처리 */}
             <div style={{ marginTop: 12 }}>
               <AttachmentUploader
                 ref={uploaderRef}
@@ -680,14 +685,14 @@ const Jobposting = () => {
             </div>
           </div>
 
-          {/* 근무 지역 */}
+          {/* 🔥 폼 요소들 크기 정규화 */}
           <div className="form-group">
             <label>근무 지역</label>
-            <div className="form-group-inline" style={{ gap: 10 }}>
+            <div className="form-group-inline" style={{ gap: 10, flexWrap: 'wrap' }}>
               <select
                 value={selectedLocation}
                 onChange={handleLocationChange}
-                style={{ flex: 1 }}
+                style={{ flex: 1, minWidth: '150px', padding: '8px', fontSize: '14px' }}
               >
                 <option value="">시/도 선택</option>
                 {locations.map((loc) => (
@@ -701,7 +706,7 @@ const Jobposting = () => {
                 value={selectedSubLocation}
                 onChange={(e) => setSelectedSubLocation(e.target.value)}
                 disabled={!selectedLocation}
-                style={{ flex: 1 }}
+                style={{ flex: 1, minWidth: '150px', padding: '8px', fontSize: '14px' }}
               >
                 <option value="">시/군/구 선택</option>
                 {subLocations.map((sub) => (
@@ -714,9 +719,8 @@ const Jobposting = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="is_remote">
-              <input type="checkbox" id="is_remote" name="is_remote" /> 재택근무
-              가능
+            <label htmlFor="is_remote" style={{ fontSize: '14px' }}>
+              <input type="checkbox" id="is_remote" name="is_remote" /> 재택근무 가능
             </label>
           </div>
 
@@ -955,25 +959,41 @@ const Jobposting = () => {
           </div>
         </fieldset>
 
-        <div style={{ display: "flex", gap: "12px", marginTop: "20px" }}>
+        <div style={{ 
+          display: "flex", 
+          gap: "12px", 
+          marginTop: "20px",
+          flexWrap: 'wrap'
+        }}>
           <button
             type="button"
             className="cta-button draft"
             onClick={(e) => {
-              // status를 DRAFT로 설정
               const statusSelect = document.getElementById("status");
               if (statusSelect) statusSelect.value = "DRAFT";
               handleSubmit(e);
             }}
             style={{
-              flex: 1,
+              flex: '1',
+              minWidth: '120px',
               background: "#6b7280",
+              padding: '12px 24px',
+              fontSize: '14px',
             }}
           >
             임시 저장
           </button>
 
-          <button type="submit" className="cta-button" style={{ flex: 2 }}>
+          <button 
+            type="submit" 
+            className="cta-button" 
+            style={{ 
+              flex: '2',
+              minWidth: '180px',
+              padding: '12px 24px',
+              fontSize: '14px',
+            }}
+          >
             공고 등록
           </button>
         </div>
