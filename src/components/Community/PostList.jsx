@@ -56,6 +56,50 @@ const PostList = () => {
 
   const [role, setRole] = useState(null); // 로그인한 유저 role 저장용
 
+  const [pendingCount, setPendingCount] = useState(0); // 대기중 초대 수
+
+
+    // ✅ 대기중 초대 수 불러오기(배지용)
+  const fetchPendingInviteCount = async () => {
+    try {
+      const res = await axios.get('http://localhost:8080/chat/invites/me/pending', {
+        withCredentials: true,
+        validateStatus: () => true,
+      });
+      const list = Array.isArray(res.data)
+        ? res.data
+        : (Array.isArray(res.data?.items) ? res.data.items : []);
+      setPendingCount(list.length || 0);
+    } catch (e) {
+      // 실패해도 UI 막진 않도록 조용히 처리
+      setPendingCount(0);
+    }
+  };
+
+    // ✅ 유저가 일반 USER일 때만 주기적으로 카운트 갱신
+  useEffect(() => {
+    if (role !== 'USER') {
+      setPendingCount(0);
+      return;
+    }
+    let alive = true;
+    const load = async () => {
+      if (!alive) return;
+      await fetchPendingInviteCount();
+    };
+    load();
+    // 30초마다 폴링
+    const t = setInterval(load, 30000);
+    // 탭 재포커스 시 즉시 갱신
+    const onVis = () => { if (document.visibilityState === 'visible') load(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      alive = false;
+      clearInterval(t);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [role]);
+
    // ✅ 현재 로그인 사용자 정보 불러오기
   useEffect(() => {
     let mounted = true;
@@ -280,11 +324,36 @@ const handleSearch = (e) => {
               {/* {role === 'COMPANY' && (
                 <button type='button' className='group-chat-btn' onClick={goInviteForm} style={{width: '100%', padding: '10px', border: 'none', borderRadius: '4px', cursor: 'pointer'}}>
                   면접제의 보내기
+                  
                 </button>
               )} */}
               {role === 'USER' && (
-                <button type='button' className='group-chat-btn' onClick={goPendingInvite} style={{width: '100%', padding: '10px', border: 'none', borderRadius: '4px', cursor: 'pointer'}}>
+                <button type='button' className='group-chat-btn' onClick={goPendingInvite} style={{position:'relative', width:'100%', padding:'10px', border:'none', borderRadius:'4px', cursor:'pointer'}}>
                   대기중인 면접제의 보기
+                  {pendingCount > 0 && (
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: -6,
+                            right: -6,
+                            minWidth: 20,
+                            height: 20,
+                            padding: '0 6px',
+                            borderRadius: 999,
+                            background: '#e11d48', // 빨강
+                            color: '#fff',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            lineHeight: 1,
+                            boxShadow: '0 2px 6px rgba(0,0,0,.15)',
+                          }}
+                        >
+                          {pendingCount > 99 ? '99+' : pendingCount}
+                        </span>
+                      )}
                 </button>
               )}
             </div>

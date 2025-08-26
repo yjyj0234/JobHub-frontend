@@ -99,7 +99,7 @@ export default function InviteFormCompany() {
       
       {result && (
         <div className="success-message">
-          <h4 className="success-title">✅ 초대 생성 완료</h4>
+          <h4 className="success-title">✅ 초대 완료</h4>
           <div className="result-grid">
             <div><strong>방 ID:</strong> {result.roomId}</div>
             <div><strong>초대자 ID:</strong> {result.inviterId}</div>
