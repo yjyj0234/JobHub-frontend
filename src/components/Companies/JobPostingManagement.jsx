@@ -16,7 +16,7 @@ import {
 import "../css/JobPostingManagement.css";
 
 const api = axios.create({
-  baseURL: "http://3.35.136.37:8080",
+  baseURL: "http://3.39.250.64:8080",
   withCredentials: true,
 });
 

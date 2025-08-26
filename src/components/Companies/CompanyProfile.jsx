@@ -16,7 +16,7 @@ import "../css/CompanyProfile.css";
 
 // axios 인스턴스 (쿠키 포함)
 const api = axios.create({
-  baseURL: "http://3.35.136.37:8080",
+  baseURL: "http://3.39.250.64:8080",
   withCredentials: true,
 });
 

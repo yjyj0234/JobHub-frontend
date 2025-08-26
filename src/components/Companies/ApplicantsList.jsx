@@ -18,7 +18,7 @@ import {
 } from "../Resume/index.js";
 
 // 프로덕션 환경에서는 상대 경로 사용하여 nginx 프록시를 통해 백엔드 호출
-axios.defaults.baseURL = "http://3.35.136.37:8080";
+axios.defaults.baseURL = "http://3.39.250.64:8080";
 axios.defaults.withCredentials = true;
 
 /* ================= 섹션 정의 (미리보기 헤더 타이틀) ================= */
