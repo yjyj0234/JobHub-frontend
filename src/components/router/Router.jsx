@@ -113,15 +113,16 @@ function AppRouter() {
         <Route path="/resumes/:id" element={<ResumeEditorPage />} />
         <Route path="/jobposting" element={<Jobposting />} />
         <Route path="/companies/applicants" element={<ApplicantsList />} />
+        <Route path="/jobpostinglist" element={<JobPostingList />} />
+
         {/* 커뮤니티 */}
         <Route path="/postlist" element={<PostList />} />
-        <Route path="/jobpostinglist" element={<JobPostingList />} />
         <Route path="/postlist/addpost" element={<AddPost />} />
         <Route path="/postlist/detail/:id" element={<PostDetail />} />
         <Route path="/postlist/edit/:id" element={<UpdatePost />} />
         <Route path="/group-chat" element={<GroupChat />} />
         <Route path="/group-chat/rooms/:roomId" element={<GroupChatRoom />} />
-        <Route path="/chat/invites" element={<InviteForm />} />
+        <Route path="/chat/invites/:userId" element={<InviteForm />} />
         <Route path="/chat/invites/pending" element={<PendingInvite />} />
         <Route path="/chat/invites/list" element={<InviteList />} />
 

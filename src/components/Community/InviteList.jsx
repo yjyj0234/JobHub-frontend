@@ -37,6 +37,7 @@ export default function InterviewRooms() {
   }, []);
 
   const enter = (id) => navigate(`/group-chat/rooms/${id}`);
+  const goBack = () => navigate(-1);
 
   if (loading) return <div className="loading-message">불러오는 중…</div>;
   
@@ -44,7 +45,12 @@ export default function InterviewRooms() {
 
   return (
     <div className="invite-list-container">
-      <h2 className="invite-list-title">면접 채팅방 목록</h2>
+      <div className="header-section" style={{position: 'relative'}}>
+        <h2 className="invite-list-title">면접제의 채팅방 목록</h2>
+        <button className="goback-btn" onClick={goBack}>
+          뒤로가기
+        </button>
+      </div>
       
       {list.length === 0 && (
         <div className="empty-message">

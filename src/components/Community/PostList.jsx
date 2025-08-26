@@ -159,7 +159,7 @@ const handleSearch = (e) => {
   const addPost = () => navigate('/postlist/addpost');
   const goDetail = (id) => navigate(`/postlist/detail/${id}`);
   const goGroupChat = () => navigate('/group-chat');
-  const goInviteForm = () => navigate('/chat/invites');
+  // const goInviteForm = () => navigate('/chat/invites');
   const goPendingInvite = () => navigate('/chat/invites/pending');
   const goInviteList = () => navigate('/chat/invites/list');
 
@@ -277,11 +277,11 @@ const handleSearch = (e) => {
               <button type='button' className='group-chat-btn' onClick={goInviteList} style={{width: '100%', padding: '10px', border: 'none', borderRadius: '4px', cursor: 'pointer'}}>
                 면접제의 채팅방 목록
               </button>
-              {role === 'COMPANY' && (
+              {/* {role === 'COMPANY' && (
                 <button type='button' className='group-chat-btn' onClick={goInviteForm} style={{width: '100%', padding: '10px', border: 'none', borderRadius: '4px', cursor: 'pointer'}}>
-                  면접제의폼
+                  면접제의 보내기
                 </button>
-              )}
+              )} */}
               {role === 'USER' && (
                 <button type='button' className='group-chat-btn' onClick={goPendingInvite} style={{width: '100%', padding: '10px', border: 'none', borderRadius: '4px', cursor: 'pointer'}}>
                   대기중인 면접제의 보기

@@ -65,7 +65,7 @@ export default function GroupChatRoom() {
           { signal: ctrl.signal }
         );
         // 서버 DTO 키 확인: roomName이 맞는지 확인
-        setRoomName(data?.roomName ?? "");
+        setRoomName(data?.displayTitle ?? data?.roomName ?? "");
       } catch (e) {
         if (e.name !== "CanceledError" && e.code !== "ERR_CANCELED") {
           console.error(e);
@@ -233,7 +233,7 @@ useEffect(() => {
   };
 
   // 채팅방 목록으로
-  const goBack = () => navigate('/group-chat');
+  const goBack = () => navigate(-1);
 
   //채팅방 나가기
   const leaveRoom = async () => {
@@ -262,7 +262,7 @@ useEffect(() => {
       <div className="gcr-container">
         <header className="gcr-header">
           <div className="gcr-header-left">
-            <h1 className="gcr-title"> {roomNameLoading ? "불러오는 중…" : (roomName || "채팅방")}</h1>
+            <h1 className="gcr-title"> {roomNameLoading ? "불러오는 중…" : (roomName+" 면접제안" || "채팅방")}</h1>
             <span className="gcr-room-id">#{roomId}</span>
           </div>
           <button type="button" className="gcr-back-btn" onClick={goBack}>
