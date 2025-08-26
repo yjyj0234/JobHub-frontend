@@ -1677,7 +1677,7 @@ function ResumeEditorPage() {
       );
 
       // 저장 후 해당 섹션 재로드
-      const cfg = SECTION_API[sec.type];
+
       if (cfg.list) {
         const listRes = await axios.get(cfg.list(rid), {
           validateStatus: () => true,
