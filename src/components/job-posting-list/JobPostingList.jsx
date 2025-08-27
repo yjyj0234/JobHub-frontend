@@ -614,7 +614,7 @@ const JobItem = ({ job, onBookmark, onOpen }) => {
                 src={
                   job.logo.startsWith("http")
                     ? job.logo
-                    : `http://localhost:8080/api/files/view?key=${encodeURIComponent(
+                    : `/api/files/view?key=${encodeURIComponent(
                         job.logo
                       )}`
                 }
@@ -857,7 +857,7 @@ const JobPosting = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8080/api/search/jobs", {
+      const res = await fetch("/api/search/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -903,7 +903,7 @@ const JobPosting = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8080/api/search/jobs", {
+      const res = await fetch("/api/search/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -968,7 +968,7 @@ const JobPosting = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8080/api/search/jobs", {
+      const res = await fetch("/api/search/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
