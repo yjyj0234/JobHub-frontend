@@ -5,8 +5,9 @@ import { AuthProvider } from "./components/context/AuthContext.jsx"; // 1. 로�
 import AppRouter from "./components/router/Router.jsx";
 import "ckeditor5/ckeditor5.css";
 import axios from "axios";
+axios.defaults.baseURL = "";  // ✅ 빈 문자열 = 현재 도메인
 // 프로덕션 환경에서 포트 8080을 포함한 백엔드 URL 사용
-axios.defaults.baseURL = "http://3.39.250.64:8080";
+//axios.defaults.baseURL = "http://3.39.250.64:8080";
 axios.defaults.withCredentials = true; // ✅ 쿠키 항상 전송
 // 전역(Global) CSS 파일
 import "./App.css"; // 3. 앱 전체의 기본 스타일 및 CSS 변수 정의
