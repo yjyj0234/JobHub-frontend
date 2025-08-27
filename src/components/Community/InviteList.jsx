@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "../css/InviteList.css";
 
 axios.defaults.withCredentials = true;
-const API = "http://localhost:8080";
+const API = "";
 
 function statusFromRoomName(roomName) {
   if (!roomName) return "알 수 없음";

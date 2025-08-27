@@ -1,8 +1,8 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import axios from "axios";
 
-// 프로덕션 환경에서 포트 8080을 포함한 백엔드 URL 사용
-const BASE_URL = "http://3.39.250.64:8080";
+// nginx 프록시를 통한 상대 경로 사용
+const BASE_URL = "";
 axios.defaults.withCredentials = true; // JWT 쿠키 자동 첨부
 
 const AuthContext = createContext(null);

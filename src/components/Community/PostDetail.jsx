@@ -28,9 +28,9 @@ export default function PostDetail() {
         // 조회수 증가
         if (!viewed.current) {
           viewed.current = true;
-          await axios.post(`http://localhost:8080/community/${id}/view`).catch(() => {});
+          await axios.post(`/community/${id}/view`).catch(() => {});
         }
-        const { data } = await axios.get(`http://localhost:8080/community/detail/${id}`);
+        const { data } = await axios.get(`/community/detail/${id}`);
         setPost(data);
       } catch (e) {
         setError({
@@ -50,11 +50,11 @@ export default function PostDetail() {
 
     console.log('=== 삭제 요청 시작 ===');
     console.log('삭제할 게시글 ID:', id);
-    console.log('요청 URL:', `http://localhost:8080/community/${id}`);
+    console.log('요청 URL:', `/community/${id}`);
 
     try {
       // FIX: DELETE 메서드로, withCredentials는 옵션 객체에
-      const response = await axios.delete(`http://localhost:8080/community/${id}`, {
+      const response = await axios.delete(`/community/${id}`, {
         withCredentials: true,
       });
       console.log('삭제 성공:', response?.status);

@@ -3,7 +3,7 @@ import axios from "axios";
 import { Plus, ChevronDown, Trash2, Edit, Save, X } from "lucide-react";
 import "../css/FaqAdminPage.css";
 
-const API_BASE_URL = "http://3.39.250.64:8080/api/faqs";
+const API_BASE_URL = "/api/faqs";
 
 // 기본 카테고리 목록을 정의합니다.
 const DEFAULT_CATEGORIES = ["계정", "결제", "이용방법", "오류", "기타"];

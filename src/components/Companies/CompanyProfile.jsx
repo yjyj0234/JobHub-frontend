@@ -14,9 +14,9 @@ import {
 } from "lucide-react";
 import "../css/CompanyProfile.css";
 
-// axios 인스턴스 (쿠키 포함)
+// nginx 프록시를 통한 상대 경로 사용
 const api = axios.create({
-  baseURL: "http://3.39.250.64:8080",
+  baseURL: "",
   withCredentials: true,
 });
 

@@ -61,7 +61,7 @@ export default function GroupChatRoom() {
       setRoomNameError("");
       try {
         const { data } = await axios.get(
-          `http://localhost:8080/group-chat/rooms/${roomId}`,
+          `/group-chat/rooms/${roomId}`,
           { signal: ctrl.signal }
         );
         // 서버 DTO 키 확인: roomName이 맞는지 확인
@@ -86,7 +86,7 @@ useEffect(() => {
   if (!roomId) return;
   (async () => {
     try {
-      const { data } = await axios.get(`http://localhost:8080/group-chat/rooms/${roomId}/members`);
+      const { data } = await axios.get(`/group-chat/rooms/${roomId}/members`);
       setParticipants(data ?? []);
     } catch (e) {
       console.error("참여자 목록 불러오기 실패:", e);
@@ -101,12 +101,12 @@ useEffect(() => {
       setLoading(true);
       setError("");
       try {
-        const { data: joinRes } = await axios.post(`http://localhost:8080/group-chat/rooms/${roomId}/join`);
+        const { data: joinRes } = await axios.post(`/group-chat/rooms/${roomId}/join`);
         setMyUid(joinRes?.userId ?? null);
         
         
         const { data } = await axios.get(
-          `http://localhost:8080/group-chat/rooms/${roomId}/messages`
+          `/group-chat/rooms/${roomId}/messages`
         );
         const normalized = (Array.isArray(data) ? data : []).map((m) => ({
           ...m,
@@ -134,7 +134,7 @@ useEffect(() => {
 
     const token = getCookie("JWT") || localStorage.getItem("JWT");
     // SockJS (XHR 핸드셰이크가 쿠키를 써야 하면 withCredentials 옵션 유지)
-    const sock = new SockJS("http://localhost:8080/ws", null, {
+    const sock = new SockJS("/ws", null, {
       transportOptions: {
         xhrStream: { withCredentials: true },
         xhrPolling: { withCredentials: true },
@@ -241,7 +241,7 @@ useEffect(() => {
  
 
     try {
-      await axios.delete(`http://localhost:8080/group-chat/rooms/${roomId}/leave`);
+      await axios.delete(`/group-chat/rooms/${roomId}/leave`);
       try { await stompRef.current?.deactivate(); } catch {}
       navigate('/group-chat');
     } catch (error) {

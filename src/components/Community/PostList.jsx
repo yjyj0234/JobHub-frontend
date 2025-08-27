@@ -62,7 +62,7 @@ const PostList = () => {
     // ✅ 대기중 초대 수 불러오기(배지용)
   const fetchPendingInviteCount = async () => {
     try {
-      const res = await axios.get('http://localhost:8080/chat/invites/me/pending', {
+      const res = await axios.get('/chat/invites/me/pending', {
         withCredentials: true,
         validateStatus: () => true,
       });
@@ -122,7 +122,7 @@ const PostList = () => {
     setLoading(true);
     setErrMsg('');
 
-    axios.get('http://localhost:8080/community/list', {
+    axios.get('/community/list', {
       withCredentials: true,                        // 쿠키 
       headers: { Authorization: undefined },         // 인터셉터 무력화
       signal: controller.signal                      // 언마운트 시 취소

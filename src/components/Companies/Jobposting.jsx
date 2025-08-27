@@ -30,7 +30,8 @@ import {
 } from "ckeditor5";
 
 // 전역 axios - 프로덕션 환경에서는 상대 경로 사용하여 nginx 프록시를 통해 백엔드 호출
-axios.defaults.baseURL = "http://3.39.250.64:8080";
+// nginx 프록시를 통한 상대 경로 사용
+axios.defaults.baseURL = "";
 
 // ✅ "COMPANY" / "ROLE_COMPANY" 모두 허용
 

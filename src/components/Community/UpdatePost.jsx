@@ -49,7 +49,7 @@ const UpdatePost = () => {
       setLoading(true);
       setError(null);
       try {
-        const { data } = await axios.get(`http://localhost:8080/community/detail/${id}`);
+        const { data } = await axios.get(`/community/detail/${id}`);
         setTitle(data.title ?? '');
         setContent(data.content ?? '');
         if (editorRef.current) {
@@ -78,7 +78,7 @@ const UpdatePost = () => {
     const data = { title, content: html}
 
     try {
-     await axios.put(`http://localhost:8080/community/edit/${id}`, data)
+     await axios.put(`/community/edit/${id}`, data)
       alert('수정 완료')
       setTitle('')
       setContent('')

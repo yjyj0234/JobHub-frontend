@@ -18,7 +18,7 @@ export default function GroupChat() {
       setLoading(true);
       setError(null);
       try {
-        const { data } = await axios.get("http://localhost:8080/group-chat/rooms/explore");
+        const { data } = await axios.get("/group-chat/rooms/explore");
         setRooms(data ?? []);
       } catch (err) {
         setError('채팅방 목록을 불러오지 못했습니다.');
@@ -36,12 +36,12 @@ export default function GroupChat() {
    try {
     if (showMyRooms) {
       // 현재 "내 방" → 전체 방으로 전환
-      const { data } = await axios.get("http://localhost:8080/group-chat/rooms/explore");
+      const { data } = await axios.get("/group-chat/rooms/explore");
       setRooms(data ?? []);
       setShowMyRooms(false);
     } else {
       // 현재 "전체 방" → 내 방으로 전환
-      const { data } = await axios.get("http://localhost:8080/group-chat/rooms/my");
+      const { data } = await axios.get("/group-chat/rooms/my");
       setRooms(data ?? []);
       setShowMyRooms(true);
     }
@@ -57,7 +57,7 @@ export default function GroupChat() {
     if (!name.trim()) return;
     
     try {
-      const { data } = await axios.post("http://localhost:8080/group-chat/rooms", {
+      const { data } = await axios.post("/group-chat/rooms", {
         roomName: name,
       });
       setRooms(prev => [data, ...prev]);
@@ -70,7 +70,7 @@ export default function GroupChat() {
 
   const handleEnter = async (id) => {
     try { 
-      await axios.post(`http://localhost:8080/group-chat/rooms/${id}/join`); 
+      await axios.post(`/group-chat/rooms/${id}/join`); 
     } catch (_) {}
     navigate(`/group-chat/rooms/${id}`);
   };
@@ -78,7 +78,7 @@ export default function GroupChat() {
   const handleDelete = async (id) => {
     if (window.confirm("정말로 삭제하시겠습니까?")) {
       try {
-        await axios.delete(`http://localhost:8080/group-chat/rooms/${id}`);
+        await axios.delete(`/group-chat/rooms/${id}`);
         setRooms(prev => prev.filter(r => r.id !== id));
       } catch (err) {
         alert('채팅방 삭제에 실패했습니다.');

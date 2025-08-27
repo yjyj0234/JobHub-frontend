@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "../css/PendingInvite.css";
 
 axios.defaults.withCredentials = true;
-const API = "http://localhost:8080";
+const API = "";
 
 export default function PendingInvites() {
   const navigate = useNavigate();

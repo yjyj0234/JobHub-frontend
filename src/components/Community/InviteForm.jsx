@@ -4,7 +4,7 @@ import "../css/InviteForm.css";
 import { useParams, useSearchParams } from "react-router-dom";
 
 axios.defaults.withCredentials = true; // 쿠키 인증 사용
-const API = "http://localhost:8080";
+const API = "";
 
 export default function InviteFormCompany() {
   const [targetUserId, setTargetUserId] = useState("");

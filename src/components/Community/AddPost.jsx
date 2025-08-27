@@ -56,7 +56,7 @@ const AddPost = () => {
     const data = { title, content}
 
     try {
-     await axios.post('http://localhost:8080/community/addpost', data)
+     await axios.post('/community/addpost', data)
       alert('등록 완료!')
       setTitle('')
       setContent('')

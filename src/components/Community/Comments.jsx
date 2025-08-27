@@ -13,7 +13,7 @@ export default function Comments({ postId }) {
   const [error, setError] = useState(null);
   const inputRef = useRef(null);
 
-  const API = 'http://localhost:8080';
+  const API = '';
 
   // 댓글 목록 불러오기
   const load = async () => {
